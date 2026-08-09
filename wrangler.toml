@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "wecpq"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "75f60483-be72-4236-9227-fc2515d96922"
 
 [vars]
 UI_USERNAME = "admin"
