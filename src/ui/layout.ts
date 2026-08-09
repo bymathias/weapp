@@ -130,30 +130,8 @@ const STYLE = `
   .stat-value { font-size: 26px; font-weight: 800; line-height: 1.1; }
   .stat-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
 
-  .chart-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-bottom: 20px; align-items: stretch; }
-  .chart-panel h2 { margin-top: 0; }
-  .bar-list .bar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-  .bar-list .bar-row:last-child { margin-bottom: 0; }
-  .bar-row .bar-label { width: 130px; flex-shrink: 0; font-size: 13px; }
-  .bar-row .bar-track { flex: 1; background: var(--bg); border-radius: 6px; height: 24px; position: relative; overflow: hidden; }
-  .bar-row .bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--accent); }
-  .bar-row .bar-count { width: 24px; text-align: right; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-
-  .donut-wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
-  .donut { width: 168px; height: 168px; border-radius: 50%; position: relative; flex-shrink: 0; }
-  .donut .donut-hole { position: absolute; inset: 26px; background: var(--panel); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .donut .donut-hole .n { font-size: 24px; font-weight: 800; line-height: 1; }
-  .donut .donut-hole .l { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .donut-legend { display: flex; flex-direction: column; gap: 10px; }
-  .donut-legend .row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-  .donut-legend .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-  .donut-legend .row .name { flex: 1; min-width: 90px; }
-  .donut-legend .row .pct { color: var(--muted); margin-right: 6px; }
-  .donut-legend .row .count { font-weight: 700; width: 20px; text-align: right; }
-
   @media (max-width: 900px) {
     .stat-grid { grid-template-columns: repeat(2, 1fr); }
-    .chart-grid { grid-template-columns: 1fr; }
   }
 `;
 

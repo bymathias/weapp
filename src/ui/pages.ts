@@ -1,7 +1,7 @@
 import { html, raw } from "hono/html";
 import { layout, ICONS } from "./layout";
 import type { Customer, Quote, QuoteStatus, QuoteWithItems } from "../types";
-import type { DashboardStats, VendorCount, RecentQuote } from "../db/queries";
+import type { DashboardStats, RecentQuote } from "../db/queries";
 
 export function loginPage(opts: { error?: boolean } = {}) {
   return layout(
@@ -28,59 +28,7 @@ export function loginPage(opts: { error?: boolean } = {}) {
   );
 }
 
-const STATUS_COLORS: Record<QuoteStatus, string> = {
-  Draft: "#94a3b8",
-  Sent: "#4f46e5",
-  Won: "#16a34a",
-  Lost: "#dc2626",
-};
-
-function buildDonutGradient(counts: { value: number; color: string }[]): string {
-  const total = counts.reduce((sum, c) => sum + c.value, 0);
-  if (total === 0) return "var(--border)";
-  let cursor = 0;
-  const stops: string[] = [];
-  for (const c of counts) {
-    if (c.value <= 0) continue;
-    const start = (cursor / total) * 100;
-    cursor += c.value;
-    const end = (cursor / total) * 100;
-    stops.push(`${c.color} ${start}% ${end}%`);
-  }
-  return `conic-gradient(${stops.join(", ")})`;
-}
-
-export function dashboardPage(stats: DashboardStats, vendorBreakdown: VendorCount[], recentQuotes: RecentQuote[]) {
-  const maxVendorCount = Math.max(1, ...vendorBreakdown.map((v) => v.count));
-  const vendorBars = vendorBreakdown
-    .map(
-      (v) => html`<div class="bar-row">
-        <div class="bar-label">${v.vendor}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${(v.count / maxVendorCount) * 100}%"></div></div>
-        <div class="bar-count">${v.count}</div>
-      </div>`
-    )
-    .join("");
-
-  const statusEntries: { label: QuoteStatus; value: number }[] = [
-    { label: "Draft", value: stats.draftCount },
-    { label: "Sent", value: stats.sentCount },
-    { label: "Won", value: stats.wonCount },
-    { label: "Lost", value: stats.lostCount },
-  ];
-  const donutBg = buildDonutGradient(statusEntries.map((s) => ({ value: s.value, color: STATUS_COLORS[s.label] })));
-  const legendRows = statusEntries
-    .map((s) => {
-      const pct = stats.totalQuotes > 0 ? Math.round((s.value / stats.totalQuotes) * 100) : 0;
-      return html`<div class="row">
-        <span class="dot" style="background:${STATUS_COLORS[s.label]}"></span>
-        <span class="name">${s.label}</span>
-        <span class="pct">${pct}%</span>
-        <span class="count">${s.value}</span>
-      </div>`;
-    })
-    .join("");
-
+export function dashboardPage(stats: DashboardStats, recentQuotes: RecentQuote[]) {
   const recentRows = recentQuotes
     .map(
       (q) => html`<tr id="recent-quote-row-${q.ref}" data-testid="recent-quote-row">
@@ -116,22 +64,6 @@ export function dashboardPage(stats: DashboardStats, vendorBreakdown: VendorCoun
         <div class="stat-card" data-testid="stat-lost">
           <span class="stat-icon red">${raw(ICONS.lost)}</span>
           <div><div class="stat-value">${stats.lostCount}</div><div class="stat-label">Lost</div></div>
-        </div>
-      </div>
-
-      <div class="chart-grid">
-        <div class="panel chart-panel">
-          <h2>Quotes by Vendor</h2>
-          <div class="bar-list">${raw(vendorBars || `<p class="muted">No quotes yet.</p>`)}</div>
-        </div>
-        <div class="panel chart-panel">
-          <h2>Quotes by Status</h2>
-          <div class="donut-wrap">
-            <div class="donut" style="background:${raw(donutBg)}">
-              <div class="donut-hole"><span class="n">${stats.totalQuotes}</span><span class="l">Total</span></div>
-            </div>
-            <div class="donut-legend">${raw(legendRows)}</div>
-          </div>
         </div>
       </div>
 

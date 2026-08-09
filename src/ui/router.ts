@@ -10,7 +10,6 @@ import {
   updateQuote,
   createCustomer,
   getDashboardStats,
-  quotesByVendor,
   listRecentQuotes,
 } from "../db/queries";
 import { loginPage, dashboardPage, customersPage, customerPage, newCustomerPage, newQuotePage, editQuotePage, quoteDetailPage } from "./pages";
@@ -42,12 +41,8 @@ uiRouter.get("/logout", async (c) => {
 uiRouter.use("/*", requireUiAuth);
 
 uiRouter.get("/", async (c) => {
-  const [stats, vendorBreakdown, recentQuotes] = await Promise.all([
-    getDashboardStats(c.env.DB),
-    quotesByVendor(c.env.DB),
-    listRecentQuotes(c.env.DB, 10),
-  ]);
-  return c.html(dashboardPage(stats, vendorBreakdown, recentQuotes));
+  const [stats, recentQuotes] = await Promise.all([getDashboardStats(c.env.DB), listRecentQuotes(c.env.DB, 10)]);
+  return c.html(dashboardPage(stats, recentQuotes));
 });
 
 uiRouter.get("/customers", async (c) => {

@@ -58,18 +58,6 @@ export async function getDashboardStats(db: D1Database): Promise<DashboardStats>
   };
 }
 
-export interface VendorCount {
-  vendor: string;
-  count: number;
-}
-
-export async function quotesByVendor(db: D1Database): Promise<VendorCount[]> {
-  const { results } = await db
-    .prepare(`SELECT vendor, COUNT(*) as count FROM quotes GROUP BY vendor ORDER BY count DESC, vendor ASC`)
-    .all<VendorCount>();
-  return results ?? [];
-}
-
 export interface RecentQuote {
   ref: string;
   customer_id: number;
