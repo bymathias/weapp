@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import type { Env } from "../types";
 import { createSession, clearSession, requireUiAuth } from "../lib/session";
-import { getCustomer, listCustomers, listQuotesForCustomer, getQuoteByRef, createQuote, updateQuote } from "../db/queries";
-import { loginPage, dashboardPage, customerPage, newQuotePage, editQuotePage, quoteDetailPage } from "./pages";
+import { getCustomer, listCustomers, listQuotesForCustomer, getQuoteByRef, createQuote, updateQuote, createCustomer } from "../db/queries";
+import { loginPage, dashboardPage, customerPage, newCustomerPage, newQuotePage, editQuotePage, quoteDetailPage } from "./pages";
 import type { QuoteStatus } from "../types";
 
 export const uiRouter = new Hono<Env>();
@@ -33,6 +33,25 @@ uiRouter.use("/*", requireUiAuth);
 uiRouter.get("/", async (c) => {
   const customers = await listCustomers(c.env.DB);
   return c.html(dashboardPage(customers));
+});
+
+uiRouter.get("/customers/new", async (c) => {
+  return c.html(newCustomerPage());
+});
+
+uiRouter.post("/customers/new", async (c) => {
+  const body = await c.req.parseBody();
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  const industry = typeof body.industry === "string" ? body.industry.trim() : "";
+  const country = typeof body.country === "string" ? body.country.trim() : "";
+  const accountOwner = typeof body.account_owner === "string" ? body.account_owner.trim() : "";
+
+  if (!name || !industry || !country || !accountOwner) {
+    return c.html(newCustomerPage({ error: "All fields are required." }), 400);
+  }
+
+  const customer = await createCustomer(c.env.DB, { name, industry, country, account_owner: accountOwner });
+  return c.redirect(`/customers/${customer.id}`);
 });
 
 uiRouter.get("/customers/:id", async (c) => {

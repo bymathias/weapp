@@ -49,3 +49,20 @@ export async function nextQuoteRef(db: D1Database): Promise<string> {
   }
   return `${prefix}${String(next).padStart(4, "0")}`;
 }
+
+export async function nextCustomerRefId(db: D1Database): Promise<string> {
+  const prefix = "CUST-";
+  const row = await db
+    .prepare(
+      `SELECT ref_id FROM customers WHERE ref_id LIKE ?1 ORDER BY CAST(SUBSTR(ref_id, LENGTH(?1) + 1) AS INTEGER) DESC LIMIT 1`
+    )
+    .bind(`${prefix}%`)
+    .first<{ ref_id: string }>();
+
+  let next = 1;
+  if (row?.ref_id) {
+    const n = parseInt(row.ref_id.slice(prefix.length), 10);
+    if (!Number.isNaN(n)) next = n + 1;
+  }
+  return `${prefix}${String(next).padStart(4, "0")}`;
+}

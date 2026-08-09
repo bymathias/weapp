@@ -2,10 +2,11 @@ import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import type { Env } from "../types";
 import { requireBearerAuth } from "../lib/bearer";
 import { isAuthenticated } from "../lib/session";
-import { getCustomer, listCustomers, listQuotesForCustomer, getQuoteByRef, createQuote, updateQuote } from "../db/queries";
+import { getCustomer, listCustomers, listQuotesForCustomer, getQuoteByRef, createQuote, updateQuote, createCustomer } from "../db/queries";
 import { generateQuotePdf } from "../pdf";
 import {
   CustomerSchema,
+  CustomerInputSchema,
   CustomerIdParamSchema,
   QuoteRefParamSchema,
   QuoteSchema,
@@ -50,6 +51,29 @@ apiRouter.openapi(
   async (c) => {
     const customers = await listCustomers(c.env.DB);
     return c.json(customers, 200);
+  }
+);
+
+// POST /api/customers
+apiRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/customers",
+    tags: ["Customers"],
+    summary: "Create a customer",
+    security: [{ Bearer: [] }],
+    request: {
+      body: { content: { "application/json": { schema: CustomerInputSchema } } },
+    },
+    responses: {
+      201: { description: "Created customer", content: { "application/json": { schema: CustomerSchema } } },
+      401: { description: "Unauthorized", content: { "application/json": { schema: ErrorSchema } } },
+    },
+  }),
+  async (c) => {
+    const body = c.req.valid("json");
+    const customer = await createCustomer(c.env.DB, body);
+    return c.json(customer, 201);
   }
 );
 

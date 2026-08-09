@@ -14,6 +14,15 @@ export const CustomerSchema = z
   })
   .openapi("Customer");
 
+export const CustomerInputSchema = z
+  .object({
+    name: z.string().min(1),
+    industry: z.string().min(1),
+    country: z.string().min(1),
+    account_owner: z.string().min(1),
+  })
+  .openapi("CustomerInput");
+
 export const QuoteItemSchema = z
   .object({
     id: z.number().int(),

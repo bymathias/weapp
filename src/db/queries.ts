@@ -1,5 +1,5 @@
 import type { Customer, Quote, QuoteItem, QuoteStatus, QuoteWithItems } from "../types";
-import { computeItems, computeSubtotal, computeTotalAmount, nextQuoteRef, type LineItemInput } from "../lib/totals";
+import { computeItems, computeSubtotal, computeTotalAmount, nextCustomerRefId, nextQuoteRef, type LineItemInput } from "../lib/totals";
 
 export async function listCustomers(db: D1Database): Promise<Customer[]> {
   const { results } = await db.prepare(`SELECT * FROM customers ORDER BY name`).all<Customer>();
@@ -8,6 +8,26 @@ export async function listCustomers(db: D1Database): Promise<Customer[]> {
 
 export async function getCustomer(db: D1Database, id: number): Promise<Customer | null> {
   return (await db.prepare(`SELECT * FROM customers WHERE id = ?1`).bind(id).first<Customer>()) ?? null;
+}
+
+export interface CreateCustomerInput {
+  name: string;
+  industry: string;
+  country: string;
+  account_owner: string;
+}
+
+export async function createCustomer(db: D1Database, input: CreateCustomerInput): Promise<Customer> {
+  const refId = await nextCustomerRefId(db);
+  const result = await db
+    .prepare(
+      `INSERT INTO customers (name, ref_id, industry, country, account_owner)
+       VALUES (?1, ?2, ?3, ?4, ?5)`
+    )
+    .bind(input.name, refId, input.industry, input.country, input.account_owner)
+    .run();
+
+  return (await getCustomer(db, result.meta.last_row_id as number))!;
 }
 
 export async function listQuotesForCustomer(db: D1Database, customerId: number): Promise<Quote[]> {

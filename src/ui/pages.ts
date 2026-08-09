@@ -44,6 +44,9 @@ export function dashboardPage(customers: Customer[]) {
     "Dashboard",
     html`<h1>Customers</h1>
       <p class="muted">All accounts in WeCPQ.</p>
+      <div class="actions-row" style="margin-bottom:16px">
+        <a class="btn" id="new-customer-btn" data-testid="new-customer-btn" href="/customers/new">+ New Customer</a>
+      </div>
       <div class="panel">
         <table id="customers-table" data-testid="customers-table">
           <thead>
@@ -57,6 +60,42 @@ export function dashboardPage(customers: Customer[]) {
           </thead>
           <tbody id="customers-table-body">${raw(rows)}</tbody>
         </table>
+      </div>`,
+    { loggedIn: true }
+  );
+}
+
+export function newCustomerPage(opts: { error?: string } = {}) {
+  return layout(
+    "New Customer",
+    html`<h1>New Customer</h1>
+      <p class="muted">Add an account to WeCPQ.</p>
+      <div class="panel">
+        ${opts.error ? html`<div class="error" id="customer-form-error" data-testid="customer-form-error">${opts.error}</div>` : ""}
+        <form id="customer-form" data-testid="customer-form" method="post" action="/customers/new">
+          <div class="field">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" data-testid="customer-name-input" required />
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label for="industry">Industry</label>
+              <input type="text" id="industry" name="industry" data-testid="customer-industry-input" required />
+            </div>
+            <div class="field">
+              <label for="country">Country</label>
+              <input type="text" id="country" name="country" data-testid="customer-country-input" required />
+            </div>
+          </div>
+          <div class="field">
+            <label for="account_owner">Account Owner</label>
+            <input type="text" id="account_owner" name="account_owner" data-testid="customer-account-owner-input" required />
+          </div>
+          <div class="actions-row">
+            <button type="submit" class="btn" id="customer-form-submit" data-testid="customer-form-submit">Save Customer</button>
+            <a class="btn secondary" id="customer-form-cancel" data-testid="customer-form-cancel" href="/">Cancel</a>
+          </div>
+        </form>
       </div>`,
     { loggedIn: true }
   );
