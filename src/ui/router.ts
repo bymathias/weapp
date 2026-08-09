@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import type { Env } from "../types";
 import { createSession, clearSession, requireUiAuth } from "../lib/session";
-import { getCustomer, listCustomers, listQuotesForCustomer, getQuoteByRef, createQuote } from "../db/queries";
-import { loginPage, dashboardPage, customerPage, newQuotePage, quoteDetailPage } from "./pages";
+import { getCustomer, listCustomers, listQuotesForCustomer, getQuoteByRef, createQuote, updateQuote } from "../db/queries";
+import { loginPage, dashboardPage, customerPage, newQuotePage, editQuotePage, quoteDetailPage } from "./pages";
 import type { QuoteStatus } from "../types";
 
 export const uiRouter = new Hono<Env>();
@@ -56,21 +56,7 @@ uiRouter.post("/quotes/new", async (c) => {
   const customer = await getCustomer(c.env.DB, customerId);
   if (!customer) return c.notFound();
 
-  const vendor = typeof body.vendor === "string" ? body.vendor : "";
-  const status = (typeof body.status === "string" ? body.status : "Draft") as QuoteStatus;
-  const marginPct = Number(body.margin_pct) || 0;
-
-  const descriptions = toArray(body["description[]"]);
-  const quantities = toArray(body["quantity[]"]);
-  const unitPrices = toArray(body["unit_price[]"]);
-
-  const items = descriptions
-    .map((description, i) => ({
-      description,
-      quantity: Number(quantities[i]) || 0,
-      unit_price: Number(unitPrices[i]) || 0,
-    }))
-    .filter((item) => item.description.trim() !== "" && item.quantity > 0);
+  const { vendor, status, marginPct, items } = parseQuoteForm(body);
 
   if (items.length === 0) {
     return c.html(newQuotePage(customer, { error: "Add at least one line item with a description and quantity." }), 400);
@@ -88,6 +74,63 @@ uiRouter.get("/quotes/:ref", async (c) => {
   if (!customer) return c.notFound();
   return c.html(quoteDetailPage(customer, quote));
 });
+
+uiRouter.get("/quotes/:ref/edit", async (c) => {
+  const ref = c.req.param("ref");
+  const quote = await getQuoteByRef(c.env.DB, ref);
+  if (!quote) return c.notFound();
+  if (quote.status === "Won") return c.redirect(`/quotes/${ref}`);
+  const customer = await getCustomer(c.env.DB, quote.customer_id);
+  if (!customer) return c.notFound();
+  return c.html(editQuotePage(customer, quote));
+});
+
+uiRouter.post("/quotes/:ref/edit", async (c) => {
+  const ref = c.req.param("ref");
+  const existing = await getQuoteByRef(c.env.DB, ref);
+  if (!existing) return c.notFound();
+  const customer = await getCustomer(c.env.DB, existing.customer_id);
+  if (!customer) return c.notFound();
+
+  if (existing.status === "Won") return c.redirect(`/quotes/${ref}`);
+
+  const body = await c.req.parseBody({ all: true });
+  const { vendor, status, marginPct, items } = parseQuoteForm(body);
+
+  if (items.length === 0) {
+    return c.html(editQuotePage(customer, existing, { error: "Add at least one line item with a description and quantity." }), 400);
+  }
+
+  try {
+    const quote = await updateQuote(c.env.DB, ref, { vendor, status, margin_pct: marginPct, items });
+    return c.redirect(`/quotes/${quote.ref}`);
+  } catch (err) {
+    if (err instanceof Error && err.message === "won_locked") {
+      return c.redirect(`/quotes/${ref}`);
+    }
+    throw err;
+  }
+});
+
+function parseQuoteForm(body: Record<string, string | File | (string | File)[]>) {
+  const vendor = typeof body.vendor === "string" ? body.vendor : "";
+  const status = (typeof body.status === "string" ? body.status : "Draft") as QuoteStatus;
+  const marginPct = Number(body.margin_pct) || 0;
+
+  const descriptions = toArray(body["description[]"]);
+  const quantities = toArray(body["quantity[]"]);
+  const unitPrices = toArray(body["unit_price[]"]);
+
+  const items = descriptions
+    .map((description, i) => ({
+      description,
+      quantity: Number(quantities[i]) || 0,
+      unit_price: Number(unitPrices[i]) || 0,
+    }))
+    .filter((item) => item.description.trim() !== "" && item.quantity > 0);
+
+  return { vendor, status, marginPct, items };
+}
 
 function toArray(value: string | File | (string | File)[] | undefined): string[] {
   if (value === undefined) return [];

@@ -1,6 +1,6 @@
 import { html, raw } from "hono/html";
 import { layout } from "./layout";
-import type { Customer, Quote, QuoteWithItems } from "../types";
+import type { Customer, Quote, QuoteStatus, QuoteWithItems } from "../types";
 
 export function loginPage(opts: { error?: boolean } = {}) {
   return layout(
@@ -104,21 +104,52 @@ export function customerPage(customer: Customer, quotes: Quote[]) {
 }
 
 const VENDORS = ["Fortinet", "Cisco", "Palo Alto Networks", "Check Point", "CrowdStrike", "Microsoft", "Veeam", "Zscaler"];
-const STATUSES = ["Draft", "Sent", "Won", "Lost"];
+const STATUSES: QuoteStatus[] = ["Draft", "Sent", "Won", "Lost"];
 
-export function newQuotePage(customer: Customer, opts: { error?: string } = {}) {
-  const vendorOptions = VENDORS.map((v) => `<option value="${v}">${v}</option>`).join("");
-  const statusOptions = STATUSES.map((s) => `<option value="${s}"${s === "Draft" ? " selected" : ""}>${s}</option>`).join("");
+interface QuoteFormItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+}
+
+interface QuoteFormPageOptions {
+  pageTitle: string;
+  heading: string;
+  customer: Customer;
+  formAction: string;
+  cancelHref: string;
+  submitLabel: string;
+  initialVendor: string;
+  initialStatus: QuoteStatus;
+  initialMarginPct: number;
+  initialItems: QuoteFormItem[];
+  includeCustomerIdField?: boolean;
+  error?: string;
+}
+
+// Shared by the "New Quote" and "Edit Quote" pages — same field layout, same
+// add/remove line-item grid and live-totals script, different initial values
+// and submit target.
+function quoteFormPage(opts: QuoteFormPageOptions) {
+  const vendorOptions = VENDORS.map(
+    (v) => `<option value="${v}"${v === opts.initialVendor ? " selected" : ""}>${v}</option>`
+  ).join("");
+  const statusOptions = STATUSES.map(
+    (s) => `<option value="${s}"${s === opts.initialStatus ? " selected" : ""}>${s}</option>`
+  ).join("");
+  const initialRows = opts.initialItems.map((item) => itemRowHtml(item)).join("");
 
   return layout(
-    "New Quote",
-    html`<h1>New Quote</h1>
-      <p class="muted">for <strong id="quote-customer-name">${customer.name}</strong> (${customer.ref_id})</p>
+    opts.pageTitle,
+    html`<h1>${opts.heading}</h1>
+      <p class="muted">for <strong id="quote-customer-name">${opts.customer.name}</strong> (${opts.customer.ref_id})</p>
 
       ${opts.error ? html`<div class="error" id="quote-form-error" data-testid="quote-form-error">${opts.error}</div>` : ""}
 
-      <form id="quote-form" data-testid="quote-form" method="post" action="/quotes/new">
-        <input type="hidden" name="customer_id" id="customer_id" value="${customer.id}" />
+      <form id="quote-form" data-testid="quote-form" method="post" action="${opts.formAction}">
+        ${opts.includeCustomerIdField
+          ? html`<input type="hidden" name="customer_id" id="customer_id" value="${opts.customer.id}" />`
+          : ""}
 
         <div class="panel">
           <div class="two-col">
@@ -133,7 +164,7 @@ export function newQuotePage(customer: Customer, opts: { error?: string } = {}) 
           </div>
           <div class="field" style="max-width:200px">
             <label for="margin_pct">Margin %</label>
-            <input type="number" id="margin_pct" name="margin_pct" data-testid="quote-margin" value="15" min="0" step="0.1" required />
+            <input type="number" id="margin_pct" name="margin_pct" data-testid="quote-margin" value="${opts.initialMarginPct}" min="0" step="0.1" required />
           </div>
         </div>
 
@@ -149,7 +180,7 @@ export function newQuotePage(customer: Customer, opts: { error?: string } = {}) 
                 <th style="width:11%"></th>
               </tr>
             </thead>
-            <tbody id="items-table-body"></tbody>
+            <tbody id="items-table-body">${raw(initialRows)}</tbody>
           </table>
           <button type="button" class="btn secondary" id="add-row-btn" data-testid="add-row-btn">+ Add line item</button>
 
@@ -166,24 +197,63 @@ export function newQuotePage(customer: Customer, opts: { error?: string } = {}) 
         </div>
 
         <div class="actions-row">
-          <button type="submit" class="btn" id="save-quote-btn" data-testid="save-quote-btn">Save Quote</button>
-          <a class="btn secondary" href="/customers/${customer.id}" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
+          <button type="submit" class="btn" id="save-quote-btn" data-testid="save-quote-btn">${opts.submitLabel}</button>
+          <a class="btn secondary" href="${opts.cancelHref}" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
         </div>
       </form>
 
-      <template id="row-template">
-        <tr class="item-row" data-testid="item-row">
-          <td><input type="text" name="description[]" class="item-description" data-testid="item-description" required /></td>
-          <td><input type="number" name="quantity[]" class="item-quantity" data-testid="item-quantity" min="1" step="1" value="1" required /></td>
-          <td><input type="number" name="unit_price[]" class="item-unit-price" data-testid="item-unit-price" min="0" step="0.01" value="0" required /></td>
-          <td class="item-line-total" data-testid="item-line-total">$0.00</td>
-          <td><button type="button" class="btn secondary remove-row-btn" data-testid="remove-row-btn">Remove</button></td>
-        </tr>
-      </template>
+      <template id="row-template">${itemRowHtml()}</template>
 
       <script>${raw(quoteFormScript())}</script>`,
     { loggedIn: true }
   );
+}
+
+function itemRowHtml(item?: QuoteFormItem) {
+  const description = item?.description ?? "";
+  const quantity = item?.quantity ?? 1;
+  const unitPrice = item?.unit_price ?? 0;
+  const lineTotal = item ? item.quantity * item.unit_price : 0;
+  return html`<tr class="item-row" data-testid="item-row">
+        <td><input type="text" name="description[]" class="item-description" data-testid="item-description" value="${description}" required /></td>
+        <td><input type="number" name="quantity[]" class="item-quantity" data-testid="item-quantity" min="1" step="1" value="${quantity}" required /></td>
+        <td><input type="number" name="unit_price[]" class="item-unit-price" data-testid="item-unit-price" min="0" step="0.01" value="${unitPrice}" required /></td>
+        <td class="item-line-total" data-testid="item-line-total">$${lineTotal.toFixed(2)}</td>
+        <td><button type="button" class="btn secondary remove-row-btn" data-testid="remove-row-btn">Remove</button></td>
+      </tr>`;
+}
+
+export function newQuotePage(customer: Customer, opts: { error?: string } = {}) {
+  return quoteFormPage({
+    pageTitle: "New Quote",
+    heading: "New Quote",
+    customer,
+    formAction: "/quotes/new",
+    cancelHref: `/customers/${customer.id}`,
+    submitLabel: "Save Quote",
+    initialVendor: VENDORS[0],
+    initialStatus: "Draft",
+    initialMarginPct: 15,
+    initialItems: [],
+    includeCustomerIdField: true,
+    error: opts.error,
+  });
+}
+
+export function editQuotePage(customer: Customer, quote: QuoteWithItems, opts: { error?: string } = {}) {
+  return quoteFormPage({
+    pageTitle: "Edit Quote",
+    heading: `Edit ${quote.ref}`,
+    customer,
+    formAction: `/quotes/${quote.ref}/edit`,
+    cancelHref: `/quotes/${quote.ref}`,
+    submitLabel: "Save Changes",
+    initialVendor: quote.vendor,
+    initialStatus: quote.status,
+    initialMarginPct: quote.margin_pct,
+    initialItems: quote.items.map((i) => ({ description: i.description, quantity: i.quantity, unit_price: i.unit_price })),
+    error: opts.error,
+  });
 }
 
 function quoteFormScript(): string {
@@ -212,10 +282,7 @@ function quoteFormScript(): string {
         totalEl.textContent = fmt(total);
       }
 
-      function addRow() {
-        var clone = template.content.cloneNode(true);
-        tbody.appendChild(clone);
-        var row = tbody.lastElementChild;
+      function wireRow(row) {
         row.querySelectorAll('input').forEach(function (input) {
           input.addEventListener('input', recalc);
         });
@@ -223,13 +290,25 @@ function quoteFormScript(): string {
           row.remove();
           recalc();
         });
+      }
+
+      function addRow() {
+        var clone = template.content.cloneNode(true);
+        tbody.appendChild(clone);
+        wireRow(tbody.lastElementChild);
         recalc();
       }
 
       document.getElementById('add-row-btn').addEventListener('click', addRow);
       marginEl.addEventListener('input', recalc);
 
-      addRow();
+      var existingRows = tbody.querySelectorAll('.item-row');
+      if (existingRows.length === 0) {
+        addRow();
+      } else {
+        existingRows.forEach(wireRow);
+        recalc();
+      }
     })();
   `;
 }
@@ -262,7 +341,10 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
         : ""}
 
       <div class="actions-row">
-        <a class="btn" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/quotes/${quote.ref}/pdf" target="_blank" rel="noopener">Download PDF</a>
+        ${isWon
+          ? ""
+          : html`<a class="btn" id="edit-quote-btn" data-testid="edit-quote-btn" href="/quotes/${quote.ref}/edit">Edit Quote</a>`}
+        <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/quotes/${quote.ref}/pdf" target="_blank" rel="noopener">Download PDF</a>
         <a class="btn secondary" id="back-to-customer-btn" data-testid="back-to-customer-btn" href="/customers/${customer.id}">Back to customer</a>
       </div>
 
