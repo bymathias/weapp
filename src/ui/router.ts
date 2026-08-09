@@ -1,8 +1,19 @@
 import { Hono } from "hono";
 import type { Env } from "../types";
 import { createSession, clearSession, requireUiAuth } from "../lib/session";
-import { getCustomer, listCustomers, listQuotesForCustomer, getQuoteByRef, createQuote, updateQuote, createCustomer } from "../db/queries";
-import { loginPage, dashboardPage, customerPage, newCustomerPage, newQuotePage, editQuotePage, quoteDetailPage } from "./pages";
+import {
+  getCustomer,
+  listCustomers,
+  listQuotesForCustomer,
+  getQuoteByRef,
+  createQuote,
+  updateQuote,
+  createCustomer,
+  getDashboardStats,
+  quotesByVendor,
+  listRecentQuotes,
+} from "../db/queries";
+import { loginPage, dashboardPage, customersPage, customerPage, newCustomerPage, newQuotePage, editQuotePage, quoteDetailPage } from "./pages";
 import type { QuoteStatus } from "../types";
 
 export const uiRouter = new Hono<Env>();
@@ -31,8 +42,17 @@ uiRouter.get("/logout", async (c) => {
 uiRouter.use("/*", requireUiAuth);
 
 uiRouter.get("/", async (c) => {
+  const [stats, vendorBreakdown, recentQuotes] = await Promise.all([
+    getDashboardStats(c.env.DB),
+    quotesByVendor(c.env.DB),
+    listRecentQuotes(c.env.DB, 10),
+  ]);
+  return c.html(dashboardPage(stats, vendorBreakdown, recentQuotes));
+});
+
+uiRouter.get("/customers", async (c) => {
   const customers = await listCustomers(c.env.DB);
-  return c.html(dashboardPage(customers));
+  return c.html(customersPage(customers));
 });
 
 uiRouter.get("/customers/new", async (c) => {

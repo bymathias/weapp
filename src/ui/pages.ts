@@ -1,6 +1,7 @@
 import { html, raw } from "hono/html";
-import { layout } from "./layout";
+import { layout, ICONS } from "./layout";
 import type { Customer, Quote, QuoteStatus, QuoteWithItems } from "../types";
+import type { DashboardStats, VendorCount, RecentQuote } from "../db/queries";
 
 export function loginPage(opts: { error?: boolean } = {}) {
   return layout(
@@ -27,7 +28,133 @@ export function loginPage(opts: { error?: boolean } = {}) {
   );
 }
 
-export function dashboardPage(customers: Customer[]) {
+const STATUS_COLORS: Record<QuoteStatus, string> = {
+  Draft: "#94a3b8",
+  Sent: "#4f46e5",
+  Won: "#16a34a",
+  Lost: "#dc2626",
+};
+
+function buildDonutGradient(counts: { value: number; color: string }[]): string {
+  const total = counts.reduce((sum, c) => sum + c.value, 0);
+  if (total === 0) return "var(--border)";
+  let cursor = 0;
+  const stops: string[] = [];
+  for (const c of counts) {
+    if (c.value <= 0) continue;
+    const start = (cursor / total) * 100;
+    cursor += c.value;
+    const end = (cursor / total) * 100;
+    stops.push(`${c.color} ${start}% ${end}%`);
+  }
+  return `conic-gradient(${stops.join(", ")})`;
+}
+
+export function dashboardPage(stats: DashboardStats, vendorBreakdown: VendorCount[], recentQuotes: RecentQuote[]) {
+  const maxVendorCount = Math.max(1, ...vendorBreakdown.map((v) => v.count));
+  const vendorBars = vendorBreakdown
+    .map(
+      (v) => html`<div class="bar-row">
+        <div class="bar-label">${v.vendor}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(v.count / maxVendorCount) * 100}%"></div></div>
+        <div class="bar-count">${v.count}</div>
+      </div>`
+    )
+    .join("");
+
+  const statusEntries: { label: QuoteStatus; value: number }[] = [
+    { label: "Draft", value: stats.draftCount },
+    { label: "Sent", value: stats.sentCount },
+    { label: "Won", value: stats.wonCount },
+    { label: "Lost", value: stats.lostCount },
+  ];
+  const donutBg = buildDonutGradient(statusEntries.map((s) => ({ value: s.value, color: STATUS_COLORS[s.label] })));
+  const legendRows = statusEntries
+    .map((s) => {
+      const pct = stats.totalQuotes > 0 ? Math.round((s.value / stats.totalQuotes) * 100) : 0;
+      return html`<div class="row">
+        <span class="dot" style="background:${STATUS_COLORS[s.label]}"></span>
+        <span class="name">${s.label}</span>
+        <span class="pct">${pct}%</span>
+        <span class="count">${s.value}</span>
+      </div>`;
+    })
+    .join("");
+
+  const recentRows = recentQuotes
+    .map(
+      (q) => html`<tr id="recent-quote-row-${q.ref}" data-testid="recent-quote-row">
+        <td><a class="link" data-testid="recent-quote-link" href="/quotes/${q.ref}">${q.ref}</a></td>
+        <td><a class="link" data-testid="recent-quote-customer-link" href="/customers/${q.customer_id}">${q.customer_name}</a></td>
+        <td>${q.vendor}</td>
+        <td><span class="badge ${q.status}">${q.status}</span></td>
+        <td>$${q.total_amount.toFixed(2)}</td>
+      </tr>`
+    )
+    .join("");
+
+  return layout(
+    "Dashboard",
+    html`<div class="page-header">
+        <h1>Dashboard</h1>
+        <p class="muted">Overview of your quote pipeline.</p>
+      </div>
+
+      <div class="stat-grid" id="dashboard-stats" data-testid="dashboard-stats">
+        <div class="stat-card" data-testid="stat-total-quotes">
+          <span class="stat-icon indigo">${raw(ICONS.quotes)}</span>
+          <div><div class="stat-value">${stats.totalQuotes}</div><div class="stat-label">Total Quotes</div></div>
+        </div>
+        <div class="stat-card" data-testid="stat-won">
+          <span class="stat-icon green">${raw(ICONS.won)}</span>
+          <div><div class="stat-value">${stats.wonCount}</div><div class="stat-label">Won</div></div>
+        </div>
+        <div class="stat-card" data-testid="stat-sent">
+          <span class="stat-icon amber">${raw(ICONS.sent)}</span>
+          <div><div class="stat-value">${stats.sentCount}</div><div class="stat-label">Sent</div></div>
+        </div>
+        <div class="stat-card" data-testid="stat-lost">
+          <span class="stat-icon red">${raw(ICONS.lost)}</span>
+          <div><div class="stat-value">${stats.lostCount}</div><div class="stat-label">Lost</div></div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="panel chart-panel">
+          <h2>Quotes by Vendor</h2>
+          <div class="bar-list">${raw(vendorBars || `<p class="muted">No quotes yet.</p>`)}</div>
+        </div>
+        <div class="panel chart-panel">
+          <h2>Quotes by Status</h2>
+          <div class="donut-wrap">
+            <div class="donut" style="background:${raw(donutBg)}">
+              <div class="donut-hole"><span class="n">${stats.totalQuotes}</span><span class="l">Total</span></div>
+            </div>
+            <div class="donut-legend">${raw(legendRows)}</div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Recently Added Quotes</h2>
+      <div class="panel">
+        <table id="recent-quotes-table" data-testid="recent-quotes-table">
+          <thead>
+            <tr>
+              <th>Ref</th>
+              <th>Customer</th>
+              <th>Vendor</th>
+              <th>Status</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>${raw(recentRows || `<tr><td colspan="5" class="muted">No quotes yet.</td></tr>`)}</tbody>
+        </table>
+      </div>`,
+    { loggedIn: true, active: "dashboard" }
+  );
+}
+
+export function customersPage(customers: Customer[]) {
   const rows = customers
     .map(
       (c) => html`<tr id="customer-row-${c.id}" data-testid="customer-row" data-customer-id="${c.id}">
@@ -41,9 +168,11 @@ export function dashboardPage(customers: Customer[]) {
     .join("");
 
   return layout(
-    "Dashboard",
-    html`<h1>Customers</h1>
-      <p class="muted">All accounts in WeCPQ.</p>
+    "Customers",
+    html`<div class="page-header">
+        <h1>Customers</h1>
+        <p class="muted">All accounts in WeCPQ.</p>
+      </div>
       <div class="actions-row" style="margin-bottom:16px">
         <a class="btn" id="new-customer-btn" data-testid="new-customer-btn" href="/customers/new">+ New Customer</a>
       </div>
@@ -61,15 +190,17 @@ export function dashboardPage(customers: Customer[]) {
           <tbody id="customers-table-body">${raw(rows)}</tbody>
         </table>
       </div>`,
-    { loggedIn: true }
+    { loggedIn: true, active: "customers" }
   );
 }
 
 export function newCustomerPage(opts: { error?: string } = {}) {
   return layout(
     "New Customer",
-    html`<h1>New Customer</h1>
-      <p class="muted">Add an account to WeCPQ.</p>
+    html`<div class="page-header">
+        <h1>New Customer</h1>
+        <p class="muted">Add an account to WeCPQ.</p>
+      </div>
       <div class="panel">
         ${opts.error ? html`<div class="error" id="customer-form-error" data-testid="customer-form-error">${opts.error}</div>` : ""}
         <form id="customer-form" data-testid="customer-form" method="post" action="/customers/new">
@@ -93,11 +224,11 @@ export function newCustomerPage(opts: { error?: string } = {}) {
           </div>
           <div class="actions-row">
             <button type="submit" class="btn" id="customer-form-submit" data-testid="customer-form-submit">Save Customer</button>
-            <a class="btn secondary" id="customer-form-cancel" data-testid="customer-form-cancel" href="/">Cancel</a>
+            <a class="btn secondary" id="customer-form-cancel" data-testid="customer-form-cancel" href="/customers">Cancel</a>
           </div>
         </form>
       </div>`,
-    { loggedIn: true }
+    { loggedIn: true, active: "customers" }
   );
 }
 
@@ -138,7 +269,7 @@ export function customerPage(customer: Customer, quotes: Quote[]) {
           </tbody>
         </table>
       </div>`,
-    { loggedIn: true }
+    { loggedIn: true, active: "customers" }
   );
 }
 
@@ -244,7 +375,7 @@ function quoteFormPage(opts: QuoteFormPageOptions) {
       <template id="row-template">${itemRowHtml()}</template>
 
       <script>${raw(quoteFormScript())}</script>`,
-    { loggedIn: true }
+    { loggedIn: true, active: "customers" }
   );
 }
 
@@ -416,6 +547,6 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
           </div>
         </div>
       </div>`,
-    { loggedIn: true }
+    { loggedIn: true, active: "customers" }
   );
 }

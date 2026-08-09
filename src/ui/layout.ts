@@ -1,18 +1,31 @@
-import { html } from "hono/html";
+import { html, raw } from "hono/html";
 import type { HtmlEscapedString } from "hono/utils/html";
+
+export const ICONS = {
+  logo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h5"/></svg>`,
+  dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
+  customers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.6-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M15.7 14.7c2.4.4 3.9 2.2 3.9 5.3"/></svg>`,
+  quotes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h5"/></svg>`,
+  won: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.3 2.3L15.5 9.5"/></svg>`,
+  sent: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L11 13"/><path d="M21 3l-7 18-4-8-8-4 19-6z"/></svg>`,
+  lost: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>`,
+};
 
 const STYLE = `
   :root {
-    --border: #d8dee6;
-    --bg: #f6f7f9;
+    --border: #e5e7f0;
+    --bg: #f5f5fb;
     --panel: #ffffff;
-    --text: #1c2430;
-    --muted: #5c6773;
-    --accent: #1f4788;
-    --accent-bg: #e8eef8;
-    --danger: #9c2b2b;
-    --danger-bg: #fbe9e9;
-    --ok: #1f7a4c;
+    --text: #12141c;
+    --muted: #6b7280;
+    --accent: #4f46e5;
+    --accent-bg: #eef2ff;
+    --danger: #dc2626;
+    --danger-bg: #fee2e2;
+    --ok: #16a34a;
+    --ok-bg: #dcfce7;
+    --warn: #d97706;
+    --warn-bg: #fef3c7;
   }
   * { box-sizing: border-box; }
   body {
@@ -25,20 +38,29 @@ const STYLE = `
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 24px;
+    padding: 12px 28px;
     background: var(--panel);
     border-bottom: 1px solid var(--border);
   }
-  header.topbar a.brand { font-weight: 700; font-size: 18px; color: var(--accent); text-decoration: none; }
-  header.topbar nav a { color: var(--muted); text-decoration: none; margin-left: 16px; font-size: 14px; }
-  main { max-width: 1000px; margin: 0 auto; padding: 24px; }
-  h1 { font-size: 22px; margin: 0 0 4px; }
-  h2 { font-size: 17px; margin: 24px 0 10px; }
+  header.topbar a.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; color: var(--text); text-decoration: none; }
+  .brand-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .brand-icon svg { width: 19px; height: 19px; }
+  nav.pillnav { display: flex; gap: 4px; }
+  .pillnav a { display: flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 9999px; color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 600; }
+  .pillnav a svg { width: 16px; height: 16px; }
+  .pillnav a.active { background: var(--accent-bg); color: var(--accent); }
+  .topbar .right { display: flex; align-items: center; gap: 18px; }
+  .topbar .right a.textlink { color: var(--muted); font-size: 14px; text-decoration: none; font-weight: 600; }
+  .topbar .right a.textlink:hover { color: var(--text); }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
+  h2 { font-size: 15px; font-weight: 700; margin: 24px 0 12px; }
   .muted { color: var(--muted); }
-  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
   table { width: 100%; border-collapse: collapse; }
-  table th, table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 14px; }
-  table th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  table th, table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  table th { color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
   table tr:last-child td { border-bottom: none; }
   a.link { color: var(--accent); text-decoration: none; font-weight: 600; }
   a.link:hover { text-decoration: underline; }
@@ -47,7 +69,7 @@ const STYLE = `
     background: var(--accent);
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 9px 16px;
     font-size: 14px;
     font-weight: 600;
@@ -56,16 +78,16 @@ const STYLE = `
   }
   .btn.secondary { background: var(--panel); color: var(--accent); border: 1px solid var(--accent); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-  .badge.Draft { background: #eef0f3; color: #4a5361; }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+  .badge.Draft { background: #f1f5f9; color: #475569; }
   .badge.Sent { background: var(--accent-bg); color: var(--accent); }
-  .badge.Won { background: #e5f5ec; color: var(--ok); }
+  .badge.Won { background: var(--ok-bg); color: var(--ok); }
   .badge.Lost { background: var(--danger-bg); color: var(--danger); }
   .locked-banner {
     background: var(--danger-bg);
     color: var(--danger);
-    border: 1px solid #f0caca;
-    border-radius: 6px;
+    border: 1px solid #f3c5c5;
+    border-radius: 8px;
     padding: 10px 14px;
     margin-bottom: 16px;
     font-weight: 600;
@@ -77,7 +99,7 @@ const STYLE = `
     width: 100%;
     padding: 8px 10px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 14px;
     background: #fff;
     color: var(--text);
@@ -90,17 +112,55 @@ const STYLE = `
   .totals .box { text-align: right; }
   .totals .box .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
   .totals .box .value { font-size: 18px; font-weight: 700; }
-  .error { background: var(--danger-bg); color: var(--danger); border: 1px solid #f0caca; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; }
+  .error { background: var(--danger-bg); color: var(--danger); border: 1px solid #f3c5c5; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; }
   .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
   .login-card { width: 340px; }
   .actions-row { display: flex; gap: 10px; align-items: center; margin-top: 18px; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .page-header { margin-bottom: 24px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; align-items: center; gap: 16px; }
+  .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .stat-icon svg { width: 24px; height: 24px; }
+  .stat-icon.indigo { background: var(--accent-bg); color: var(--accent); }
+  .stat-icon.green { background: var(--ok-bg); color: var(--ok); }
+  .stat-icon.amber { background: var(--warn-bg); color: var(--warn); }
+  .stat-icon.red { background: var(--danger-bg); color: var(--danger); }
+  .stat-value { font-size: 26px; font-weight: 800; line-height: 1.1; }
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+  .chart-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-bottom: 20px; align-items: stretch; }
+  .chart-panel h2 { margin-top: 0; }
+  .bar-list .bar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .bar-list .bar-row:last-child { margin-bottom: 0; }
+  .bar-row .bar-label { width: 130px; flex-shrink: 0; font-size: 13px; }
+  .bar-row .bar-track { flex: 1; background: var(--bg); border-radius: 6px; height: 24px; position: relative; overflow: hidden; }
+  .bar-row .bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--accent); }
+  .bar-row .bar-count { width: 24px; text-align: right; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+
+  .donut-wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .donut { width: 168px; height: 168px; border-radius: 50%; position: relative; flex-shrink: 0; }
+  .donut .donut-hole { position: absolute; inset: 26px; background: var(--panel); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .donut .donut-hole .n { font-size: 24px; font-weight: 800; line-height: 1; }
+  .donut .donut-hole .l { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 10px; }
+  .donut-legend .row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .donut-legend .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .donut-legend .row .name { flex: 1; min-width: 90px; }
+  .donut-legend .row .pct { color: var(--muted); margin-right: 6px; }
+  .donut-legend .row .count { font-weight: 700; width: 20px; text-align: right; }
+
+  @media (max-width: 900px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid { grid-template-columns: 1fr; }
+  }
 `;
 
 export function layout(
   title: string,
   body: HtmlEscapedString | Promise<HtmlEscapedString> | string,
-  opts: { loggedIn?: boolean } = {}
+  opts: { loggedIn?: boolean; active?: "dashboard" | "customers" } = {}
 ) {
   return html`<!doctype html>
 <html lang="en">
@@ -113,11 +173,19 @@ export function layout(
 <body>
   ${opts.loggedIn
     ? html`<header class="topbar">
-        <a class="brand" href="/" id="nav-home">WeCPQ</a>
-        <nav>
-          <a href="/api-docs" id="nav-api-docs" data-testid="nav-api-docs">API Docs</a>
-          <a href="/logout" id="nav-logout" data-testid="nav-logout">Log out</a>
+        <a class="brand" href="/" id="nav-home">
+          <span class="brand-icon">${raw(ICONS.logo)}</span>
+          WeCPQ
+        </a>
+        <nav class="pillnav">
+          <a href="/" id="nav-dashboard" data-testid="nav-dashboard" class="${opts.active === "dashboard" ? "active" : ""}">${raw(ICONS.dashboard)} Dashboard</a>
+          <a href="/customers" id="nav-customers" data-testid="nav-customers" class="${opts.active === "customers" ? "active" : ""}">${raw(ICONS.customers)} Customers</a>
         </nav>
+        <div class="right">
+          <a href="/api-docs" id="nav-api-docs" data-testid="nav-api-docs" class="textlink">API Docs</a>
+          <a href="/logout" id="nav-logout" data-testid="nav-logout" class="textlink">Log out</a>
+          <span class="avatar" id="nav-avatar" data-testid="nav-avatar">A</span>
+        </div>
       </header>`
     : ""}
   <main>${body}</main>

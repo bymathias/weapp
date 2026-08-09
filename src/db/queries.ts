@@ -30,6 +30,68 @@ export async function createCustomer(db: D1Database, input: CreateCustomerInput)
   return (await getCustomer(db, result.meta.last_row_id as number))!;
 }
 
+export interface DashboardStats {
+  totalCustomers: number;
+  totalQuotes: number;
+  draftCount: number;
+  sentCount: number;
+  wonCount: number;
+  lostCount: number;
+}
+
+export async function getDashboardStats(db: D1Database): Promise<DashboardStats> {
+  const customerRow = await db.prepare(`SELECT COUNT(*) as n FROM customers`).first<{ n: number }>();
+  const { results } = await db
+    .prepare(`SELECT status, COUNT(*) as n FROM quotes GROUP BY status`)
+    .all<{ status: QuoteStatus; n: number }>();
+
+  const counts: Record<QuoteStatus, number> = { Draft: 0, Sent: 0, Won: 0, Lost: 0 };
+  for (const row of results ?? []) counts[row.status] = row.n;
+
+  return {
+    totalCustomers: customerRow?.n ?? 0,
+    totalQuotes: counts.Draft + counts.Sent + counts.Won + counts.Lost,
+    draftCount: counts.Draft,
+    sentCount: counts.Sent,
+    wonCount: counts.Won,
+    lostCount: counts.Lost,
+  };
+}
+
+export interface VendorCount {
+  vendor: string;
+  count: number;
+}
+
+export async function quotesByVendor(db: D1Database): Promise<VendorCount[]> {
+  const { results } = await db
+    .prepare(`SELECT vendor, COUNT(*) as count FROM quotes GROUP BY vendor ORDER BY count DESC, vendor ASC`)
+    .all<VendorCount>();
+  return results ?? [];
+}
+
+export interface RecentQuote {
+  ref: string;
+  customer_id: number;
+  customer_name: string;
+  vendor: string;
+  status: QuoteStatus;
+  total_amount: number;
+  created_at: string;
+}
+
+export async function listRecentQuotes(db: D1Database, limit: number): Promise<RecentQuote[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT q.ref, q.customer_id, c.name as customer_name, q.vendor, q.status, q.total_amount, q.created_at
+       FROM quotes q JOIN customers c ON c.id = q.customer_id
+       ORDER BY q.created_at DESC, q.id DESC LIMIT ?1`
+    )
+    .bind(limit)
+    .all<RecentQuote>();
+  return results ?? [];
+}
+
 export async function listQuotesForCustomer(db: D1Database, customerId: number): Promise<Quote[]> {
   const { results } = await db
     .prepare(`SELECT * FROM quotes WHERE customer_id = ?1 ORDER BY created_at DESC, id DESC`)
