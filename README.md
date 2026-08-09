@@ -1,0 +1,150 @@
+# WeCPQ
+
+A Configure-Price-Quote demo app built on Cloudflare Workers, Hono, and D1.
+It exists to be automated: a clean server-rendered UI with stable
+`id`/`name`/`data-testid` attributes for UI automation (e.g. UiPath), and a
+bearer-protected REST API documented with OpenAPI/Swagger for API-based
+automation.
+
+## Stack
+
+- Cloudflare Workers + [Hono](https://hono.dev)
+- Cloudflare D1 (SQLite)
+- `pdf-lib` for PDF generation (no headless browser)
+- `@hono/zod-openapi` + Swagger UI for API docs
+
+## Demo credentials
+
+| Surface | Values |
+|---|---|
+| UI login (`/login`) | `admin` / `demo123` |
+| API OAuth2 client credentials (`POST /oauth/token`) | `client_id=wecpq-demo-client`, `client_secret=wecpq-demo-secret` |
+
+These are hardcoded in `wrangler.toml` under `[vars]`. Change them there (and
+redeploy) before using this anywhere non-demo.
+
+## Project layout
+
+```
+schema.sql          D1 table definitions
+seed.sql             deterministic demo data (8 customers, 16 quotes)
+src/
+  index.ts           app entrypoint — mounts oauth, api, ui routers
+  types.ts            shared Env/domain types
+  lib/                totals math, session cookies, bearer tokens
+  db/queries.ts        D1 access layer (also computes totals server-side)
+  api/                 zod-openapi routes, schemas, /oauth/token
+  ui/                  server-rendered pages (login, dashboard, customer, quote)
+  pdf.ts               pdf-lib quote PDF generation
+```
+
+## Local development
+
+Install dependencies:
+
+```sh
+npm install
+```
+
+Create the local D1 database and load schema + seed data:
+
+```sh
+npm run db:migrate:local
+npm run db:seed:local
+```
+
+Run the dev server:
+
+```sh
+npm run dev
+```
+
+This starts `wrangler dev` (Miniflare) on `http://localhost:8787`. Log in at
+`/login` with `admin` / `demo123`.
+
+> If `wrangler dev` needs to bind IPv6 and your environment doesn't support
+> it, run `wrangler dev --ip 127.0.0.1` instead.
+
+## Deploying to Cloudflare
+
+1. Create the D1 database in your Cloudflare account:
+
+   ```sh
+   npx wrangler d1 create wecpq
+   ```
+
+   Copy the returned `database_id` into `wrangler.toml` under
+   `[[d1_databases]]` (replace `REPLACE_WITH_YOUR_D1_DATABASE_ID`).
+
+2. Apply schema and seed data to the remote database:
+
+   ```sh
+   npm run db:migrate:remote
+   npm run db:seed:remote
+   ```
+
+3. (Recommended) Set stronger secrets instead of the demo `[vars]` defaults —
+   either edit `wrangler.toml` directly, or override with Wrangler secrets:
+
+   ```sh
+   npx wrangler secret put SESSION_SECRET
+   npx wrangler secret put OAUTH_CLIENT_SECRET
+   ```
+
+4. Deploy:
+
+   ```sh
+   npm run deploy
+   ```
+
+## GitHub → Cloudflare auto-deploy
+
+1. Push this repo to GitHub.
+2. In the Cloudflare dashboard: **Workers & Pages → Create → Workers →
+   Connect to Git**, pick the repo/branch.
+3. Build command: `npm install` (Wrangler deploy is handled by Cloudflare's
+   Workers Builds integration using `wrangler.toml`).
+4. Add the D1 binding in the Cloudflare dashboard build settings if it isn't
+   picked up automatically from `wrangler.toml`.
+5. Every push to the connected branch redeploys automatically.
+
+## API usage
+
+1. Get a bearer token:
+
+   ```sh
+   curl -X POST http://localhost:8787/oauth/token \
+     -d grant_type=client_credentials \
+     -d client_id=wecpq-demo-client \
+     -d client_secret=wecpq-demo-secret
+   ```
+
+2. Call the API with it:
+
+   ```sh
+   curl http://localhost:8787/api/customers \
+     -H "Authorization: Bearer <access_token>"
+   ```
+
+3. Explore/try endpoints interactively at `/api-docs` (Swagger UI); the raw
+   spec is at `/openapi.json` — point a UiPath connector generator at it.
+
+Tokens expire after 1 hour.
+
+## Business rules
+
+- `line_total = quantity * unit_price`
+- `subtotal = sum(line_total)`
+- `total_amount = subtotal * (1 + margin_pct / 100)`
+- All totals are computed server-side on create/update — client-sent totals
+  are ignored.
+- A quote with `status = "Won"` is locked: the UI shows it read-only with a
+  "locked" banner, and `PUT /api/quotes/:ref` returns `409` while it's Won.
+
+## Seed data
+
+`seed.sql` creates 8 fictional IT-sector customers (`CUST-0001`…`CUST-0008`)
+and 16 quotes (`Q-2026-0001`…`Q-2026-0016`) spanning all four statuses,
+including several Won quotes (to demo the lock) and quotes with multiple
+line items. Re-running `db:migrate:local`/`remote` drops and recreates the
+schema, so re-seeding always yields the same data.
