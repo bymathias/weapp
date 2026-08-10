@@ -58,7 +58,7 @@ export async function getDashboardStats(db: D1Database): Promise<DashboardStats>
   };
 }
 
-export interface RecentQuote {
+export interface QuoteListRow {
   ref: string;
   customer_id: number;
   customer_name: string;
@@ -68,16 +68,47 @@ export interface RecentQuote {
   created_at: string;
 }
 
-export async function listRecentQuotes(db: D1Database, limit: number): Promise<RecentQuote[]> {
+export interface ListQuotesOptions {
+  search?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface QuoteListResult {
+  quotes: QuoteListRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+// Matches quote ref, customer name, or customer ref_id (e.g. "CUST-0001") —
+// the three human-facing identifiers a user would search by.
+export async function listQuotes(db: D1Database, opts: ListQuotesOptions): Promise<QuoteListResult> {
+  const search = (opts.search ?? "").trim();
+  const like = `%${search}%`;
+  const whereClause = `WHERE ?1 = '' OR q.ref LIKE ?2 OR c.name LIKE ?2 OR c.ref_id LIKE ?2`;
+
+  const countRow = await db
+    .prepare(`SELECT COUNT(*) as n FROM quotes q JOIN customers c ON c.id = q.customer_id ${whereClause}`)
+    .bind(search, like)
+    .first<{ n: number }>();
+  const total = countRow?.n ?? 0;
+
+  const totalPages = Math.max(1, Math.ceil(total / opts.pageSize));
+  const page = Math.min(Math.max(1, opts.page), totalPages);
+  const offset = (page - 1) * opts.pageSize;
+
   const { results } = await db
     .prepare(
       `SELECT q.ref, q.customer_id, c.name as customer_name, q.vendor, q.status, q.total_amount, q.created_at
        FROM quotes q JOIN customers c ON c.id = q.customer_id
-       ORDER BY q.created_at DESC, q.id DESC LIMIT ?1`
+       ${whereClause}
+       ORDER BY q.created_at DESC, q.id DESC LIMIT ?3 OFFSET ?4`
     )
-    .bind(limit)
-    .all<RecentQuote>();
-  return results ?? [];
+    .bind(search, like, opts.pageSize, offset)
+    .all<QuoteListRow>();
+
+  return { quotes: results ?? [], total, page, pageSize: opts.pageSize };
 }
 
 export async function listQuotesForCustomer(db: D1Database, customerId: number): Promise<Quote[]> {

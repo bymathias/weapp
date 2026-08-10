@@ -1,7 +1,7 @@
 import { html, raw } from "hono/html";
 import { layout, ICONS } from "./layout";
 import type { Customer, Quote, QuoteStatus, QuoteWithItems } from "../types";
-import type { DashboardStats, RecentQuote } from "../db/queries";
+import type { DashboardStats, QuoteListResult } from "../db/queries";
 
 export function loginPage(opts: { error?: boolean } = {}) {
   return layout(
@@ -28,18 +28,25 @@ export function loginPage(opts: { error?: boolean } = {}) {
   );
 }
 
-export function dashboardPage(stats: DashboardStats, recentQuotes: RecentQuote[]) {
-  const recentRows = recentQuotes
+export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult, search: string) {
+  const rows = quoteList.quotes
     .map(
-      (q) => html`<tr id="recent-quote-row-${q.ref}" data-testid="recent-quote-row">
-        <td><a class="link" data-testid="recent-quote-link" href="/quotes/${q.ref}">${q.ref}</a></td>
-        <td><a class="link" data-testid="recent-quote-customer-link" href="/customers/${q.customer_id}">${q.customer_name}</a></td>
+      (q) => html`<tr id="quote-row-${q.ref}" data-testid="quote-row">
+        <td><a class="link" data-testid="quote-link" href="/quotes/${q.ref}">${q.ref}</a></td>
+        <td><a class="link" data-testid="quote-customer-link" href="/customers/${q.customer_id}">${q.customer_name}</a></td>
         <td>${q.vendor}</td>
         <td><span class="badge ${q.status}">${q.status}</span></td>
         <td>$${q.total_amount.toFixed(2)}</td>
+        <td>${q.created_at.slice(0, 10)}</td>
       </tr>`
     )
     .join("");
+
+  const emptyMessage = search ? "No quotes match your search." : "No quotes yet.";
+  const totalPages = Math.max(1, Math.ceil(quoteList.total / quoteList.pageSize));
+  const qParam = search ? `q=${encodeURIComponent(search)}&` : "";
+  const prevHref = `/?${qParam}page=${quoteList.page - 1}`;
+  const nextHref = `/?${qParam}page=${quoteList.page + 1}`;
 
   return layout(
     "Dashboard",
@@ -67,9 +74,26 @@ export function dashboardPage(stats: DashboardStats, recentQuotes: RecentQuote[]
         </div>
       </div>
 
-      <h2>Recently Added Quotes</h2>
+      <div class="dash-quotes-header">
+        <h2>Quotes</h2>
+        <form id="quote-search-form" data-testid="quote-search-form" method="get" action="/" class="search-form">
+          <input
+            type="text"
+            id="quote-search-input"
+            name="q"
+            data-testid="quote-search-input"
+            placeholder="Search by quote ref, customer name, or ID"
+            value="${search}"
+          />
+          <button type="submit" class="btn" id="quote-search-submit" data-testid="quote-search-submit">Search</button>
+          ${search
+            ? html`<a class="btn secondary" id="quote-search-clear" data-testid="quote-search-clear" href="/">Clear</a>`
+            : ""}
+        </form>
+      </div>
+
       <div class="panel">
-        <table id="recent-quotes-table" data-testid="recent-quotes-table">
+        <table id="all-quotes-table" data-testid="all-quotes-table">
           <thead>
             <tr>
               <th>Ref</th>
@@ -77,10 +101,21 @@ export function dashboardPage(stats: DashboardStats, recentQuotes: RecentQuote[]
               <th>Vendor</th>
               <th>Status</th>
               <th>Total</th>
+              <th>Created</th>
             </tr>
           </thead>
-          <tbody>${raw(recentRows || `<tr><td colspan="5" class="muted">No quotes yet.</td></tr>`)}</tbody>
+          <tbody>${raw(rows || `<tr><td colspan="6" class="muted">${emptyMessage}</td></tr>`)}</tbody>
         </table>
+
+        <div class="pagination" id="quotes-pagination" data-testid="quotes-pagination">
+          ${quoteList.page > 1
+            ? html`<a class="btn secondary" id="pagination-prev" data-testid="pagination-prev" href="${prevHref}">Previous</a>`
+            : html`<span class="btn secondary" aria-disabled="true" style="opacity:0.5;pointer-events:none">Previous</span>`}
+          <span class="muted" id="pagination-info" data-testid="pagination-info">Page ${quoteList.page} of ${totalPages} (${quoteList.total} quotes)</span>
+          ${quoteList.page < totalPages
+            ? html`<a class="btn secondary" id="pagination-next" data-testid="pagination-next" href="${nextHref}">Next</a>`
+            : html`<span class="btn secondary" aria-disabled="true" style="opacity:0.5;pointer-events:none">Next</span>`}
+        </div>
       </div>`,
     { loggedIn: true, active: "dashboard" }
   );
