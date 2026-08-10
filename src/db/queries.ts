@@ -62,6 +62,7 @@ export interface QuoteListRow {
   ref: string;
   customer_id: number;
   customer_name: string;
+  customer_ref_id: string;
   vendor: string;
   status: QuoteStatus;
   total_amount: number;
@@ -100,7 +101,7 @@ export async function listQuotes(db: D1Database, opts: ListQuotesOptions): Promi
 
   const { results } = await db
     .prepare(
-      `SELECT q.ref, q.customer_id, c.name as customer_name, q.vendor, q.status, q.total_amount, q.created_at
+      `SELECT q.ref, q.customer_id, c.name as customer_name, c.ref_id as customer_ref_id, q.vendor, q.status, q.total_amount, q.created_at
        FROM quotes q JOIN customers c ON c.id = q.customer_id
        ${whereClause}
        ORDER BY q.created_at DESC, q.id DESC LIMIT ?3 OFFSET ?4`

@@ -34,6 +34,7 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
       (q) => html`<tr id="quote-row-${q.ref}" data-testid="quote-row">
         <td><a class="link" data-testid="quote-link" href="/quotes/${q.ref}">${q.ref}</a></td>
         <td><a class="link" data-testid="quote-customer-link" href="/customers/${q.customer_id}">${q.customer_name}</a></td>
+        <td data-testid="quote-customer-ref-id">${q.customer_ref_id}</td>
         <td>${q.vendor}</td>
         <td><span class="badge ${q.status}">${q.status}</span></td>
         <td>$${q.total_amount.toFixed(2)}</td>
@@ -98,13 +99,14 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
             <tr>
               <th>Ref</th>
               <th>Customer</th>
+              <th>Customer ID</th>
               <th>Vendor</th>
               <th>Status</th>
               <th>Total</th>
               <th>Created</th>
             </tr>
           </thead>
-          <tbody>${raw(rows || `<tr><td colspan="6" class="muted">${emptyMessage}</td></tr>`)}</tbody>
+          <tbody>${raw(rows || `<tr><td colspan="7" class="muted">${emptyMessage}</td></tr>`)}</tbody>
         </table>
 
         <div class="pagination" id="quotes-pagination" data-testid="quotes-pagination">

@@ -53,7 +53,8 @@ const STYLE = `
   .topbar .right a.textlink { color: var(--muted); font-size: 14px; text-decoration: none; font-weight: 600; }
   .topbar .right a.textlink:hover { color: var(--text); }
   .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-  main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+  main { max-width: 1400px; margin: 0 auto; padding: 28px 24px; }
+  main.main-bare { max-width: none; padding: 0; }
   h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
   h2 { font-size: 15px; font-weight: 700; margin: 24px 0 12px; }
   .muted { color: var(--muted); }
@@ -173,7 +174,7 @@ export function layout(
         </div>
       </header>`
     : ""}
-  <main>${body}</main>
+  <main class="${opts.loggedIn ? "" : "main-bare"}">${body}</main>
 </body>
 </html>`;
 }
