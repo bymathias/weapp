@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import type { Env } from "../types";
 import { createSession, clearSession, requireUiAuth } from "../lib/session";
 import {
@@ -13,10 +13,24 @@ import {
   getDashboardStats,
   listQuotes,
 } from "../db/queries";
-import { loginPage, dashboardPage, customersPage, customerPage, newCustomerPage, newQuotePage, editQuotePage, quoteDetailPage } from "./pages";
+import {
+  loginPage,
+  dashboardPage,
+  customersPage,
+  customerPage,
+  newCustomerPage,
+  newQuotePage,
+  editQuotePage,
+  quoteDetailPage,
+  notFoundPage,
+} from "./pages";
 import type { QuoteStatus } from "../types";
 
 export const uiRouter = new Hono<Env>();
+
+function notFound(c: Context<Env>, entity: "Customer" | "Quote", identifier: string) {
+  return c.html(notFoundPage({ entity, identifier }), 404);
+}
 
 uiRouter.get("/login", async (c) => {
   const error = c.req.query("error");
@@ -89,7 +103,7 @@ uiRouter.post("/customers/new", async (c) => {
 uiRouter.get("/customers/:refId", async (c) => {
   const refId = c.req.param("refId");
   const customer = await getCustomerByRefId(c.env.DB, refId);
-  if (!customer) return c.notFound();
+  if (!customer) return notFound(c, "Customer", refId);
   const quotes = await listQuotesForCustomer(c.env.DB, customer.id);
   return c.html(customerPage(customer, quotes));
 });
@@ -97,7 +111,7 @@ uiRouter.get("/customers/:refId", async (c) => {
 uiRouter.get("/quotes/new", async (c) => {
   const refId = c.req.query("customer_id") ?? "";
   const customer = await getCustomerByRefId(c.env.DB, refId);
-  if (!customer) return c.notFound();
+  if (!customer) return notFound(c, "Customer", refId);
   return c.html(newQuotePage(customer));
 });
 
@@ -105,7 +119,7 @@ uiRouter.post("/quotes/new", async (c) => {
   const body = await c.req.parseBody({ all: true });
   const customerId = Number(body.customer_id);
   const customer = await getCustomer(c.env.DB, customerId);
-  if (!customer) return c.notFound();
+  if (!customer) return notFound(c, "Customer", String(body.customer_id ?? ""));
 
   const { vendor, status, marginPct, items } = parseQuoteForm(body);
 
@@ -120,28 +134,28 @@ uiRouter.post("/quotes/new", async (c) => {
 uiRouter.get("/quotes/:ref", async (c) => {
   const ref = c.req.param("ref");
   const quote = await getQuoteByRef(c.env.DB, ref);
-  if (!quote) return c.notFound();
+  if (!quote) return notFound(c, "Quote", ref);
   const customer = await getCustomer(c.env.DB, quote.customer_id);
-  if (!customer) return c.notFound();
+  if (!customer) return notFound(c, "Customer", String(quote.customer_id));
   return c.html(quoteDetailPage(customer, quote));
 });
 
 uiRouter.get("/quotes/:ref/edit", async (c) => {
   const ref = c.req.param("ref");
   const quote = await getQuoteByRef(c.env.DB, ref);
-  if (!quote) return c.notFound();
+  if (!quote) return notFound(c, "Quote", ref);
   if (quote.status === "Won") return c.redirect(`/quotes/${ref}`);
   const customer = await getCustomer(c.env.DB, quote.customer_id);
-  if (!customer) return c.notFound();
+  if (!customer) return notFound(c, "Customer", String(quote.customer_id));
   return c.html(editQuotePage(customer, quote));
 });
 
 uiRouter.post("/quotes/:ref/edit", async (c) => {
   const ref = c.req.param("ref");
   const existing = await getQuoteByRef(c.env.DB, ref);
-  if (!existing) return c.notFound();
+  if (!existing) return notFound(c, "Quote", ref);
   const customer = await getCustomer(c.env.DB, existing.customer_id);
-  if (!customer) return c.notFound();
+  if (!customer) return notFound(c, "Customer", String(existing.customer_id));
 
   if (existing.status === "Won") return c.redirect(`/quotes/${ref}`);
 

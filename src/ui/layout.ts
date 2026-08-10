@@ -9,6 +9,7 @@ export const ICONS = {
   won: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.3 2.3L15.5 9.5"/></svg>`,
   sent: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L11 13"/><path d="M21 3l-7 18-4-8-8-4 19-6z"/></svg>`,
   lost: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>`,
+  notFound: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M21 21l-4.35-4.35"/><path d="M8.5 8.5l4 4M12.5 8.5l-4 4"/></svg>`,
 };
 
 const STYLE = `
@@ -142,6 +143,12 @@ const STYLE = `
   .login-subtitle { text-align: center; margin-top: 0; }
   .actions-row { display: flex; gap: 10px; align-items: center; margin-top: 18px; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .not-found { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 80px 20px; gap: 6px; }
+  .not-found .not-found-icon { width: 64px; height: 64px; border-radius: 16px; background: var(--accent-bg); color: var(--accent); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+  .not-found .not-found-icon svg { width: 32px; height: 32px; }
+  .not-found h1 { margin: 0; }
+  .not-found p { margin: 0 0 16px; }
 
   .page-header { margin-bottom: 24px; }
   .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }

@@ -2,12 +2,21 @@ import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import type { Env } from "../types";
 import { requireBearerAuth } from "../lib/bearer";
 import { isAuthenticated } from "../lib/session";
-import { getCustomer, listCustomers, listQuotesForCustomer, getQuoteByRef, createQuote, updateQuote, createCustomer } from "../db/queries";
+import {
+  getCustomer,
+  getCustomerByRefId,
+  listCustomers,
+  listQuotesForCustomer,
+  getQuoteByRef,
+  createQuote,
+  updateQuote,
+  createCustomer,
+} from "../db/queries";
 import { generateQuotePdf } from "../pdf";
 import {
   CustomerSchema,
   CustomerInputSchema,
-  CustomerIdParamSchema,
+  CustomerRefIdParamSchema,
   QuoteRefParamSchema,
   QuoteSchema,
   QuoteWithItemsSchema,
@@ -77,61 +86,61 @@ apiRouter.openapi(
   }
 );
 
-// GET /api/customers/:id
+// GET /api/customers/:refId
 apiRouter.openapi(
   createRoute({
     method: "get",
-    path: "/customers/{id}",
+    path: "/customers/{refId}",
     tags: ["Customers"],
     summary: "Get a single customer",
     security: [{ Bearer: [] }],
-    request: { params: CustomerIdParamSchema },
+    request: { params: CustomerRefIdParamSchema },
     responses: {
       200: { description: "Customer", content: { "application/json": { schema: CustomerSchema } } },
       404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
     },
   }),
   async (c) => {
-    const id = Number(c.req.valid("param").id);
-    const customer = await getCustomer(c.env.DB, id);
+    const { refId } = c.req.valid("param");
+    const customer = await getCustomerByRefId(c.env.DB, refId);
     if (!customer) return c.json({ error: "not_found", message: "Customer not found" }, 404);
     return c.json(customer, 200);
   }
 );
 
-// GET /api/customers/:id/quotes
+// GET /api/customers/:refId/quotes
 apiRouter.openapi(
   createRoute({
     method: "get",
-    path: "/customers/{id}/quotes",
+    path: "/customers/{refId}/quotes",
     tags: ["Quotes"],
     summary: "List quotes for a customer",
     security: [{ Bearer: [] }],
-    request: { params: CustomerIdParamSchema },
+    request: { params: CustomerRefIdParamSchema },
     responses: {
       200: { description: "List of quotes", content: { "application/json": { schema: z.array(QuoteSchema) } } },
       404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
     },
   }),
   async (c) => {
-    const id = Number(c.req.valid("param").id);
-    const customer = await getCustomer(c.env.DB, id);
+    const { refId } = c.req.valid("param");
+    const customer = await getCustomerByRefId(c.env.DB, refId);
     if (!customer) return c.json({ error: "not_found", message: "Customer not found" }, 404);
-    const quotes = await listQuotesForCustomer(c.env.DB, id);
+    const quotes = await listQuotesForCustomer(c.env.DB, customer.id);
     return c.json(quotes, 200);
   }
 );
 
-// POST /api/customers/:id/quotes
+// POST /api/customers/:refId/quotes
 apiRouter.openapi(
   createRoute({
     method: "post",
-    path: "/customers/{id}/quotes",
+    path: "/customers/{refId}/quotes",
     tags: ["Quotes"],
     summary: "Create a quote for a customer",
     security: [{ Bearer: [] }],
     request: {
-      params: CustomerIdParamSchema,
+      params: CustomerRefIdParamSchema,
       body: { content: { "application/json": { schema: QuoteInputSchema } } },
     },
     responses: {
@@ -140,11 +149,11 @@ apiRouter.openapi(
     },
   }),
   async (c) => {
-    const id = Number(c.req.valid("param").id);
-    const customer = await getCustomer(c.env.DB, id);
+    const { refId } = c.req.valid("param");
+    const customer = await getCustomerByRefId(c.env.DB, refId);
     if (!customer) return c.json({ error: "not_found", message: "Customer not found" }, 404);
     const body = c.req.valid("json");
-    const quote = await createQuote(c.env.DB, id, body);
+    const quote = await createQuote(c.env.DB, customer.id, body);
     return c.json(quote, 201);
   }
 );

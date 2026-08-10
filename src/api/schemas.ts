@@ -76,8 +76,8 @@ export const ErrorSchema = z
   })
   .openapi("Error");
 
-export const CustomerIdParamSchema = z.object({
-  id: z.string().regex(/^\d+$/).openapi({ param: { name: "id", in: "path" }, example: "1" }),
+export const CustomerRefIdParamSchema = z.object({
+  refId: z.string().openapi({ param: { name: "refId", in: "path" }, example: "CUST-0001" }),
 });
 
 export const QuoteRefParamSchema = z.object({

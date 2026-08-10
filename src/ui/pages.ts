@@ -38,6 +38,23 @@ export function loginPage(opts: { error?: "missing" | "invalid"; username?: stri
   );
 }
 
+export function notFoundPage(opts: { entity: "Customer" | "Quote"; identifier: string }) {
+  const title = `${opts.entity} Not Found`;
+  const refLabel = opts.entity === "Quote" ? "ref" : "ID";
+  const message = `We couldn't find a ${opts.entity.toLowerCase()} with ${refLabel} "${opts.identifier}".`;
+
+  return layout(
+    title,
+    html`<div class="not-found" id="not-found-page" data-testid="not-found-page">
+      <span class="not-found-icon">${raw(ICONS.notFound)}</span>
+      <h1>${title}</h1>
+      <p class="muted" data-testid="not-found-message">${message}</p>
+      <a class="btn" id="back-to-dashboard-btn" data-testid="back-to-dashboard-btn" href="/">Back to Dashboard</a>
+    </div>`,
+    { loggedIn: true }
+  );
+}
+
 export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult, search: string) {
   const rows = quoteList.quotes
     .map(
