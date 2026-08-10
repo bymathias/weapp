@@ -46,8 +46,13 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
   const emptyMessage = search ? "No quotes match your search." : "No quotes yet.";
   const totalPages = Math.max(1, Math.ceil(quoteList.total / quoteList.pageSize));
   const qParam = search ? `q=${encodeURIComponent(search)}&` : "";
-  const prevHref = `/?${qParam}page=${quoteList.page - 1}`;
-  const nextHref = `/?${qParam}page=${quoteList.page + 1}`;
+  const pageLinks = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .map((p) =>
+      p === quoteList.page
+        ? html`<span class="page-num active" id="pagination-page-${p}" data-testid="pagination-page-current">${p}</span>`
+        : html`<a class="page-num" id="pagination-page-${p}" data-testid="pagination-page" href="/?${qParam}page=${p}">${p}</a>`
+    )
+    .join("");
 
   return layout(
     "Dashboard",
@@ -110,13 +115,8 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
         </table>
 
         <div class="pagination" id="quotes-pagination" data-testid="quotes-pagination">
-          ${quoteList.page > 1
-            ? html`<a class="btn secondary" id="pagination-prev" data-testid="pagination-prev" href="${prevHref}">Previous</a>`
-            : html`<span class="btn secondary" aria-disabled="true" style="opacity:0.5;pointer-events:none">Previous</span>`}
-          <span class="muted" id="pagination-info" data-testid="pagination-info">Page ${quoteList.page} of ${totalPages} (${quoteList.total} quotes)</span>
-          ${quoteList.page < totalPages
-            ? html`<a class="btn secondary" id="pagination-next" data-testid="pagination-next" href="${nextHref}">Next</a>`
-            : html`<span class="btn secondary" aria-disabled="true" style="opacity:0.5;pointer-events:none">Next</span>`}
+          <span class="muted" id="pagination-info" data-testid="pagination-info">${quoteList.total} quotes</span>
+          <div class="page-numbers">${raw(pageLinks)}</div>
         </div>
       </div>`,
     { loggedIn: true, active: "dashboard" }

@@ -28,8 +28,12 @@ const STYLE = `
     --warn-bg: #fef3c7;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
@@ -53,8 +57,23 @@ const STYLE = `
   .topbar .right a.textlink { color: var(--muted); font-size: 14px; text-decoration: none; font-weight: 600; }
   .topbar .right a.textlink:hover { color: var(--text); }
   .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-  main { max-width: 1400px; margin: 0 auto; padding: 28px 24px; }
-  main.main-bare { max-width: none; padding: 0; }
+  main { max-width: 1400px; margin: 0 auto; padding: 28px 24px; flex: 1 0 auto; width: 100%; }
+  main.main-bare { max-width: none; padding: 0; display: flex; }
+  footer.site-footer {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  footer.site-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  footer.site-footer a:hover { text-decoration: underline; }
   h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
   h2 { font-size: 15px; font-weight: 700; margin: 24px 0 12px; }
   .muted { color: var(--muted); }
@@ -114,7 +133,7 @@ const STYLE = `
   .totals .box .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
   .totals .box .value { font-size: 18px; font-weight: 700; }
   .error { background: var(--danger-bg); color: var(--danger); border: 1px solid #f3c5c5; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; }
-  .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-wrap { display: flex; align-items: center; justify-content: center; flex: 1; width: 100%; }
   .login-card { width: 340px; }
   .actions-row { display: flex; gap: 10px; align-items: center; margin-top: 18px; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -135,7 +154,25 @@ const STYLE = `
   .dash-quotes-header h2 { margin: 0; }
   .search-form { display: flex; gap: 8px; align-items: center; }
   .search-form input[type=text] { width: 300px; }
-  .pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 18px; }
+  .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 18px; }
+  .page-numbers { display: flex; gap: 6px; }
+  .page-num {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .page-num:hover { border-color: var(--accent); color: var(--accent); }
+  .page-num.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
   @media (max-width: 900px) {
     .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -168,13 +205,16 @@ export function layout(
           <a href="/customers" id="nav-customers" data-testid="nav-customers" class="${opts.active === "customers" ? "active" : ""}">${raw(ICONS.customers)} Customers</a>
         </nav>
         <div class="right">
-          <a href="/api-docs" id="nav-api-docs" data-testid="nav-api-docs" class="textlink">API Docs</a>
           <a href="/logout" id="nav-logout" data-testid="nav-logout" class="textlink">Log out</a>
           <span class="avatar" id="nav-avatar" data-testid="nav-avatar">A</span>
         </div>
       </header>`
     : ""}
   <main class="${opts.loggedIn ? "" : "main-bare"}">${body}</main>
+  <footer class="site-footer">
+    <span id="footer-tagline" data-testid="footer-tagline">WeCPQ — a Configure-Price-Quote demo site for UI and API automation testing.</span>
+    <a href="/api-docs" id="footer-api-docs" data-testid="footer-api-docs">API Docs</a>
+  </footer>
 </body>
 </html>`;
 }
