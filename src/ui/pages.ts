@@ -3,18 +3,28 @@ import { layout, ICONS } from "./layout";
 import type { Customer, Quote, QuoteStatus, QuoteWithItems } from "../types";
 import type { DashboardStats, QuoteListResult } from "../db/queries";
 
-export function loginPage(opts: { error?: boolean } = {}) {
+export function loginPage(opts: { error?: "missing" | "invalid"; username?: string } = {}) {
+  const errorMessage =
+    opts.error === "missing"
+      ? "Please enter both a username and password."
+      : opts.error === "invalid"
+        ? "Invalid username or password. Please try again."
+        : null;
+
   return layout(
     "Log in",
     html`<div class="login-wrap">
+      <div class="login-brand">
+        <span class="brand-icon-lg">${raw(ICONS.logo)}</span>
+        <h1 id="login-brand-title">WeCPQ</h1>
+      </div>
       <div class="panel login-card">
-        <h1>WeCPQ</h1>
-        <p class="muted">Sign in to continue</p>
-        ${opts.error ? html`<div class="error" id="login-error" data-testid="login-error">Invalid username or password</div>` : ""}
+        <p class="muted login-subtitle">Sign in to continue</p>
+        ${errorMessage ? html`<div class="error" id="login-error" data-testid="login-error">${errorMessage}</div>` : ""}
         <form id="login-form" data-testid="login-form" method="post" action="/login">
           <div class="field">
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" data-testid="login-username" autocomplete="username" required />
+            <input type="text" id="username" name="username" data-testid="login-username" autocomplete="username" value="${opts.username ?? ""}" required />
           </div>
           <div class="field">
             <label for="password">Password</label>

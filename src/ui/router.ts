@@ -18,19 +18,30 @@ import type { QuoteStatus } from "../types";
 export const uiRouter = new Hono<Env>();
 
 uiRouter.get("/login", async (c) => {
-  return c.html(loginPage({ error: c.req.query("error") === "1" }));
+  const error = c.req.query("error");
+  return c.html(
+    loginPage({
+      error: error === "missing" || error === "invalid" ? error : undefined,
+      username: c.req.query("username") ?? "",
+    })
+  );
 });
 
 uiRouter.post("/login", async (c) => {
   const body = await c.req.parseBody();
-  const username = typeof body.username === "string" ? body.username : "";
+  const username = typeof body.username === "string" ? body.username.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
+  const usernameParam = `username=${encodeURIComponent(username)}`;
+
+  if (!username || !password) {
+    return c.redirect(`/login?error=missing&${usernameParam}`);
+  }
 
   if (username === c.env.UI_USERNAME && password === c.env.UI_PASSWORD) {
     await createSession(c);
     return c.redirect("/");
   }
-  return c.redirect("/login?error=1");
+  return c.redirect(`/login?error=invalid&${usernameParam}`);
 });
 
 uiRouter.get("/logout", async (c) => {

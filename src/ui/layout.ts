@@ -133,8 +133,13 @@ const STYLE = `
   .totals .box .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
   .totals .box .value { font-size: 18px; font-weight: 700; }
   .error { background: var(--danger-bg); color: var(--danger); border: 1px solid #f3c5c5; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; }
-  .login-wrap { display: flex; align-items: center; justify-content: center; flex: 1; width: 100%; }
+  .login-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; width: 100%; }
+  .login-brand { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .login-brand .brand-icon-lg { width: 56px; height: 56px; border-radius: 14px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .login-brand .brand-icon-lg svg { width: 30px; height: 30px; }
+  .login-brand h1 { margin: 0; }
   .login-card { width: 340px; }
+  .login-subtitle { text-align: center; margin-top: 0; }
   .actions-row { display: flex; gap: 10px; align-items: center; margin-top: 18px; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
