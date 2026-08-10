@@ -3,6 +3,7 @@ import type { Env } from "../types";
 import { createSession, clearSession, requireUiAuth } from "../lib/session";
 import {
   getCustomer,
+  getCustomerByRefId,
   listCustomers,
   listQuotesForCustomer,
   getQuoteByRef,
@@ -82,20 +83,20 @@ uiRouter.post("/customers/new", async (c) => {
   }
 
   const customer = await createCustomer(c.env.DB, { name, industry, country, account_owner: accountOwner });
-  return c.redirect(`/customers/${customer.id}`);
+  return c.redirect(`/customers/${customer.ref_id}`);
 });
 
-uiRouter.get("/customers/:id", async (c) => {
-  const id = Number(c.req.param("id"));
-  const customer = await getCustomer(c.env.DB, id);
+uiRouter.get("/customers/:refId", async (c) => {
+  const refId = c.req.param("refId");
+  const customer = await getCustomerByRefId(c.env.DB, refId);
   if (!customer) return c.notFound();
-  const quotes = await listQuotesForCustomer(c.env.DB, id);
+  const quotes = await listQuotesForCustomer(c.env.DB, customer.id);
   return c.html(customerPage(customer, quotes));
 });
 
 uiRouter.get("/quotes/new", async (c) => {
-  const customerId = Number(c.req.query("customer_id"));
-  const customer = await getCustomer(c.env.DB, customerId);
+  const refId = c.req.query("customer_id") ?? "";
+  const customer = await getCustomerByRefId(c.env.DB, refId);
   if (!customer) return c.notFound();
   return c.html(newQuotePage(customer));
 });

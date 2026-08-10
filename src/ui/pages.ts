@@ -43,7 +43,7 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
     .map(
       (q) => html`<tr id="quote-row-${q.ref}" data-testid="quote-row">
         <td><a class="link" data-testid="quote-link" href="/quotes/${q.ref}">${q.ref}</a></td>
-        <td><a class="link" data-testid="quote-customer-link" href="/customers/${q.customer_id}">${q.customer_name}</a></td>
+        <td><a class="link" data-testid="quote-customer-link" href="/customers/${q.customer_ref_id}">${q.customer_name}</a></td>
         <td data-testid="quote-customer-ref-id">${q.customer_ref_id}</td>
         <td>${q.vendor}</td>
         <td><span class="badge ${q.status}">${q.status}</span></td>
@@ -137,7 +137,7 @@ export function customersPage(customers: Customer[]) {
   const rows = customers
     .map(
       (c) => html`<tr id="customer-row-${c.id}" data-testid="customer-row" data-customer-id="${c.id}">
-        <td><a class="link" id="customer-link-${c.id}" data-testid="customer-link" href="/customers/${c.id}">${c.name}</a></td>
+        <td><a class="link" id="customer-link-${c.id}" data-testid="customer-link" href="/customers/${c.ref_id}">${c.name}</a></td>
         <td>${c.ref_id}</td>
         <td>${c.industry}</td>
         <td>${c.country}</td>
@@ -229,7 +229,7 @@ export function customerPage(customer: Customer, quotes: Quote[]) {
       <p class="muted">${customer.ref_id} · ${customer.industry} · ${customer.country} · Owner: ${customer.account_owner}</p>
 
       <div class="actions-row">
-        <a class="btn" id="new-quote-btn" data-testid="new-quote-btn" href="/quotes/new?customer_id=${customer.id}">New Quote</a>
+        <a class="btn" id="new-quote-btn" data-testid="new-quote-btn" href="/quotes/new?customer_id=${customer.ref_id}">New Quote</a>
       </div>
 
       <h2>Quotes</h2>
@@ -378,7 +378,7 @@ export function newQuotePage(customer: Customer, opts: { error?: string } = {}) 
     heading: "New Quote",
     customer,
     formAction: "/quotes/new",
-    cancelHref: `/customers/${customer.id}`,
+    cancelHref: `/customers/${customer.ref_id}`,
     submitLabel: "Save Quote",
     initialVendor: VENDORS[0],
     initialStatus: "Draft",
@@ -494,7 +494,7 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
           ? ""
           : html`<a class="btn" id="edit-quote-btn" data-testid="edit-quote-btn" href="/quotes/${quote.ref}/edit">Edit Quote</a>`}
         <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/quotes/${quote.ref}/pdf" target="_blank" rel="noopener">Download PDF</a>
-        <a class="btn secondary" id="back-to-customer-btn" data-testid="back-to-customer-btn" href="/customers/${customer.id}">Back to customer</a>
+        <a class="btn secondary" id="back-to-customer-btn" data-testid="back-to-customer-btn" href="/customers/${customer.ref_id}">Back to customer</a>
       </div>
 
       <h2>Line Items</h2>

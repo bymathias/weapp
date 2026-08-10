@@ -10,6 +10,10 @@ export async function getCustomer(db: D1Database, id: number): Promise<Customer 
   return (await db.prepare(`SELECT * FROM customers WHERE id = ?1`).bind(id).first<Customer>()) ?? null;
 }
 
+export async function getCustomerByRefId(db: D1Database, refId: string): Promise<Customer | null> {
+  return (await db.prepare(`SELECT * FROM customers WHERE ref_id = ?1`).bind(refId).first<Customer>()) ?? null;
+}
+
 export interface CreateCustomerInput {
   name: string;
   industry: string;
