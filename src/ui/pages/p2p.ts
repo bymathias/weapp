@@ -71,6 +71,7 @@ export function purchaseOrderDetailPage(
       <div class="actions-row">
         <a class="btn" id="btn-post-gr" data-testid="btn-post-gr" href="/goods-receipts/new?po_number=${po.po_number}">Post Goods Receipt</a>
         <a class="btn secondary" id="btn-create-invoice" data-testid="btn-create-invoice" href="/supplier-invoices/new?po_number=${po.po_number}">Create Supplier Invoice</a>
+        <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/purchase-orders/${po.po_number}/pdf" target="_blank" rel="noopener">Download PDF</a>
         <a class="btn secondary" id="back-btn" data-testid="back-btn" href="/purchase-orders">Back to list</a>
       </div>
 

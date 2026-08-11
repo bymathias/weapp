@@ -1,6 +1,6 @@
 import { createRoute, z, type OpenAPIHono } from "@hono/zod-openapi";
 import type { Env } from "../../types";
-import { getMaterialByCode, getVendorByRefId } from "../../db/master";
+import { getMaterialByCode, getVendor, getVendorByRefId, listMaterials } from "../../db/master";
 import {
   createGoodsReceipt,
   createPurchaseOrder,
@@ -16,6 +16,7 @@ import {
 } from "../../db/p2p";
 import { getFlow } from "../../lib/flow";
 import { mapActionError } from "../errors";
+import { generatePurchaseOrderPdf } from "../../pdf";
 import {
   ErrorSchema,
   FlowEntrySchema,
@@ -100,6 +101,38 @@ export function registerP2PRoutes(api: OpenAPIHono<Env>) {
       const po = await getPurchaseOrderByNumber(c.env.DB, po_number);
       if (!po) return c.json({ error: "not_found", message: "Purchase order not found" }, 404);
       return c.json(po, 200);
+    }
+  );
+
+  api.openapi(
+    createRoute({
+      method: "get",
+      path: "/purchase-orders/{po_number}/pdf",
+      tags: ["Purchase Orders"],
+      summary: "Download the purchase order as a PDF",
+      security: [{ Bearer: [] }],
+      request: { params: PoNumberParamSchema },
+      responses: {
+        200: { description: "PDF document", content: { "application/pdf": { schema: { type: "string", format: "binary" } } } },
+        404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
+      },
+    }),
+    async (c) => {
+      const { po_number } = c.req.valid("param");
+      const po = await getPurchaseOrderByNumber(c.env.DB, po_number);
+      if (!po) return c.json({ error: "not_found", message: "Purchase order not found" }, 404);
+      const vendor = await getVendor(c.env.DB, po.vendor_id);
+      if (!vendor) return c.json({ error: "not_found", message: "Vendor not found" }, 404);
+      const materials = await listMaterials(c.env.DB);
+      const materialsById = new Map(materials.map((m) => [m.id, m]));
+      const pdfBytes = await generatePurchaseOrderPdf(po, vendor, materialsById);
+      return new Response(pdfBytes as BodyInit, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="${po.po_number}.pdf"`,
+        },
+      });
     }
   );
 
