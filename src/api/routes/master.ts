@@ -1,10 +1,11 @@
 import { createRoute, z, type OpenAPIHono } from "@hono/zod-openapi";
 import type { Env } from "../../types";
-import { getCustomerByRefId, getMaterialByCode, getVendorByRefId, listCustomers, listMaterials, listVendors } from "../../db/master";
-import { CustomerRefParamSchema, CustomerSchema, ErrorSchema, MaterialCodeParamSchema, MaterialSchema, VendorRefParamSchema, VendorSchema } from "../schemas";
+import { createCustomer, getCustomerByRefId, getMaterialByCode, getVendorByRefId, listCustomers, listMaterials, listVendors } from "../../db/master";
+import { CustomerCreateSchema, CustomerRefParamSchema, CustomerSchema, ErrorSchema, MaterialCodeParamSchema, MaterialSchema, VendorRefParamSchema, VendorSchema } from "../schemas";
 
-// Read-only master data — customers, vendors, materials — for populating
-// forms and resolving refs. No create endpoints (not part of the spec).
+// Master data — customers, vendors, materials — for populating forms and
+// resolving refs. Vendors/materials are read-only (not part of the spec);
+// customers can also be created (ref_id is server-generated).
 export function registerMasterRoutes(api: OpenAPIHono<Env>) {
   api.openapi(
     createRoute({
@@ -36,6 +37,25 @@ export function registerMasterRoutes(api: OpenAPIHono<Env>) {
       const customer = await getCustomerByRefId(c.env.DB, ref);
       if (!customer) return c.json({ error: "not_found", message: "Customer not found" }, 404);
       return c.json(customer, 200);
+    }
+  );
+
+  api.openapi(
+    createRoute({
+      method: "post",
+      path: "/customers",
+      tags: ["Master Data"],
+      summary: "Create a customer",
+      security: [{ Bearer: [] }],
+      request: { body: { content: { "application/json": { schema: CustomerCreateSchema } } } },
+      responses: {
+        201: { description: "Created customer", content: { "application/json": { schema: CustomerSchema } } },
+      },
+    }),
+    async (c) => {
+      const body = c.req.valid("json");
+      const customer = await createCustomer(c.env.DB, body);
+      return c.json(customer, 201);
     }
   );
 

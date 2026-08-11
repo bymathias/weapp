@@ -123,6 +123,7 @@ interface LaunchpadTile {
 }
 
 const TILES: LaunchpadTile[] = [
+  { href: "/customers", icon: ICONS.customer, title: "Customers", sub: "Master Data", testid: "tile-customers" },
   { href: "/purchase-orders", icon: ICONS.po, title: "Purchase Orders", sub: "Purchase-to-Pay", testid: "tile-purchase-orders" },
   { href: "/goods-receipts", icon: ICONS.gr, title: "Goods Receipts", sub: "Purchase-to-Pay", testid: "tile-goods-receipts" },
   { href: "/supplier-invoices", icon: ICONS.si, title: "Supplier Invoices", sub: "Purchase-to-Pay", testid: "tile-supplier-invoices" },

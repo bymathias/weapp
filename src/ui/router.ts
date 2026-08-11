@@ -6,6 +6,7 @@ import { loginPage, launchpadPage } from "./pages/shared";
 import { worklistPage } from "./pages/worklist";
 import { registerP2PUiRoutes } from "./routes/p2p";
 import { registerO2CUiRoutes } from "./routes/o2c";
+import { registerMasterUiRoutes } from "./routes/master";
 
 export const uiRouter = new Hono<Env>();
 
@@ -53,5 +54,6 @@ uiRouter.get("/worklist", async (c) => {
   return c.html(worklistPage(worklist));
 });
 
+registerMasterUiRoutes(uiRouter);
 registerP2PUiRoutes(uiRouter);
 registerO2CUiRoutes(uiRouter);

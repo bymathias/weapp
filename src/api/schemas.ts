@@ -24,6 +24,16 @@ export const CustomerSchema = z
   })
   .openapi("Customer");
 
+export const CustomerCreateSchema = z
+  .object({
+    name: z.string().min(1),
+    industry: z.string().min(1),
+    country: z.string().min(1),
+    account_owner: z.string().min(1),
+    credit_limit: z.number().nonnegative().default(0),
+  })
+  .openapi("CustomerCreate");
+
 export const VendorSchema = z
   .object({
     id: z.number().int(),

@@ -1,8 +1,30 @@
+import { nextRefId } from "../lib/numbering";
 import type { CompanyCode, Customer, Material, Vendor } from "../types";
 
 export async function listCustomers(db: D1Database): Promise<Customer[]> {
   const { results } = await db.prepare(`SELECT * FROM customers ORDER BY name`).all<Customer>();
   return results ?? [];
+}
+
+export interface CustomerInput {
+  name: string;
+  industry: string;
+  country: string;
+  account_owner: string;
+  credit_limit: number;
+}
+
+export async function createCustomer(db: D1Database, input: CustomerInput): Promise<Customer> {
+  const refId = await nextRefId(db, "customers", "ref_id", "CUST-");
+  const row = await db
+    .prepare(
+      `INSERT INTO customers (name, ref_id, industry, country, account_owner, credit_limit)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+       RETURNING *`
+    )
+    .bind(input.name, refId, input.industry, input.country, input.account_owner, input.credit_limit)
+    .first<Customer>();
+  return row!;
 }
 
 export async function getCustomer(db: D1Database, id: number): Promise<Customer | null> {
