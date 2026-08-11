@@ -12,6 +12,10 @@ export const ICONS = {
   notFound: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M21 21l-4.35-4.35"/><path d="M8.5 8.5l4 4M12.5 8.5l-4 4"/></svg>`,
 };
 
+const FAVICON = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#4f46e5"/><g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.logo.replace(/<svg[^>]*>|<\/svg>/g, "")}</g></svg>`
+)}`;
+
 const STYLE = `
   :root {
     --border: #e5e7f0;
@@ -203,6 +207,7 @@ export function layout(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${title} · WeCPQ</title>
+  <link rel="icon" href="${FAVICON}" />
   <style>${STYLE}</style>
 </head>
 <body>
