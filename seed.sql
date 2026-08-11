@@ -26,8 +26,8 @@ INSERT INTO vendors (name, ref_id) VALUES
   ('Veeam', 'VEND-0007'),
   ('Zscaler', 'VEND-0008');
 
--- Each vendor carries 2 materials so the PO form's vendor-scoped material
--- dropdown always has more than one choice.
+-- Each vendor carries 5 materials so the PO form's vendor-scoped material
+-- dropdown always has multiple choices.
 INSERT INTO materials (material_code, description, vendor_id, standard_price, stock_qty) VALUES
   ('MAT-0001', 'FortiGate 100F Firewall Appliance', 1, 1850.00, 25),
   ('MAT-0002', 'Cisco Catalyst 9300 Switch', 2, 4200.00, 15),
@@ -44,7 +44,31 @@ INSERT INTO materials (material_code, description, vendor_id, standard_price, st
   ('MAT-0013', 'CrowdStrike Falcon Complete MDR (per endpoint)', 5, 110.00, 350),
   ('MAT-0014', 'Microsoft Defender for Endpoint P2 (per user)', 6, 24.00, 900),
   ('MAT-0015', 'Veeam ONE Monitoring & Analytics (per socket)', 7, 340.00, 60),
-  ('MAT-0016', 'Zscaler Private Access Business (per user, annual)', 8, 48.00, 700);
+  ('MAT-0016', 'Zscaler Private Access Business (per user, annual)', 8, 48.00, 700),
+  ('MAT-0017', 'FortiSwitch 448E-FPOE', 1, 3100.00, 14),
+  ('MAT-0018', 'FortiClient EMS License (per endpoint)', 1, 22.00, 750),
+  ('MAT-0019', 'FortiMail 200F Secure Email Gateway', 1, 4600.00, 8),
+  ('MAT-0020', 'Cisco Identity Services Engine (ISE) License', 2, 95.00, 400),
+  ('MAT-0021', 'Cisco Umbrella DNS Security (per user, annual)', 2, 28.00, 950),
+  ('MAT-0022', 'Cisco Duo MFA (per user, annual)', 2, 18.00, 1200),
+  ('MAT-0023', 'Prisma Access License (per user, annual)', 3, 72.00, 600),
+  ('MAT-0024', 'Cortex XDR Pro (per endpoint)', 3, 85.00, 450),
+  ('MAT-0025', 'GlobalProtect Subscription (per user, annual)', 3, 34.00, 700),
+  ('MAT-0026', 'Check Point CloudGuard Network Security', 4, 5400.00, 9),
+  ('MAT-0027', 'Check Point Harmony Email & Collaboration (per seat)', 4, 26.00, 850),
+  ('MAT-0028', 'Check Point Quantum Maestro Orchestrator', 4, 12500.00, 4),
+  ('MAT-0029', 'CrowdStrike Falcon Prevent (per endpoint)', 5, 45.00, 900),
+  ('MAT-0030', 'CrowdStrike Falcon Identity Threat Protection (per user)', 5, 58.00, 500),
+  ('MAT-0031', 'CrowdStrike Falcon Cloud Security (per workload)', 5, 130.00, 300),
+  ('MAT-0032', 'Microsoft Sentinel (per GB ingested, monthly)', 6, 2.75, 5000),
+  ('MAT-0033', 'Microsoft Entra ID P2 License (per user)', 6, 9.00, 1500),
+  ('MAT-0034', 'Microsoft Intune License (per user)', 6, 8.00, 1500),
+  ('MAT-0035', 'Veeam Backup for Microsoft 365 (per user)', 7, 4.00, 2000),
+  ('MAT-0036', 'Veeam Recovery Orchestrator (per socket)', 7, 950.00, 30),
+  ('MAT-0037', 'Veeam CDP for Continuous Data Protection (per VM)', 7, 210.00, 100),
+  ('MAT-0038', 'Zscaler Digital Experience (per user, annual)', 8, 20.00, 900),
+  ('MAT-0039', 'Zscaler Cloud Protection (per workload)', 8, 95.00, 250),
+  ('MAT-0040', 'Zscaler Deception (per user, annual)', 8, 30.00, 600);
 
 -- Purchase Orders -------------------------------------------------------------
 -- PO1 (Fortinet): full happy path, invoiced+matched+paid.
