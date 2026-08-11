@@ -131,6 +131,41 @@ This starts `wrangler dev` (Miniflare) on `http://localhost:8787`. Log in at
 
 Tokens expire after 1 hour.
 
+## Adding WeCPQ as a UiPath connector
+
+UiPath Automation Cloud's **Integration Service** can build a custom
+connector directly from WeCPQ's OpenAPI spec (`/openapi.json`), since it
+already documents every endpoint and declares the OAuth2 client-credentials
+security scheme.
+
+1. Automation Cloud → **Integration Service** → **Connectors** → **Create
+   Custom Connector**, and import the OpenAPI spec — either upload the file
+   or point it at `https://<your-deployment>/openapi.json` (e.g.
+   `https://wecpq.bymathias.workers.dev/openapi.json`). Integration Service
+   parses the paths/schemas and generates connector actions automatically.
+2. **Override the base URL**: the spec declares `servers: [{ url: "/" }]`
+   (relative, since it's meant to resolve against whatever host serves it).
+   UiPath needs an absolute URL, so set it explicitly to your deployment's
+   origin, e.g. `https://wecpq.bymathias.workers.dev`.
+3. **Auth** — choose connection type **OAuth 2.0 – Client Credentials**
+   (built into UiPath):
+   - Token URL: `https://<your-deployment>/oauth/token`
+   - Client ID: `wecpq-demo-client`
+   - Client Secret: `wecpq-demo-secret`
+
+   This matches `POST /oauth/token` exactly (standard `client_credentials`
+   grant, returns `{access_token, token_type, expires_in}`). UiPath fetches
+   and auto-refreshes tokens on its own — no manual handling of the 1-hour
+   TTL needed.
+4. Test each generated action in the connector's test panel (list/create
+   customers, create/update quotes, download PDF, etc.).
+5. Once published, the actions are usable from Studio/Studio Web activities,
+   or as triggers/actions in Integration Service-driven automations.
+
+These are the demo credentials hardcoded in `wrangler.toml` — fine for this
+demo, but rotate `OAUTH_CLIENT_SECRET` via `wrangler secret put` first if
+this ever needs to be a real integration.
+
 ## Business rules
 
 - `line_total = quantity * unit_price`
