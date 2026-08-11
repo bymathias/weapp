@@ -48,6 +48,7 @@ export const MaterialSchema = z
     id: z.number().int(),
     material_code: z.string(),
     description: z.string(),
+    vendor_id: z.number().int(),
     standard_price: z.number(),
     stock_qty: z.number().int(),
     created_at: z.string(),

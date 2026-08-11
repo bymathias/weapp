@@ -70,6 +70,9 @@ export function registerP2PUiRoutes(ui: Hono<Env>) {
     for (let i = 0; i < materialCodes.length; i++) {
       const material = await getMaterialByCode(c.env.DB, materialCodes[i]);
       const qty = Number(qtys[i]) || 0;
+      if (material && material.vendor_id !== vendor.id) {
+        return c.html(newPurchaseOrderPage(vendors, materials, { error: `${material.material_code} does not belong to ${vendor.name}.` }), 400);
+      }
       const price = Number(prices[i]) || 0;
       if (material && qty > 0) items.push({ material_id: material.id, qty, price });
     }

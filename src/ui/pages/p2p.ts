@@ -90,22 +90,18 @@ export function purchaseOrderDetailPage(
   );
 }
 
-function poItemRowHtml(materials: Material[]) {
-  const options = materials
-    .map((m) => `<option value="${m.material_code}" data-price="${m.standard_price}">${m.material_code} — ${m.description}</option>`)
-    .join("");
-  const price = materials[0]?.standard_price ?? 0;
-  return html`<tr class="item-row" data-testid="po-item-row">
-    <td><select name="material_code[]" class="item-material" data-testid="po-item-material" required>${raw(options)}</select></td>
-    <td><input type="number" name="qty[]" class="item-qty" data-testid="po-item-qty" min="1" step="1" value="1" required /></td>
-    <td><input type="number" name="price[]" class="item-price" data-testid="po-item-price" min="0" step="0.01" value="${price}" required /></td>
-    <td class="item-line-total" data-testid="po-item-line-total">$0.00</td>
-    <td><button type="button" class="btn secondary remove-row-btn" data-testid="remove-row-btn">Remove</button></td>
-  </tr>`;
-}
-
 export function newPurchaseOrderPage(vendors: Vendor[], materials: Material[], opts: { error?: string } = {}) {
   const vendorOptions = vendors.map((v) => `<option value="${v.ref_id}">${v.name} (${v.ref_id})</option>`).join("");
+
+  // Materials scoped by vendor ref_id, so the item dropdown only ever offers
+  // materials that belong to the selected vendor.
+  const materialsByVendor: Record<string, { code: string; description: string; price: number }[]> = {};
+  for (const v of vendors) materialsByVendor[v.ref_id] = [];
+  const vendorRefById = new Map(vendors.map((v) => [v.id, v.ref_id]));
+  for (const m of materials) {
+    const vendorRef = vendorRefById.get(m.vendor_id);
+    if (vendorRef) materialsByVendor[vendorRef].push({ code: m.material_code, description: m.description, price: m.standard_price });
+  }
 
   return layout(
     "New Purchase Order",
@@ -139,19 +135,22 @@ export function newPurchaseOrderPage(vendors: Vendor[], materials: Material[], o
         </div>
       </form>
 
-      <template id="row-template">${poItemRowHtml(materials)}</template>
-      <script>${raw(poFormScript())}</script>`,
+      <script>${raw(poFormScript(materialsByVendor))}</script>`,
     { loggedIn: true }
   );
 }
 
-function poFormScript(): string {
+function poFormScript(materialsByVendor: Record<string, { code: string; description: string; price: number }[]>): string {
+  // < guards against a stray "</script" inside the JSON breaking out of the tag.
+  const data = JSON.stringify(materialsByVendor).replace(/</g, "\\u003c");
   return `
     (function () {
+      var materialsByVendor = ${data};
+      var vendorSelect = document.getElementById('vendor_ref');
       var tbody = document.getElementById('items-table-body');
-      var template = document.getElementById('row-template');
       var subtotalEl = document.getElementById('subtotal-display');
       function fmt(n) { return '$' + n.toFixed(2); }
+      function currentMaterials() { return materialsByVendor[vendorSelect.value] || []; }
       function recalc() {
         var subtotal = 0;
         tbody.querySelectorAll('.item-row').forEach(function (row) {
@@ -162,6 +161,19 @@ function poFormScript(): string {
           subtotal += lt;
         });
         subtotalEl.textContent = fmt(subtotal);
+      }
+      function rowHtml(materials) {
+        var options = materials.map(function (m) {
+          return '<option value="' + m.code + '" data-price="' + m.price + '">' + m.code + ' — ' + m.description + '</option>';
+        }).join('');
+        var price = materials[0] ? materials[0].price : 0;
+        return '<tr class="item-row" data-testid="po-item-row">' +
+          '<td><select name="material_code[]" class="item-material" data-testid="po-item-material" required>' + options + '</select></td>' +
+          '<td><input type="number" name="qty[]" class="item-qty" data-testid="po-item-qty" min="1" step="1" value="1" required /></td>' +
+          '<td><input type="number" name="price[]" class="item-price" data-testid="po-item-price" min="0" step="0.01" value="' + price + '" required /></td>' +
+          '<td class="item-line-total" data-testid="po-item-line-total">$0.00</td>' +
+          '<td><button type="button" class="btn secondary remove-row-btn" data-testid="remove-row-btn">Remove</button></td>' +
+        '</tr>';
       }
       function wireRow(row) {
         row.querySelectorAll('.item-qty, .item-price').forEach(function (input) {
@@ -178,14 +190,18 @@ function poFormScript(): string {
         });
       }
       function addRow() {
-        var clone = template.content.cloneNode(true);
-        tbody.appendChild(clone);
+        var materials = currentMaterials();
+        if (materials.length === 0) return;
+        tbody.insertAdjacentHTML('beforeend', rowHtml(materials));
         wireRow(tbody.lastElementChild);
         recalc();
       }
       document.getElementById('add-row-btn').addEventListener('click', addRow);
-      var existing = tbody.querySelectorAll('.item-row');
-      if (existing.length === 0) { addRow(); } else { existing.forEach(wireRow); recalc(); }
+      vendorSelect.addEventListener('change', function () {
+        tbody.innerHTML = '';
+        addRow();
+      });
+      addRow();
     })();
   `;
 }

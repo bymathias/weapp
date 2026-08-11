@@ -3,3 +3,6 @@ node_modules/
 .dev.vars
 dist/
 *.log
+
+# Override a global `*.sql` ignore — schema.sql/seed.sql are core to this app.
+!*.sql

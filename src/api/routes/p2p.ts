@@ -58,6 +58,7 @@ export function registerP2PRoutes(api: OpenAPIHono<Env>) {
       request: { body: { content: { "application/json": { schema: PurchaseOrderInputSchema } } } },
       responses: {
         201: { description: "Created purchase order", content: { "application/json": { schema: PurchaseOrderWithItemsSchema } } },
+        400: { description: "Material does not belong to the vendor", content: { "application/json": { schema: ErrorSchema } } },
         404: { description: "Vendor or material not found", content: { "application/json": { schema: ErrorSchema } } },
       },
     }),
@@ -70,6 +71,9 @@ export function registerP2PRoutes(api: OpenAPIHono<Env>) {
       for (const item of body.items) {
         const material = await getMaterialByCode(c.env.DB, item.material_code);
         if (!material) return c.json({ error: "not_found", message: `Material ${item.material_code} not found` }, 404);
+        if (material.vendor_id !== vendor.id) {
+          return c.json({ error: "invalid_material", message: `${material.material_code} does not belong to ${vendor.name}` }, 400);
+        }
         items.push({ material_id: material.id, qty: item.qty, price: item.price });
       }
 

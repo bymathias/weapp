@@ -41,6 +41,7 @@ export interface Material {
   id: number;
   material_code: string;
   description: string;
+  vendor_id: number;
   standard_price: number;
   stock_qty: number;
   created_at: string;
