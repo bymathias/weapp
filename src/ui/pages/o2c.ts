@@ -85,6 +85,7 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
         ${so.status === "Delivered"
           ? html`<form method="post" action="/sales-orders/${so.so_number}/bill"><button type="submit" class="btn" id="btn-bill" data-testid="btn-bill">Bill</button></form>`
           : ""}
+        <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/sales-orders/${so.so_number}/pdf" target="_blank" rel="noopener">Download PDF</a>
         <a class="btn secondary" id="back-btn" data-testid="back-btn" href="/sales-orders">Back to list</a>
       </div>
 

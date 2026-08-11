@@ -1,6 +1,6 @@
 import { createRoute, z, type OpenAPIHono } from "@hono/zod-openapi";
 import type { Env } from "../../types";
-import { getCustomerByRefId } from "../../db/master";
+import { getCustomer, getCustomerByRefId } from "../../db/master";
 import {
   createBilling,
   createDelivery,
@@ -15,6 +15,7 @@ import {
 } from "../../db/o2c";
 import { getFlow } from "../../lib/flow";
 import { mapActionError } from "../errors";
+import { generateSalesOrderPdf } from "../../pdf";
 import {
   BillNumberParamSchema,
   BillingDocumentSchema,
@@ -88,6 +89,36 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       const so = await getSalesOrderByNumber(c.env.DB, so_number);
       if (!so) return c.json({ error: "not_found", message: "Sales order not found" }, 404);
       return c.json(so, 200);
+    }
+  );
+
+  api.openapi(
+    createRoute({
+      method: "get",
+      path: "/sales-orders/{so_number}/pdf",
+      tags: ["Sales Orders"],
+      summary: "Download the sales order as a PDF",
+      security: [{ Bearer: [] }],
+      request: { params: SoNumberParamSchema },
+      responses: {
+        200: { description: "PDF document", content: { "application/pdf": { schema: { type: "string", format: "binary" } } } },
+        404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
+      },
+    }),
+    async (c) => {
+      const { so_number } = c.req.valid("param");
+      const so = await getSalesOrderByNumber(c.env.DB, so_number);
+      if (!so) return c.json({ error: "not_found", message: "Sales order not found" }, 404);
+      const customer = await getCustomer(c.env.DB, so.customer_id);
+      if (!customer) return c.json({ error: "not_found", message: "Customer not found" }, 404);
+      const pdfBytes = await generateSalesOrderPdf(so, customer);
+      return new Response(pdfBytes as BodyInit, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="${so.so_number}.pdf"`,
+        },
+      });
     }
   );
 

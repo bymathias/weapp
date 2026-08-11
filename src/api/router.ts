@@ -15,10 +15,16 @@ apiRouter.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
   description: "Obtain via POST /oauth/token (client_credentials grant).",
 });
 
-// The PDF link is also used directly by a logged-in browser (the PO detail
-// page's "Download PDF" button), so accept a UI session cookie there in
-// addition to the bearer token API automation uses everywhere else.
+// The PDF links are also used directly by a logged-in browser (the PO/SO
+// detail pages' "Download PDF" buttons), so accept a UI session cookie
+// there in addition to the bearer token API automation uses everywhere else.
 apiRouter.use("/purchase-orders/:po_number/pdf", async (c, next) => {
+  if (await isAuthenticated(c)) {
+    c.set("apiClientId", "ui-session");
+  }
+  await next();
+});
+apiRouter.use("/sales-orders/:so_number/pdf", async (c, next) => {
   if (await isAuthenticated(c)) {
     c.set("apiClientId", "ui-session");
   }
