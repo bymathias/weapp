@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "wesap"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "8af4d5f9-b642-4ebe-b06e-4e84664a2a44"
 
 [vars]
 UI_USERNAME = "admin"
