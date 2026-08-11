@@ -230,6 +230,7 @@ export function layout(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${title} · WeSAP</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a6ed1'/%3E%3Crect x='5' y='5' width='9' height='9' rx='2' fill='%23fff'/%3E%3Crect x='18' y='5' width='9' height='9' rx='2' fill='%23fff'/%3E%3Crect x='5' y='18' width='9' height='9' rx='2' fill='%23fff'/%3E%3Crect x='18' y='18' width='9' height='9' rx='2' fill='%23fff'/%3E%3C/svg%3E" />
   <style>${STYLE}</style>
 </head>
 <body>
