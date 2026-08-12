@@ -3,10 +3,11 @@ import { layout } from "../layout";
 import { filterBar, money, statusBadge } from "./shared";
 import type { PaymentListRow } from "../../db/payments";
 
-function paymentRow(p: PaymentListRow, rowTestid: string, statusTestidPrefix: string) {
+function paymentRow(p: PaymentListRow, rowTestid: string, statusTestidPrefix: string, showCustomerPo: boolean) {
   return html`<tr id="${rowTestid}-${p.pay_number}" data-testid="${rowTestid}">
     <td>${p.pay_number}</td>
     <td>${p.ref_number}</td>
+    ${showCustomerPo ? html`<td data-testid="incoming-payment-customer-po-number">${p.customer_po_number ?? "—"}</td>` : ""}
     <td>${p.party_name}</td>
     <td>${money(p.amount)}</td>
     <td>${p.created_at.slice(0, 10)}</td>
@@ -16,7 +17,7 @@ function paymentRow(p: PaymentListRow, rowTestid: string, statusTestidPrefix: st
 
 // Payments (outgoing / P2P): vendor payments, direction = 'out'.
 export function outgoingPaymentsListPage(rows: PaymentListRow[]) {
-  const body = rows.map((p) => paymentRow(p, "payment-row", "payment-status")).join("");
+  const body = rows.map((p) => paymentRow(p, "payment-row", "payment-status", false)).join("");
 
   return layout(
     "Payments",
@@ -39,9 +40,11 @@ export function outgoingPaymentsListPage(rows: PaymentListRow[]) {
   );
 }
 
-// Incoming Payments (O2C): customer receipts, direction = 'in'.
+// Incoming Payments (O2C): customer receipts, direction = 'in'. The
+// filter-bar's client-side row search already covers this column since it
+// matches on full row text — no new search logic needed.
 export function incomingPaymentsListPage(rows: PaymentListRow[]) {
-  const body = rows.map((p) => paymentRow(p, "incoming-payment-row", "incoming-payment-status")).join("");
+  const body = rows.map((p) => paymentRow(p, "incoming-payment-row", "incoming-payment-status", true)).join("");
 
   return layout(
     "Incoming Payments",
@@ -55,9 +58,9 @@ export function incomingPaymentsListPage(rows: PaymentListRow[]) {
       <div class="panel">
         <table id="incoming-payments-table" data-testid="incoming-payments-table">
           <thead>
-            <tr><th>Payment</th><th>Billing Document</th><th>Customer</th><th>Amount</th><th>Date</th><th>Status</th></tr>
+            <tr><th>Payment</th><th>Billing Document</th><th>Customer PO</th><th>Customer</th><th>Amount</th><th>Date</th><th>Status</th></tr>
           </thead>
-          <tbody>${raw(body || `<tr><td colspan="6" class="muted">No incoming payments yet.</td></tr>`)}</tbody>
+          <tbody>${raw(body || `<tr><td colspan="7" class="muted">No incoming payments yet.</td></tr>`)}</tbody>
         </table>
       </div>`,
     { loggedIn: true }

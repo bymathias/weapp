@@ -129,6 +129,12 @@ INSERT INTO si_items (si_id, po_item_id, qty, price, line_total) VALUES
   (4, 3, 3, 4200.00, 12600.00);
 
 -- Sales Orders ----------------------------------------------------------------
+-- PO-driven O2C: each order carries the customer's own Purchase Order number
+-- (their own numbering format — this isn't WeSAP's to standardize) plus the
+-- WeCPQ quote ref it traces back to. Both are supplied by the UiPath bridge,
+-- which has already matched the customer PO against the WeCPQ quote before
+-- calling POST /api/sales-orders — WeSAP just carries them through.
+--
 -- SO1 (Northbridge): full happy path, delivered+billed+paid.
 -- SO2 (Datapoint): delivered, not yet billed — live Bill demo.
 -- SO3 (Meridian): Open — live Create Delivery demo.
@@ -140,14 +146,14 @@ INSERT INTO si_items (si_id, po_item_id, qty, price, line_total) VALUES
 -- SO7 (Harbor): Open, source_quote_ref references WeCPQ's Q-2026-0011 (also
 --   a Harbor Networks / CrowdStrike quote) — illustrates the bridge field.
 
-INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, total_amount) VALUES
-  ('1000000001', 1, 'Paid', NULL, 5700.00),
-  ('1000000002', 2, 'Delivered', NULL, 2850.00),
-  ('1000000003', 3, 'Open', NULL, 8400.00),
-  ('1000000004', 4, 'Billed', NULL, 16000.00),
-  ('1000000005', 8, 'Open', NULL, 27500.00),
-  ('1000000006', 7, 'Blocked (Credit)', NULL, 52000.00),
-  ('1000000007', 6, 'Open', 'Q-2026-0011', 17000.00);
+INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, customer_po_number, total_amount) VALUES
+  ('1000000001', 1, 'Paid', 'Q-2026-0002', 'PO-NORTHBRIDGE-2026-0142', 5700.00),
+  ('1000000002', 2, 'Delivered', 'Q-2026-0004', 'DPS-PO-88231', 2850.00),
+  ('1000000003', 3, 'Open', 'Q-2026-0006', 'PO-MERIDIAN-4471', 8400.00),
+  ('1000000004', 4, 'Billed', 'Q-2026-0008', 'CCS2026-0219', 16000.00),
+  ('1000000005', 8, 'Open', 'Q-2026-0009', 'APEX-PO-2026-056', 27500.00),
+  ('1000000006', 7, 'Blocked (Credit)', 'Q-2026-0010', 'SDG-PO-30187', 52000.00),
+  ('1000000007', 6, 'Open', 'Q-2026-0011', 'HN-2026-PO-0088', 17000.00);
 
 INSERT INTO so_items (so_id, description, qty, unit_price, line_total, material_code) VALUES
   (1, 'FortiGate 100F Firewall Appliance', 2, 1850.00, 3700.00, 'MAT-0001'),
@@ -172,10 +178,11 @@ INSERT INTO deliveries (dlv_number, so_id, status) VALUES
   ('8000000003', 4, 'Posted');
 
 -- Billing Documents -------------------------------------------------------
+-- customer_po_number is copied from the originating sales order.
 
-INSERT INTO billing_documents (bill_number, so_id, customer_id, amount, status) VALUES
-  ('9000000001', 1, 1, 5700.00, 'Paid'),
-  ('9000000002', 4, 4, 16000.00, 'Open');
+INSERT INTO billing_documents (bill_number, so_id, customer_id, amount, status, customer_po_number) VALUES
+  ('9000000001', 1, 1, 5700.00, 'Paid', 'PO-NORTHBRIDGE-2026-0142'),
+  ('9000000002', 4, 4, 16000.00, 'Open', 'CCS2026-0219');
 
 -- Payments ------------------------------------------------------------------
 

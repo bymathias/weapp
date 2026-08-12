@@ -129,6 +129,7 @@ export interface SalesOrder {
   customer_id: number;
   status: SoStatus;
   source_quote_ref: string | null;
+  customer_po_number: string | null;
   total_amount: number;
   created_at: string;
 }
@@ -166,6 +167,7 @@ export interface BillingDocument {
   customer_id: number;
   amount: number;
   status: BillingStatus;
+  customer_po_number: string | null;
   created_at: string;
 }
 

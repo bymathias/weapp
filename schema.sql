@@ -112,6 +112,7 @@ CREATE TABLE sales_orders (
   customer_id INTEGER NOT NULL REFERENCES customers(id),
   status TEXT NOT NULL CHECK (status IN ('Open', 'Blocked (Credit)', 'Released', 'Delivered', 'Billed', 'Paid')) DEFAULT 'Open',
   source_quote_ref TEXT,
+  customer_po_number TEXT,
   total_amount REAL NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -141,6 +142,7 @@ CREATE TABLE billing_documents (
   customer_id INTEGER NOT NULL REFERENCES customers(id),
   amount REAL NOT NULL DEFAULT 0,
   status TEXT NOT NULL CHECK (status IN ('Open', 'Paid')) DEFAULT 'Open',
+  customer_po_number TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

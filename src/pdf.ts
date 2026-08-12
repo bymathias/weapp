@@ -187,10 +187,15 @@ export async function generateSalesOrderPdf(so: SalesOrderWithItems, customer: C
   draw(`Date: ${new Date(so.created_at).toLocaleDateString("en-US")}`, leftX, { size: 10 });
   y -= 14;
   draw(`Status: ${so.status}`, leftX, { size: 10, f: bold });
+  if (so.customer_po_number) {
+    y -= 14;
+    draw(`Customer PO: ${so.customer_po_number}`, leftX, { size: 10, f: bold });
+  }
   if (so.source_quote_ref) {
     y -= 14;
     draw(`Source Quote: ${so.source_quote_ref}`, leftX, { size: 10 });
   }
+  const leftEndY = y;
 
   y = topY;
   draw("SOLD TO", rightX, { size: 13, f: bold });
@@ -203,7 +208,8 @@ export async function generateSalesOrderPdf(so: SalesOrderWithItems, customer: C
   y -= 14;
   draw(`Account owner: ${customer.account_owner}`, rightX, { size: 10 });
 
-  y -= 34;
+  // Items table starts below whichever column (meta or customer) ran longer.
+  y = Math.min(y, leftEndY) - 24;
 
   // Line items table
   const col = {

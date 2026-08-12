@@ -230,6 +230,7 @@ export const SalesOrderSchema = z
     customer_id: z.number().int(),
     status: SoStatusSchema,
     source_quote_ref: z.string().nullable(),
+    customer_po_number: z.string().nullable(),
     total_amount: z.number(),
     created_at: z.string(),
   })
@@ -252,6 +253,10 @@ export const SalesOrderInputSchema = z
   .object({
     customer_ref: z.string().min(1),
     items: z.array(SoItemInputSchema).min(1),
+    // PO-driven O2C: the UiPath bridge has already matched the customer's PO
+    // against the WeCPQ quote before calling this endpoint, so a customer PO
+    // number is required. source_quote_ref stays optional for flexibility.
+    customer_po_number: z.string().min(1),
     source_quote_ref: z.string().optional(),
   })
   .openapi("SalesOrderInput");
@@ -288,6 +293,7 @@ export const BillingDocumentSchema = z
     customer_id: z.number().int(),
     amount: z.number(),
     status: BillingStatusSchema,
+    customer_po_number: z.string().nullable(),
     created_at: z.string(),
   })
   .openapi("BillingDocument");
@@ -312,6 +318,7 @@ export const PaymentSchema = z
     ref_id: z.number().int(),
     ref_number: z.string(),
     party_name: z.string(),
+    customer_po_number: z.string().nullable(),
     direction: PaymentDirectionSchema,
     amount: z.number(),
     status: PaymentStatusSchema,

@@ -20,6 +20,7 @@ export function salesOrdersListPage(rows: SalesOrderListRow[]) {
       (so) => html`<tr class="clickable-row" data-testid="so-row" data-href="/sales-orders/${so.so_number}">
         <td><a class="link" data-testid="so-link" href="/sales-orders/${so.so_number}">${so.so_number}</a></td>
         <td>${so.customer_name}</td>
+        <td data-testid="so-customer-po-number">${so.customer_po_number ?? "—"}</td>
         <td>${money(so.total_amount)}</td>
         <td>${statusBadge(so.status, `so-status-${so.so_number}`)}</td>
         <td>${so.created_at.slice(0, 10)}</td>
@@ -39,8 +40,8 @@ export function salesOrdersListPage(rows: SalesOrderListRow[]) {
       ${filterBar("so-table")}
       <div class="panel">
         <table id="so-table" data-testid="so-table">
-          <thead><tr><th>SO Number</th><th>Customer</th><th>Total</th><th>Status</th><th>Created</th></tr></thead>
-          <tbody>${raw(body || `<tr><td colspan="5" class="muted">No sales orders yet.</td></tr>`)}</tbody>
+          <thead><tr><th>SO Number</th><th>Customer</th><th>Customer PO</th><th>Total</th><th>Status</th><th>Created</th></tr></thead>
+          <tbody>${raw(body || `<tr><td colspan="6" class="muted">No sales orders yet.</td></tr>`)}</tbody>
         </table>
       </div>`,
     { loggedIn: true }
@@ -61,6 +62,9 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
     .join("");
 
   const facets = [{ label: "Customer", value: html`${customer.name} (${customer.ref_id})` }];
+  if (so.customer_po_number) {
+    facets.push({ label: "Customer PO", value: html`<span data-testid="so-customer-po-number-value">${so.customer_po_number}</span>` });
+  }
   if (so.source_quote_ref) {
     facets.push({ label: "Source Quote", value: html`<span data-testid="so-source-quote-ref">${so.source_quote_ref}</span>` });
   }
@@ -148,8 +152,14 @@ export function newSalesOrderPage(customers: Customer[], materials: Material[], 
               <select id="customer_ref" name="customer_ref" data-testid="so-customer" required>${raw(customerOptions)}</select>
             </div>
             <div class="field">
-              <label for="source_quote_ref">Source Quote Ref (optional)</label>
-              <input type="text" id="source_quote_ref" name="source_quote_ref" data-testid="so-source-quote-ref-input" placeholder="e.g. Q-2026-0011" />
+              <label for="customer_po_number">Customer PO Number</label>
+              <input type="text" id="customer_po_number" name="customer_po_number" data-testid="so-customer-po-number-input" placeholder="e.g. PO-NORTHBRIDGE-2026-0142" required />
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label for="source_quote_ref">Quote Ref</label>
+              <input type="text" id="source_quote_ref" name="source_quote_ref" data-testid="so-source-quote-ref-input" placeholder="e.g. Q-2026-0011" required />
             </div>
           </div>
         </div>
@@ -315,6 +325,7 @@ export function billingListPage(rows: BillingListRow[]) {
         <td><a class="link" data-testid="bill-link" href="/billing/${b.bill_number}">${b.bill_number}</a></td>
         <td><a class="link" href="/sales-orders/${b.so_number}">${b.so_number}</a></td>
         <td>${b.customer_name}</td>
+        <td data-testid="bill-customer-po-number">${b.customer_po_number ?? "—"}</td>
         <td>${money(b.amount)}</td>
         <td>${statusBadge(b.status, `bill-status-${b.bill_number}`)}</td>
         <td>${b.created_at.slice(0, 10)}</td>
@@ -333,8 +344,8 @@ export function billingListPage(rows: BillingListRow[]) {
       ${filterBar("bill-table")}
       <div class="panel">
         <table id="bill-table" data-testid="bill-table">
-          <thead><tr><th>Bill Number</th><th>SO Number</th><th>Customer</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
-          <tbody>${raw(body || `<tr><td colspan="6" class="muted">No billing documents yet.</td></tr>`)}</tbody>
+          <thead><tr><th>Bill Number</th><th>SO Number</th><th>Customer</th><th>Customer PO</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
+          <tbody>${raw(body || `<tr><td colspan="7" class="muted">No billing documents yet.</td></tr>`)}</tbody>
         </table>
       </div>`,
     { loggedIn: true }
@@ -342,6 +353,14 @@ export function billingListPage(rows: BillingListRow[]) {
 }
 
 export function billingDetailPage(bill: BillingDocument, so: SalesOrder, customer: Customer, flow: FlowEntry[]) {
+  const facets = [
+    { label: "Customer", value: html`${customer.name} (${customer.ref_id})` },
+    { label: "Sales Order", value: html`<a class="link" href="/sales-orders/${so.so_number}">${so.so_number}</a>` },
+  ];
+  if (bill.customer_po_number) {
+    facets.push({ label: "Customer PO", value: html`<span data-testid="bill-customer-po-number-value">${bill.customer_po_number}</span>` });
+  }
+
   return layout(
     `Billing ${bill.bill_number}`,
     html`${objectPageHeader({
@@ -349,10 +368,7 @@ export function billingDetailPage(bill: BillingDocument, so: SalesOrder, custome
         titleTestid: "bill-number",
         status: bill.status,
         statusTestid: "bill-status-badge",
-        facets: [
-          { label: "Customer", value: html`${customer.name} (${customer.ref_id})` },
-          { label: "Sales Order", value: html`<a class="link" href="/sales-orders/${so.so_number}">${so.so_number}</a>` },
-        ],
+        facets,
       })}
 
       ${bill.status === "Paid"

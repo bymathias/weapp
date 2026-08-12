@@ -8,10 +8,16 @@ API-based automation.
 
 WeSAP is the twin of [WeCPQ](https://github.com/) (a Configure-Price-Quote
 demo app) — same stack, same conventions — and the two are meant to be used
-together in a single demo: WeCPQ produces a Won quote, UiPath reads it and
-calls WeSAP's `POST /api/sales-orders` to create the matching sales order.
-**WeSAP's customer master data mirrors WeCPQ's exactly (same names and
-`ref_id`s)**, so the bridge always resolves the same customer on both sides.
+together in a single demo, PO-driven: WeCPQ produces a Won quote, the
+customer sends back their own Purchase Order referencing it, and a UiPath
+bot/agent reads both, matches the customer PO against the WeCPQ quote, and
+calls WeSAP's `POST /api/sales-orders` with the matched `customer_po_number`
+and `source_quote_ref` to create the sales order. **The PO-vs-quote match
+itself happens upstream, in the UiPath layer — WeSAP only captures and
+carries the two references** (order → delivery → billing/invoice) so the
+customer's invoice can always be traced back to their PO. **WeSAP's customer
+master data mirrors WeCPQ's exactly (same names and `ref_id`s)**, so the
+bridge always resolves the same customer on both sides.
 
 ## Stack
 
@@ -35,6 +41,10 @@ redeploy) before using this anywhere non-demo.
 ```
 schema.sql          D1 table definitions (master data, P2P docs, O2C docs, doc_flow)
 seed.sql             deterministic demo data spanning both processes
+migrations/          incremental ALTER TABLE migrations for an existing DB
+                       (schema.sql already has the full current schema for
+                       fresh installs — these are for applying the same
+                       change to a live DB without dropping/reseeding it)
 src/
   index.ts           app entrypoint — mounts oauth, api, ui routers
   types.ts            shared Env/domain types
@@ -138,11 +148,14 @@ This starts `wrangler dev` (Miniflare) on `http://localhost:8787`. Log in at
 
 Tokens expire after 1 hour.
 
-### The WeCPQ → UiPath → WeSAP bridge
+### The WeCPQ → UiPath → WeSAP bridge (PO-driven)
 
-`POST /api/sales-orders` is the bridge target: given `customer_ref`, `items[]`,
-and (optionally) `source_quote_ref`, it computes totals server-side, runs the
-credit-limit check, and returns the created sales order:
+`POST /api/sales-orders` is the bridge target — called once the UiPath bot
+has matched the customer's PO against the WeCPQ quote. Given `customer_ref`,
+`items[]`, `customer_po_number` (required — a PO-driven order must carry
+one), and `source_quote_ref`, it computes totals server-side, runs the
+credit-limit check, and returns the created sales order, carrying both
+references through to delivery and billing:
 
 ```sh
 curl -X POST http://localhost:8787/api/sales-orders \
@@ -150,6 +163,7 @@ curl -X POST http://localhost:8787/api/sales-orders \
   -H "Content-Type: application/json" \
   -d '{
     "customer_ref": "CUST-0008",
+    "customer_po_number": "PO-APEX-2026-056",
     "source_quote_ref": "Q-2026-0009",
     "items": [{ "description": "Onboarding Services", "qty": 10, "unit_price": 500 }]
   }'
@@ -157,7 +171,9 @@ curl -X POST http://localhost:8787/api/sales-orders \
 
 Because WeSAP's customers use the same `ref_id`s as WeCPQ's, a UiPath bot
 reading a Won quote from WeCPQ can pass its `customer.ref_id` straight
-through as `customer_ref` here.
+through as `customer_ref` here. The PO-vs-quote match itself is out of scope
+for WeSAP — it belongs to the UiPath automation layer, which supplies the
+already-matched `customer_po_number` and `source_quote_ref`.
 
 ## Business rules
 

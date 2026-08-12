@@ -54,8 +54,12 @@ export function registerO2CUiRoutes(ui: Hono<Env>) {
 
     if (!customer) return c.html(newSalesOrderPage(customers, materials, { error: "Select a customer." }), 400);
 
-    const sourceQuoteRef =
-      typeof body.source_quote_ref === "string" && body.source_quote_ref.trim() !== "" ? body.source_quote_ref.trim() : null;
+    const customerPoNumber = typeof body.customer_po_number === "string" ? body.customer_po_number.trim() : "";
+    const sourceQuoteRef = typeof body.source_quote_ref === "string" ? body.source_quote_ref.trim() : "";
+
+    if (!customerPoNumber || !sourceQuoteRef) {
+      return c.html(newSalesOrderPage(customers, materials, { error: "Customer PO Number and Quote Ref are required." }), 400);
+    }
 
     const descriptions = toArray(body["description[]"]);
     const qtys = toArray(body["qty[]"]);
@@ -75,7 +79,7 @@ export function registerO2CUiRoutes(ui: Hono<Env>) {
       return c.html(newSalesOrderPage(customers, materials, { error: "Add at least one line item." }), 400);
     }
 
-    const so = await createSalesOrder(c.env.DB, customer.id, items, sourceQuoteRef);
+    const so = await createSalesOrder(c.env.DB, customer.id, items, sourceQuoteRef, customerPoNumber);
     return c.redirect(`/sales-orders/${so.so_number}`);
   });
 

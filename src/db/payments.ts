@@ -7,20 +7,34 @@ import { getBillingByNumber } from "./o2c";
 export interface PaymentListRow extends Payment {
   ref_number: string;
   party_name: string;
+  // AR ("in") only — the customer's PO number, copied onto the billing
+  // document at creation. Display-only: lets the AR/incoming-payments view
+  // be searched/matched by customer PO, not just the WeSAP invoice number.
+  customer_po_number: string | null;
 }
 
-async function resolveRefAndParty(db: D1Database, refType: PaymentRefType, refId: number): Promise<{ ref_number: string; party_name: string }> {
+async function resolveRefAndParty(
+  db: D1Database,
+  refType: PaymentRefType,
+  refId: number
+): Promise<{ ref_number: string; party_name: string; customer_po_number: string | null }> {
   const row =
     refType === "supplier_invoice"
       ? await db
-          .prepare(`SELECT si.inv_number as ref_number, v.name as party_name FROM supplier_invoices si JOIN vendors v ON v.id = si.vendor_id WHERE si.id = ?1`)
+          .prepare(
+            `SELECT si.inv_number as ref_number, v.name as party_name, NULL as customer_po_number
+             FROM supplier_invoices si JOIN vendors v ON v.id = si.vendor_id WHERE si.id = ?1`
+          )
           .bind(refId)
-          .first<{ ref_number: string; party_name: string }>()
+          .first<{ ref_number: string; party_name: string; customer_po_number: string | null }>()
       : await db
-          .prepare(`SELECT bd.bill_number as ref_number, c.name as party_name FROM billing_documents bd JOIN customers c ON c.id = bd.customer_id WHERE bd.id = ?1`)
+          .prepare(
+            `SELECT bd.bill_number as ref_number, c.name as party_name, bd.customer_po_number as customer_po_number
+             FROM billing_documents bd JOIN customers c ON c.id = bd.customer_id WHERE bd.id = ?1`
+          )
           .bind(refId)
-          .first<{ ref_number: string; party_name: string }>();
-  return row ?? { ref_number: "", party_name: "" };
+          .first<{ ref_number: string; party_name: string; customer_po_number: string | null }>();
+  return row ?? { ref_number: "", party_name: "", customer_po_number: null };
 }
 
 // direction omitted -> all payments (both AP/"out" and AR/"in").
@@ -29,7 +43,8 @@ export async function listPayments(db: D1Database, direction?: PaymentDirection)
     .prepare(
       `SELECT p.*,
          CASE WHEN p.ref_type = 'supplier_invoice' THEN si.inv_number ELSE bd.bill_number END AS ref_number,
-         CASE WHEN p.ref_type = 'supplier_invoice' THEN v.name ELSE c.name END AS party_name
+         CASE WHEN p.ref_type = 'supplier_invoice' THEN v.name ELSE c.name END AS party_name,
+         bd.customer_po_number AS customer_po_number
        FROM payments p
        LEFT JOIN supplier_invoices si ON p.ref_type = 'supplier_invoice' AND si.id = p.ref_id
        LEFT JOIN vendors v ON v.id = si.vendor_id

@@ -48,7 +48,8 @@ export async function createSalesOrder(
   db: D1Database,
   customerId: number,
   items: CreateSoItemInput[],
-  sourceQuoteRef: string | null
+  sourceQuoteRef: string | null,
+  customerPoNumber: string
 ): Promise<SalesOrderWithItems> {
   const customer = await getCustomer(db, customerId);
   if (!customer) throw new Error("not_found");
@@ -63,10 +64,10 @@ export async function createSalesOrder(
 
   const result = await db
     .prepare(
-      `INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, total_amount)
-       VALUES (?1, ?2, ?3, ?4, ?5)`
+      `INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, customer_po_number, total_amount)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
     )
-    .bind(soNumber, customerId, status, sourceQuoteRef, totalAmount)
+    .bind(soNumber, customerId, status, sourceQuoteRef, customerPoNumber, totalAmount)
     .run();
   const soId = result.meta.last_row_id as number;
 
@@ -179,8 +180,11 @@ export async function createBilling(db: D1Database, soNumber: string): Promise<B
   const billNumber = await nextDocNumber(db, "billing_documents", "bill_number", 9000000001);
 
   const result = await db
-    .prepare(`INSERT INTO billing_documents (bill_number, so_id, customer_id, amount, status) VALUES (?1, ?2, ?3, ?4, 'Open')`)
-    .bind(billNumber, so.id, so.customer_id, so.total_amount)
+    .prepare(
+      `INSERT INTO billing_documents (bill_number, so_id, customer_id, amount, status, customer_po_number)
+       VALUES (?1, ?2, ?3, ?4, 'Open', ?5)`
+    )
+    .bind(billNumber, so.id, so.customer_id, so.total_amount, so.customer_po_number)
     .run();
   const billId = result.meta.last_row_id as number;
 

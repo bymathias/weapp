@@ -66,7 +66,7 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       const body = c.req.valid("json");
       const customer = await getCustomerByRefId(c.env.DB, body.customer_ref);
       if (!customer) return c.json({ error: "not_found", message: "Customer not found" }, 404);
-      const so = await createSalesOrder(c.env.DB, customer.id, body.items, body.source_quote_ref ?? null);
+      const so = await createSalesOrder(c.env.DB, customer.id, body.items, body.source_quote_ref ?? null, body.customer_po_number);
       return c.json(so, 201);
     }
   );
