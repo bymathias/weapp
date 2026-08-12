@@ -191,28 +191,25 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
 
       <div class="list-toolbar">
         <h2>Quotes</h2>
-        <div class="toolbar-actions">
-          <a class="btn" id="new-quote-btn" data-testid="new-quote-btn" href="/quotes/new">New Quote</a>
-          <form id="quote-search-form" data-testid="quote-search-form" method="get" action="/" class="search-form">
-            <input
-              type="text"
-              id="quote-search-input"
-              name="q"
-              data-testid="quote-search-input"
-              placeholder="Search by quote ref, customer name, or ID"
-              value="${search}"
-              autocomplete="off"
-            />
-            <button type="submit" class="btn" id="quote-search-submit" data-testid="quote-search-submit">Search</button>
-            <button
-              type="button"
-              class="btn secondary"
-              id="quote-search-clear"
-              data-testid="quote-search-clear"
-              style="display:${search ? "inline-block" : "none"}"
-            >Clear</button>
-          </form>
-        </div>
+        <form id="quote-search-form" data-testid="quote-search-form" method="get" action="/" class="search-form">
+          <input
+            type="text"
+            id="quote-search-input"
+            name="q"
+            data-testid="quote-search-input"
+            placeholder="Search by quote ref, customer name, or ID"
+            value="${search}"
+            autocomplete="off"
+          />
+          <button type="submit" class="btn" id="quote-search-submit" data-testid="quote-search-submit">Search</button>
+          <button
+            type="button"
+            class="btn secondary"
+            id="quote-search-clear"
+            data-testid="quote-search-clear"
+            style="display:${search ? "inline-block" : "none"}"
+          >Clear</button>
+        </form>
       </div>
 
       ${quotesResultsPanel(quoteList, search)}
