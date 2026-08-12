@@ -280,7 +280,7 @@ export const FIORI_CSS = `
     text-decoration: none;
     color: var(--text);
     width: 11rem;
-    height: 11rem;
+    height: 7rem;
     transition: box-shadow 0.15s, border-color 0.15s;
   }
   .tile:hover { box-shadow: 0 4px 12px rgba(10,110,209,0.18); border-color: var(--brand); }
