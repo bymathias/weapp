@@ -191,25 +191,28 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
 
       <div class="list-toolbar">
         <h2>Quotes</h2>
-        <form id="quote-search-form" data-testid="quote-search-form" method="get" action="/" class="search-form">
-          <input
-            type="text"
-            id="quote-search-input"
-            name="q"
-            data-testid="quote-search-input"
-            placeholder="Search by quote ref, customer name, or ID"
-            value="${search}"
-            autocomplete="off"
-          />
-          <button type="submit" class="btn" id="quote-search-submit" data-testid="quote-search-submit">Search</button>
-          <button
-            type="button"
-            class="btn secondary"
-            id="quote-search-clear"
-            data-testid="quote-search-clear"
-            style="display:${search ? "inline-block" : "none"}"
-          >Clear</button>
-        </form>
+        <div class="toolbar-actions">
+          <a class="btn" id="new-quote-btn" data-testid="new-quote-btn" href="/quotes/new">New Quote</a>
+          <form id="quote-search-form" data-testid="quote-search-form" method="get" action="/" class="search-form">
+            <input
+              type="text"
+              id="quote-search-input"
+              name="q"
+              data-testid="quote-search-input"
+              placeholder="Search by quote ref, customer name, or ID"
+              value="${search}"
+              autocomplete="off"
+            />
+            <button type="submit" class="btn" id="quote-search-submit" data-testid="quote-search-submit">Search</button>
+            <button
+              type="button"
+              class="btn secondary"
+              id="quote-search-clear"
+              data-testid="quote-search-clear"
+              style="display:${search ? "inline-block" : "none"}"
+            >Clear</button>
+          </form>
+        </div>
       </div>
 
       ${quotesResultsPanel(quoteList, search)}
@@ -381,7 +384,8 @@ interface QuoteFormItem {
 interface QuoteFormPageOptions {
   pageTitle: string;
   heading: string;
-  customer: Customer;
+  customer: Customer | null;
+  customers?: Customer[];
   formAction: string;
   cancelHref: string;
   submitLabel: string;
@@ -395,7 +399,9 @@ interface QuoteFormPageOptions {
 
 // Shared by the "New Quote" and "Edit Quote" pages — same field layout, same
 // add/remove line-item grid and live-totals script, different initial values
-// and submit target.
+// and submit target. When `customer` is null (New Quote reached without a
+// customer preselected), the customer is picked from a dropdown instead of
+// a fixed hidden field.
 function quoteFormPage(opts: QuoteFormPageOptions) {
   const vendorOptions = VENDORS.map(
     (v) => `<option value="${v}"${v === opts.initialVendor ? " selected" : ""}>${v}</option>`
@@ -404,18 +410,33 @@ function quoteFormPage(opts: QuoteFormPageOptions) {
     (s) => `<option value="${s}"${s === opts.initialStatus ? " selected" : ""}>${s}</option>`
   ).join("");
   const initialRows = opts.initialItems.map((item) => itemRowHtml(item)).join("");
+  const customerOptions = (opts.customers ?? [])
+    .map((c) => `<option value="${c.id}">${c.name} (${c.ref_id})</option>`)
+    .join("");
 
   return layout(
     opts.pageTitle,
     html`<h1>${opts.heading}</h1>
-      <p class="muted">for <strong id="quote-customer-name">${opts.customer.name}</strong> (${opts.customer.ref_id})</p>
+      ${opts.customer
+        ? html`<p class="muted">for <strong id="quote-customer-name">${opts.customer.name}</strong> (${opts.customer.ref_id})</p>`
+        : html`<p class="muted">Select a customer to create a quote for.</p>`}
 
       ${opts.error ? html`<div class="error" id="quote-form-error" data-testid="quote-form-error">${opts.error}</div>` : ""}
 
       <form id="quote-form" data-testid="quote-form" method="post" action="${opts.formAction}">
-        ${opts.includeCustomerIdField
-          ? html`<input type="hidden" name="customer_id" id="customer_id" value="${opts.customer.id}" />`
-          : ""}
+        ${opts.customer
+          ? opts.includeCustomerIdField
+            ? html`<input type="hidden" name="customer_id" id="customer_id" value="${opts.customer.id}" />`
+            : ""
+          : html`<div class="panel">
+              <div class="field">
+                <label for="customer_id">Customer</label>
+                <select id="customer_id" name="customer_id" data-testid="quote-customer-select" required>
+                  <option value="">Select a customer…</option>
+                  ${raw(customerOptions)}
+                </select>
+              </div>
+            </div>`}
 
         <div class="panel">
           <div class="two-col">
@@ -489,13 +510,14 @@ function itemRowHtml(item?: QuoteFormItem) {
       </tr>`;
 }
 
-export function newQuotePage(customer: Customer, opts: { error?: string } = {}) {
+export function newQuotePage(customer: Customer | null, customers: Customer[], opts: { error?: string } = {}) {
   return quoteFormPage({
     pageTitle: "New Quote",
     heading: "New Quote",
     customer,
+    customers,
     formAction: "/quotes/new",
-    cancelHref: `/customers/${customer.ref_id}`,
+    cancelHref: customer ? `/customers/${customer.ref_id}` : "/",
     submitLabel: "Save Quote",
     initialVendor: VENDORS[0],
     initialStatus: "Draft",

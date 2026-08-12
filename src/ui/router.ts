@@ -130,9 +130,13 @@ uiRouter.get("/customers/:refId", async (c) => {
 
 uiRouter.get("/quotes/new", async (c) => {
   const refId = c.req.query("customer_id") ?? "";
+  if (!refId) {
+    const customers = await listCustomers(c.env.DB);
+    return c.html(newQuotePage(null, customers));
+  }
   const customer = await getCustomerByRefId(c.env.DB, refId);
   if (!customer) return notFound(c, "Customer", refId);
-  return c.html(newQuotePage(customer));
+  return c.html(newQuotePage(customer, []));
 });
 
 uiRouter.post("/quotes/new", async (c) => {
@@ -144,7 +148,7 @@ uiRouter.post("/quotes/new", async (c) => {
   const { vendor, status, marginPct, items } = parseQuoteForm(body);
 
   if (items.length === 0) {
-    return c.html(newQuotePage(customer, { error: "Add at least one line item with a description and quantity." }), 400);
+    return c.html(newQuotePage(customer, [], { error: "Add at least one line item with a description and quantity." }), 400);
   }
 
   const quote = await createQuote(c.env.DB, customerId, { vendor, status, margin_pct: marginPct, items });

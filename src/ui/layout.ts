@@ -168,6 +168,7 @@ const STYLE = `
 
   .list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 24px 0 12px; }
   .list-toolbar h2 { margin: 0; }
+  .toolbar-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .search-form { display: flex; gap: 8px; align-items: center; }
   .search-form input[type=text] { width: 300px; }
   .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 18px; }
@@ -222,7 +223,7 @@ export function layout(
           <a href="/customers" id="nav-customers" data-testid="nav-customers" class="${opts.active === "customers" ? "active" : ""}">${raw(ICONS.customers)} Customers</a>
         </nav>
         <div class="right">
-          <a href="/logout" id="nav-logout" data-testid="nav-logout" class="textlink">Log out</a>
+          <a href="/logout" id="nav-logout" data-testid="nav-logout" class="btn secondary">Log out</a>
           <span class="avatar" id="nav-avatar" data-testid="nav-avatar">A</span>
         </div>
       </header>`
