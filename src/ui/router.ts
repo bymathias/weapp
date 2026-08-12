@@ -148,7 +148,7 @@ uiRouter.post("/quotes/new", async (c) => {
   const { vendor, status, marginPct, items } = parseQuoteForm(body);
 
   if (items.length === 0) {
-    return c.html(newQuotePage(customer, [], { error: "Add at least one line item with a description and quantity." }), 400);
+    return c.html(newQuotePage(customer, [], { error: "Add at least one line item with a SKU, description, and quantity." }), 400);
   }
 
   const quote = await createQuote(c.env.DB, customerId, { vendor, status, margin_pct: marginPct, items });
@@ -187,7 +187,7 @@ uiRouter.post("/quotes/:ref/edit", async (c) => {
   const { vendor, status, marginPct, items } = parseQuoteForm(body);
 
   if (items.length === 0) {
-    return c.html(editQuotePage(customer, existing, { error: "Add at least one line item with a description and quantity." }), 400);
+    return c.html(editQuotePage(customer, existing, { error: "Add at least one line item with a SKU, description, and quantity." }), 400);
   }
 
   try {
@@ -206,17 +206,19 @@ function parseQuoteForm(body: Record<string, string | File | (string | File)[]>)
   const status = (typeof body.status === "string" ? body.status : "Draft") as QuoteStatus;
   const marginPct = Number(body.margin_pct) || 0;
 
+  const skus = toArray(body["sku[]"]);
   const descriptions = toArray(body["description[]"]);
   const quantities = toArray(body["quantity[]"]);
   const unitPrices = toArray(body["unit_price[]"]);
 
   const items = descriptions
     .map((description, i) => ({
+      sku: skus[i] ?? "",
       description,
       quantity: Number(quantities[i]) || 0,
       unit_price: Number(unitPrices[i]) || 0,
     }))
-    .filter((item) => item.description.trim() !== "" && item.quantity > 0);
+    .filter((item) => item.sku.trim() !== "" && item.description.trim() !== "" && item.quantity > 0);
 
   return { vendor, status, marginPct, items };
 }

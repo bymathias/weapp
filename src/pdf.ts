@@ -72,7 +72,8 @@ export async function generateQuotePdf(quote: QuoteWithItems, customer: Customer
 
   // Line items table
   const col = {
-    desc: MARGIN,
+    sku: MARGIN,
+    desc: MARGIN + 75,
     qty: PAGE_WIDTH - MARGIN - 190,
     unit: PAGE_WIDTH - MARGIN - 130,
     total: PAGE_WIDTH - MARGIN - 60,
@@ -85,7 +86,8 @@ export async function generateQuotePdf(quote: QuoteWithItems, customer: Customer
     height: 18,
     color: rgb(0.94, 0.95, 0.97),
   });
-  draw("Description", col.desc + 4, { size: 9, f: bold });
+  draw("SKU", col.sku + 4, { size: 9, f: bold });
+  draw("Description", col.desc, { size: 9, f: bold });
   draw("Qty", col.qty, { size: 9, f: bold });
   draw("Unit Price", col.unit, { size: 9, f: bold });
   draw("Line Total", col.total, { size: 9, f: bold });
@@ -94,12 +96,14 @@ export async function generateQuotePdf(quote: QuoteWithItems, customer: Customer
   for (const item of quote.items) {
     if (y < 140) {
       // Simple one-page demo doc: stop rather than paginate.
-      draw("… (additional items omitted)", col.desc + 4, { size: 8, color: rgb(0.5, 0.5, 0.5) });
+      draw("… (additional items omitted)", col.desc, { size: 8, color: rgb(0.5, 0.5, 0.5) });
       y -= 14;
       break;
     }
-    const desc = item.description.length > 46 ? `${item.description.slice(0, 43)}...` : item.description;
-    draw(desc, col.desc + 4, { size: 9 });
+    const sku = item.sku.length > 14 ? `${item.sku.slice(0, 12)}...` : item.sku;
+    const desc = item.description.length > 34 ? `${item.description.slice(0, 31)}...` : item.description;
+    draw(sku, col.sku + 4, { size: 9 });
+    draw(desc, col.desc, { size: 9 });
     draw(String(item.quantity), col.qty, { size: 9 });
     draw(money(item.unit_price), col.unit, { size: 9 });
     draw(money(item.line_total), col.total, { size: 9 });

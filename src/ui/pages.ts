@@ -373,6 +373,7 @@ const VENDORS = ["Fortinet", "Cisco", "Palo Alto Networks", "Check Point", "Crow
 const STATUSES: QuoteStatus[] = ["Draft", "Sent", "Won", "Lost"];
 
 interface QuoteFormItem {
+  sku: string;
   description: string;
   quantity: number;
   unit_price: number;
@@ -463,10 +464,11 @@ function quoteFormPage(opts: QuoteFormPageOptions) {
           <table id="items-table" class="items-table" data-testid="items-table">
             <thead>
               <tr>
-                <th style="width:45%">Description</th>
-                <th style="width:12%">Qty</th>
-                <th style="width:16%">Unit Price</th>
-                <th style="width:16%">Line Total</th>
+                <th style="width:15%">SKU</th>
+                <th style="width:33%">Description</th>
+                <th style="width:10%">Qty</th>
+                <th style="width:14%">Unit Price</th>
+                <th style="width:17%">Line Total</th>
                 <th style="width:11%"></th>
               </tr>
             </thead>
@@ -500,11 +502,13 @@ function quoteFormPage(opts: QuoteFormPageOptions) {
 }
 
 function itemRowHtml(item?: QuoteFormItem) {
+  const sku = item?.sku ?? "";
   const description = item?.description ?? "";
   const quantity = item?.quantity ?? 1;
   const unitPrice = item?.unit_price ?? 0;
   const lineTotal = item ? item.quantity * item.unit_price : 0;
   return html`<tr class="item-row" data-testid="item-row">
+        <td><input type="text" name="sku[]" class="item-sku" data-testid="item-sku" value="${sku}" required /></td>
         <td><input type="text" name="description[]" class="item-description" data-testid="item-description" value="${description}" required /></td>
         <td><input type="number" name="quantity[]" class="item-quantity" data-testid="item-quantity" min="1" step="1" value="${quantity}" required /></td>
         <td><input type="number" name="unit_price[]" class="item-unit-price" data-testid="item-unit-price" min="0" step="0.01" value="${unitPrice}" required /></td>
@@ -542,7 +546,7 @@ export function editQuotePage(customer: Customer, quote: QuoteWithItems, opts: {
     initialVendor: quote.vendor,
     initialStatus: quote.status,
     initialMarginPct: quote.margin_pct,
-    initialItems: quote.items.map((i) => ({ description: i.description, quantity: i.quantity, unit_price: i.unit_price })),
+    initialItems: quote.items.map((i) => ({ sku: i.sku, description: i.description, quantity: i.quantity, unit_price: i.unit_price })),
     error: opts.error,
   });
 }
@@ -615,6 +619,7 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
   const rows = quote.items
     .map(
       (item) => html`<tr id="quote-item-row-${item.id}" data-testid="quote-item-row">
+        <td data-testid="quote-item-sku">${item.sku}</td>
         <td>${item.description}</td>
         <td>${item.quantity}</td>
         <td>$${item.unit_price.toFixed(2)}</td>
@@ -650,6 +655,7 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
         <table id="quote-items-table" data-testid="quote-items-table">
           <thead>
             <tr>
+              <th>SKU</th>
               <th>Description</th>
               <th>Qty</th>
               <th>Unit Price</th>

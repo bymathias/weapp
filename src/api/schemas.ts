@@ -27,6 +27,7 @@ export const QuoteItemSchema = z
   .object({
     id: z.number().int(),
     quote_id: z.number().int(),
+    sku: z.string(),
     description: z.string(),
     quantity: z.number().int(),
     unit_price: z.number(),
@@ -54,6 +55,7 @@ export const QuoteWithItemsSchema = QuoteSchema.extend({
 
 export const QuoteItemInputSchema = z
   .object({
+    sku: z.string().min(1),
     description: z.string().min(1),
     quantity: z.number().int().positive(),
     unit_price: z.number().nonnegative(),

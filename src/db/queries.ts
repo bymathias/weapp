@@ -175,10 +175,10 @@ export async function createQuote(
   for (const item of computedItems) {
     await db
       .prepare(
-        `INSERT INTO quote_items (quote_id, description, quantity, unit_price, line_total)
-         VALUES (?1, ?2, ?3, ?4, ?5)`
+        `INSERT INTO quote_items (quote_id, sku, description, quantity, unit_price, line_total)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
       )
-      .bind(quoteId, item.description, item.quantity, item.unit_price, item.line_total)
+      .bind(quoteId, item.sku, item.description, item.quantity, item.unit_price, item.line_total)
       .run();
   }
 
@@ -210,10 +210,10 @@ export async function updateQuote(
   for (const item of computedItems) {
     await db
       .prepare(
-        `INSERT INTO quote_items (quote_id, description, quantity, unit_price, line_total)
-         VALUES (?1, ?2, ?3, ?4, ?5)`
+        `INSERT INTO quote_items (quote_id, sku, description, quantity, unit_price, line_total)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
       )
-      .bind(existing.id, item.description, item.quantity, item.unit_price, item.line_total)
+      .bind(existing.id, item.sku, item.description, item.quantity, item.unit_price, item.line_total)
       .run();
   }
 

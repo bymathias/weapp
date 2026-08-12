@@ -27,6 +27,7 @@ export interface Customer {
 export interface QuoteItem {
   id: number;
   quote_id: number;
+  sku: string;
   description: string;
   quantity: number;
   unit_price: number;
