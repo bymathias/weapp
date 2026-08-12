@@ -27,7 +27,7 @@ export function worklistPage(items: WorklistItem[]) {
     "Worklist",
     html`<div class="page-header">
         <div>
-          <h1>Worklist</h1>
+          <h1>Worklist (${items.length})</h1>
           <p class="muted">Items needing action across both processes.</p>
         </div>
       </div>

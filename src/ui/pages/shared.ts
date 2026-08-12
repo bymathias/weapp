@@ -1,4 +1,5 @@
 import { html, raw } from "hono/html";
+import type { HtmlEscapedString } from "hono/utils/html";
 import { layout, ICONS } from "../layout";
 import type { DocType, FlowEntry } from "../../types";
 
@@ -14,6 +15,44 @@ export function statusBadgeClass(status: string): "ok" | "warn" | "danger" | "ne
 
 export function statusBadge(status: string, testid = "status-badge") {
   return html`<span class="badge ${statusBadgeClass(status)}" id="${testid}" data-testid="${testid}">${status}</span>`;
+}
+
+// List Report floorplan: a filter-bar strip that does a client-side text
+// filter over the target table's rows (wired by the global script in
+// layout.ts) — no backend/query involved.
+export function filterBar(tableId: string, label = "Search") {
+  return html`<div class="filter-bar" data-target="${tableId}" data-testid="filter-bar">
+    <span class="filter-bar-label">${label}</span>
+    <input type="search" placeholder="Filter this list…" aria-label="Filter" data-testid="filter-bar-input" />
+    <button type="button" class="btn secondary filter-go-btn" data-testid="filter-bar-go">Go</button>
+  </div>`;
+}
+
+// Object Page floorplan: title + Object Status (as semantic text, via
+// statusBadge) + a row of key facets (label above value).
+export function objectPageHeader(opts: {
+  title: string;
+  titleTestid: string;
+  status: string;
+  statusTestid: string;
+  facets: { label: string; value: HtmlEscapedString | Promise<HtmlEscapedString> | string }[];
+}) {
+  const facetsHtml = opts.facets
+    .map((f) => html`<div class="facet"><span class="facet-label">${f.label}</span><span class="facet-value">${f.value}</span></div>`)
+    .join("");
+  return html`<div class="object-header">
+    <div class="object-title-row">
+      <h1 id="${opts.titleTestid}" data-testid="${opts.titleTestid}">${opts.title}</h1>
+      ${statusBadge(opts.status, opts.statusTestid)}
+    </div>
+    <div class="facets-row">${raw(facetsHtml)}</div>
+  </div>`;
+}
+
+// Object Page floorplan: sticky in-page anchor bar linking to content sections.
+export function anchorBar(items: { href: string; label: string }[]) {
+  const linksHtml = items.map((i) => `<a href="${i.href}">${i.label}</a>`).join("");
+  return html`<nav class="anchor-bar" data-testid="anchor-bar">${raw(linksHtml)}</nav>`;
 }
 
 const FLOW_HREF: Partial<Record<DocType, (n: string) => string>> = {
@@ -132,13 +171,37 @@ const TILES: LaunchpadTile[] = [
   { href: "/billing", icon: ICONS.billing, title: "Billing", sub: "Order-to-Cash", testid: "tile-billing" },
 ];
 
+// Fiori launchpad: tiles grouped under a header per functional area, in a
+// fixed order — the groups themselves are new wrapper markup only, every
+// tile keeps its existing id/data-testid/href unchanged.
+const GROUP_ORDER = ["Insights", "Master Data", "Purchase-to-Pay", "Order-to-Cash"] as const;
+
+function tileHtml(t: LaunchpadTile, subTestid: string, subOverride?: string): string {
+  return `<a class="tile" id="${t.testid}" data-testid="${t.testid}" href="${t.href}">
+    <span class="tile-icon">${t.icon}</span>
+    <div><div class="tile-title">${t.title}</div><div class="tile-sub" data-testid="${subTestid}">${subOverride ?? t.sub}</div></div>
+  </a>`;
+}
+
 export function launchpadPage(worklistCount: number) {
-  const tileHtml = TILES.map(
-    (t) => html`<a class="tile" id="${t.testid}" data-testid="${t.testid}" href="${t.href}">
-      <span class="tile-icon">${raw(t.icon)}</span>
-      <div><div class="tile-title">${t.title}</div><div class="tile-sub">${t.sub}</div></div>
-    </a>`
-  ).join("");
+  const groups = new Map<string, string[]>(GROUP_ORDER.map((g) => [g, []]));
+  groups.get("Insights")!.push(
+    tileHtml(
+      { href: "/worklist", icon: ICONS.worklist, title: "Worklist", sub: "", testid: "tile-worklist" },
+      "worklist-tile-count",
+      `${worklistCount} item${worklistCount === 1 ? "" : "s"} need attention`
+    )
+  );
+  for (const t of TILES) groups.get(t.sub)!.push(tileHtml(t, `${t.testid}-sub`));
+
+  const groupsHtml = GROUP_ORDER.filter((g) => (groups.get(g)?.length ?? 0) > 0)
+    .map(
+      (g) => html`<div class="tile-group" data-testid="tile-group-${g.toLowerCase().replace(/[^a-z0-9]+/g, "-")}">
+        <div class="tile-group-header">${g}</div>
+        <div class="tile-grid">${raw(groups.get(g)!.join(""))}</div>
+      </div>`
+    )
+    .join("");
 
   return layout(
     "Launchpad",
@@ -148,16 +211,7 @@ export function launchpadPage(worklistCount: number) {
           <p class="muted">Company Code 1000 · WeSAP AG</p>
         </div>
       </div>
-      <div class="tile-grid" id="launchpad-tiles" data-testid="launchpad-tiles">
-        ${raw(tileHtml)}
-        <a class="tile worklist-tile" id="tile-worklist" data-testid="tile-worklist" href="/worklist">
-          <span class="tile-icon">${raw(ICONS.worklist)}</span>
-          <div>
-            <div class="tile-title">Worklist</div>
-            <div class="tile-sub" data-testid="worklist-tile-count">${worklistCount} item${worklistCount === 1 ? "" : "s"} need attention</div>
-          </div>
-        </a>
-      </div>`,
+      <div id="launchpad-tiles" data-testid="launchpad-tiles">${raw(groupsHtml)}</div>`,
     { loggedIn: true, active: "launchpad" }
   );
 }

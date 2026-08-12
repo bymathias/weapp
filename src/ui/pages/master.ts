@@ -1,5 +1,6 @@
 import { html, raw } from "hono/html";
 import { layout } from "../layout";
+import { filterBar } from "./shared";
 import type { Customer } from "../../types";
 
 export function customersListPage(customers: Customer[]) {
@@ -20,11 +21,12 @@ export function customersListPage(customers: Customer[]) {
     "Customers",
     html`<div class="page-header">
         <div>
-          <h1>Customers</h1>
+          <h1>Customers (${customers.length})</h1>
           <p class="muted">Customer master data.</p>
         </div>
         <a class="btn" id="new-customer-btn" data-testid="new-customer-btn" href="/customers/new">New Customer</a>
       </div>
+      ${filterBar("customers-table")}
       <div class="panel">
         <table id="customers-table" data-testid="customers-table">
           <thead>
@@ -69,7 +71,7 @@ export function newCustomerPage(opts: { error?: string; values?: Record<string, 
 
         <div class="actions-row">
           <button type="submit" class="btn" id="save-customer-btn" data-testid="save-customer-btn">Create Customer</button>
-          <a class="btn secondary" href="/customers" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
+          <a class="btn transparent" href="/customers" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
         </div>
       </form>`,
     { loggedIn: true }

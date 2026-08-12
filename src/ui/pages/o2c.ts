@@ -1,6 +1,6 @@
 import { html, raw } from "hono/html";
 import { layout } from "../layout";
-import { docFlowPanel, money, statusBadge } from "./shared";
+import { anchorBar, docFlowPanel, filterBar, money, objectPageHeader, statusBadge } from "./shared";
 import type {
   BillingDocument,
   Customer,
@@ -31,11 +31,12 @@ export function salesOrdersListPage(rows: SalesOrderListRow[]) {
     "Sales Orders",
     html`<div class="page-header">
         <div>
-          <h1>Sales Orders</h1>
+          <h1>Sales Orders (${rows.length})</h1>
           <p class="muted">Order-to-Cash documents.</p>
         </div>
         <a class="btn" id="new-so-btn" data-testid="new-so-btn" href="/sales-orders/new">New Sales Order</a>
       </div>
+      ${filterBar("so-table")}
       <div class="panel">
         <table id="so-table" data-testid="so-table">
           <thead><tr><th>SO Number</th><th>Customer</th><th>Total</th><th>Status</th><th>Created</th></tr></thead>
@@ -58,13 +59,20 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
     )
     .join("");
 
+  const facets = [{ label: "Customer", value: html`${customer.name} (${customer.ref_id})` }];
+  if (so.source_quote_ref) {
+    facets.push({ label: "Source Quote", value: html`<span data-testid="so-source-quote-ref">${so.source_quote_ref}</span>` });
+  }
+
   return layout(
     `SO ${so.so_number}`,
-    html`<h1 id="so-number" data-testid="so-number">${so.so_number}</h1>
-      <p class="muted">
-        ${customer.name} (${customer.ref_id}) · ${statusBadge(so.status, "so-status-badge")}
-        ${so.source_quote_ref ? html` · Source Quote: <span data-testid="so-source-quote-ref">${so.source_quote_ref}</span>` : ""}
-      </p>
+    html`${objectPageHeader({
+        title: so.so_number,
+        titleTestid: "so-number",
+        status: so.status,
+        statusTestid: "so-status-badge",
+        facets,
+      })}
 
       ${so.status === "Blocked (Credit)"
         ? html`<div class="block-banner" id="credit-block-banner" data-testid="credit-block-banner">
@@ -74,6 +82,24 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
       ${so.status === "Paid"
         ? html`<div class="locked-banner" id="paid-locked-banner" data-testid="paid-locked-banner">This sales order is Paid and is locked.</div>`
         : ""}
+
+      ${anchorBar([
+        { href: "#items-section", label: "Items" },
+        { href: "#doc-flow-panel", label: "Document Flow" },
+      ])}
+
+      <h2 id="items-section">Line Items</h2>
+      <div class="panel">
+        <table id="so-items-table" data-testid="so-items-table">
+          <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
+          <tbody>${raw(rows)}</tbody>
+        </table>
+        <div class="totals">
+          <div class="box"><div class="label">Total</div><div class="value" id="so-total" data-testid="so-total">${money(so.total_amount)}</div></div>
+        </div>
+      </div>
+
+      ${docFlowPanel(flow)}
 
       <div class="actions-row">
         ${so.status === "Blocked (Credit)"
@@ -86,21 +112,8 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
           ? html`<form method="post" action="/sales-orders/${so.so_number}/bill"><button type="submit" class="btn" id="btn-bill" data-testid="btn-bill">Bill</button></form>`
           : ""}
         <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/sales-orders/${so.so_number}/pdf" target="_blank" rel="noopener">Download PDF</a>
-        <a class="btn secondary" id="back-btn" data-testid="back-btn" href="/sales-orders">Back to list</a>
-      </div>
-
-      <h2>Line Items</h2>
-      <div class="panel">
-        <table id="so-items-table" data-testid="so-items-table">
-          <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
-          <tbody>${raw(rows)}</tbody>
-        </table>
-        <div class="totals">
-          <div class="box"><div class="label">Total</div><div class="value" id="so-total" data-testid="so-total">${money(so.total_amount)}</div></div>
-        </div>
-      </div>
-
-      ${docFlowPanel(flow)}`,
+        <a class="btn transparent" id="back-btn" data-testid="back-btn" href="/sales-orders">Back to list</a>
+      </div>`,
     { loggedIn: true }
   );
 }
@@ -163,7 +176,7 @@ export function newSalesOrderPage(customers: Customer[], materials: Material[], 
 
         <div class="actions-row">
           <button type="submit" class="btn" id="save-so-btn" data-testid="save-so-btn">Create Sales Order</button>
-          <a class="btn secondary" href="/sales-orders" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
+          <a class="btn transparent" href="/sales-orders" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
         </div>
       </form>
 
@@ -232,10 +245,11 @@ export function deliveriesListPage(rows: DeliveryListRow[]) {
     "Deliveries",
     html`<div class="page-header">
         <div>
-          <h1>Deliveries</h1>
+          <h1>Deliveries (${rows.length})</h1>
           <p class="muted">Posted against sales orders — open an SO to create one.</p>
         </div>
       </div>
+      ${filterBar("dlv-table")}
       <div class="panel">
         <table id="dlv-table" data-testid="dlv-table">
           <thead><tr><th>Delivery</th><th>SO Number</th><th>Customer</th><th>Status</th><th>Created</th></tr></thead>
@@ -258,17 +272,22 @@ export function deliveryDetailPage(dlv: Delivery, so: SalesOrderWithItems, custo
 
   return layout(
     `Delivery ${dlv.dlv_number}`,
-    html`<h1 id="dlv-number" data-testid="dlv-number">${dlv.dlv_number}</h1>
-      <p class="muted">
-        ${customer.name} (${customer.ref_id}) · SO <a class="link" href="/sales-orders/${so.so_number}">${so.so_number}</a> ·
-        ${statusBadge(dlv.status, "dlv-status-badge")}
-      </p>
+    html`${objectPageHeader({
+        title: dlv.dlv_number,
+        titleTestid: "dlv-number",
+        status: dlv.status,
+        statusTestid: "dlv-status-badge",
+        facets: [
+          { label: "Customer", value: html`${customer.name} (${customer.ref_id})` },
+          { label: "Sales Order", value: html`<a class="link" href="/sales-orders/${so.so_number}">${so.so_number}</a>` },
+        ],
+      })}
+      ${anchorBar([
+        { href: "#items-section", label: "Items" },
+        { href: "#doc-flow-panel", label: "Document Flow" },
+      ])}
 
-      <div class="actions-row">
-        <a class="btn secondary" id="back-btn" data-testid="back-btn" href="/deliveries">Back to list</a>
-      </div>
-
-      <h2>Line Items</h2>
+      <h2 id="items-section">Line Items</h2>
       <div class="panel">
         <table id="dlv-items-table" data-testid="dlv-items-table">
           <thead><tr><th>Description</th><th>Qty</th></tr></thead>
@@ -276,7 +295,11 @@ export function deliveryDetailPage(dlv: Delivery, so: SalesOrderWithItems, custo
         </table>
       </div>
 
-      ${docFlowPanel(flow)}`,
+      ${docFlowPanel(flow)}
+
+      <div class="actions-row">
+        <a class="btn transparent" id="back-btn" data-testid="back-btn" href="/deliveries">Back to list</a>
+      </div>`,
     { loggedIn: true }
   );
 }
@@ -301,10 +324,11 @@ export function billingListPage(rows: BillingListRow[]) {
     "Billing",
     html`<div class="page-header">
         <div>
-          <h1>Billing Documents</h1>
+          <h1>Billing Documents (${rows.length})</h1>
           <p class="muted">Customer invoices — open a delivered SO to bill it.</p>
         </div>
       </div>
+      ${filterBar("bill-table")}
       <div class="panel">
         <table id="bill-table" data-testid="bill-table">
           <thead><tr><th>Bill Number</th><th>SO Number</th><th>Customer</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
@@ -318,30 +342,40 @@ export function billingListPage(rows: BillingListRow[]) {
 export function billingDetailPage(bill: BillingDocument, so: SalesOrder, customer: Customer, flow: FlowEntry[]) {
   return layout(
     `Billing ${bill.bill_number}`,
-    html`<h1 id="bill-number" data-testid="bill-number">${bill.bill_number}</h1>
-      <p class="muted">
-        ${customer.name} (${customer.ref_id}) · SO <a class="link" href="/sales-orders/${so.so_number}">${so.so_number}</a> ·
-        ${statusBadge(bill.status, "bill-status-badge")}
-      </p>
+    html`${objectPageHeader({
+        title: bill.bill_number,
+        titleTestid: "bill-number",
+        status: bill.status,
+        statusTestid: "bill-status-badge",
+        facets: [
+          { label: "Customer", value: html`${customer.name} (${customer.ref_id})` },
+          { label: "Sales Order", value: html`<a class="link" href="/sales-orders/${so.so_number}">${so.so_number}</a>` },
+        ],
+      })}
 
       ${bill.status === "Paid"
         ? html`<div class="locked-banner" id="paid-locked-banner" data-testid="paid-locked-banner">This billing document is Paid and is locked.</div>`
         : ""}
 
-      <div class="actions-row">
-        ${bill.status === "Open"
-          ? html`<form method="post" action="/billing/${bill.bill_number}/clear"><button type="submit" class="btn" id="btn-clear" data-testid="btn-clear">Clear</button></form>`
-          : ""}
-        <a class="btn secondary" id="back-btn" data-testid="back-btn" href="/billing">Back to list</a>
-      </div>
+      ${anchorBar([
+        { href: "#amount-section", label: "Amount" },
+        { href: "#doc-flow-panel", label: "Document Flow" },
+      ])}
 
-      <div class="panel">
+      <div class="panel" id="amount-section">
         <div class="totals">
           <div class="box"><div class="label">Amount</div><div class="value" id="bill-amount" data-testid="bill-amount">${money(bill.amount)}</div></div>
         </div>
       </div>
 
-      ${docFlowPanel(flow)}`,
+      ${docFlowPanel(flow)}
+
+      <div class="actions-row">
+        ${bill.status === "Open"
+          ? html`<form method="post" action="/billing/${bill.bill_number}/clear"><button type="submit" class="btn" id="btn-clear" data-testid="btn-clear">Clear</button></form>`
+          : ""}
+        <a class="btn transparent" id="back-btn" data-testid="back-btn" href="/billing">Back to list</a>
+      </div>`,
     { loggedIn: true }
   );
 }

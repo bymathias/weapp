@@ -1,6 +1,6 @@
 import { html, raw } from "hono/html";
 import { layout } from "../layout";
-import { docFlowPanel, money, statusBadge } from "./shared";
+import { anchorBar, docFlowPanel, filterBar, money, objectPageHeader, statusBadge } from "./shared";
 import type { FlowEntry, Material, PoItem, PurchaseOrder, PurchaseOrderWithItems, Vendor } from "../../types";
 import type { GoodsReceiptListRow, PurchaseOrderListRow, SupplierInvoiceListRow } from "../../db/p2p";
 import type { GoodsReceiptWithItems, SupplierInvoiceWithItems } from "../../types";
@@ -28,11 +28,12 @@ export function purchaseOrdersListPage(rows: PurchaseOrderListRow[]) {
     "Purchase Orders",
     html`<div class="page-header">
         <div>
-          <h1>Purchase Orders</h1>
+          <h1>Purchase Orders (${rows.length})</h1>
           <p class="muted">Purchase-to-Pay documents.</p>
         </div>
         <a class="btn" id="new-po-btn" data-testid="new-po-btn" href="/purchase-orders/new">New Purchase Order</a>
       </div>
+      ${filterBar("po-table")}
       <div class="panel">
         <table id="po-table" data-testid="po-table">
           <thead>
@@ -65,17 +66,22 @@ export function purchaseOrderDetailPage(
 
   return layout(
     `PO ${po.po_number}`,
-    html`<h1 id="po-number" data-testid="po-number">${po.po_number}</h1>
-      <p class="muted">${vendor.name} (${vendor.ref_id}) · ${statusBadge(po.status, "po-status-badge")}</p>
+    html`${objectPageHeader({
+        title: po.po_number,
+        titleTestid: "po-number",
+        status: po.status,
+        statusTestid: "po-status-badge",
+        facets: [
+          { label: "Vendor", value: html`${vendor.name} (${vendor.ref_id})` },
+          { label: "Created", value: po.created_at.slice(0, 10) },
+        ],
+      })}
+      ${anchorBar([
+        { href: "#items-section", label: "Items" },
+        { href: "#doc-flow-panel", label: "Document Flow" },
+      ])}
 
-      <div class="actions-row">
-        <a class="btn" id="btn-post-gr" data-testid="btn-post-gr" href="/goods-receipts/new?po_number=${po.po_number}">Post Goods Receipt</a>
-        <a class="btn secondary" id="btn-create-invoice" data-testid="btn-create-invoice" href="/supplier-invoices/new?po_number=${po.po_number}">Create Supplier Invoice</a>
-        <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/purchase-orders/${po.po_number}/pdf" target="_blank" rel="noopener">Download PDF</a>
-        <a class="btn secondary" id="back-btn" data-testid="back-btn" href="/purchase-orders">Back to list</a>
-      </div>
-
-      <h2>Line Items</h2>
+      <h2 id="items-section">Line Items</h2>
       <div class="panel">
         <table id="po-items-table" data-testid="po-items-table">
           <thead><tr><th>Material</th><th>Qty</th><th>Price</th><th>Line Total</th></tr></thead>
@@ -86,7 +92,14 @@ export function purchaseOrderDetailPage(
         </div>
       </div>
 
-      ${docFlowPanel(flow)}`,
+      ${docFlowPanel(flow)}
+
+      <div class="actions-row">
+        <a class="btn" id="btn-post-gr" data-testid="btn-post-gr" href="/goods-receipts/new?po_number=${po.po_number}">Post Goods Receipt</a>
+        <a class="btn secondary" id="btn-create-invoice" data-testid="btn-create-invoice" href="/supplier-invoices/new?po_number=${po.po_number}">Create Supplier Invoice</a>
+        <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/purchase-orders/${po.po_number}/pdf" target="_blank" rel="noopener">Download PDF</a>
+        <a class="btn transparent" id="back-btn" data-testid="back-btn" href="/purchase-orders">Back to list</a>
+      </div>`,
     { loggedIn: true }
   );
 }
@@ -132,7 +145,7 @@ export function newPurchaseOrderPage(vendors: Vendor[], materials: Material[], o
 
         <div class="actions-row">
           <button type="submit" class="btn" id="save-po-btn" data-testid="save-po-btn">Create Purchase Order</button>
-          <a class="btn secondary" href="/purchase-orders" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
+          <a class="btn transparent" href="/purchase-orders" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
         </div>
       </form>
 
@@ -225,10 +238,11 @@ export function goodsReceiptsListPage(rows: GoodsReceiptListRow[]) {
     "Goods Receipts",
     html`<div class="page-header">
         <div>
-          <h1>Goods Receipts</h1>
+          <h1>Goods Receipts (${rows.length})</h1>
           <p class="muted">Posted against purchase orders — open a PO to post one.</p>
         </div>
       </div>
+      ${filterBar("gr-table")}
       <div class="panel">
         <table id="gr-table" data-testid="gr-table">
           <thead><tr><th>GR Number</th><th>PO Number</th><th>Status</th><th>Created</th></tr></thead>
@@ -258,14 +272,19 @@ export function goodsReceiptDetailPage(
 
   return layout(
     `GR ${gr.gr_number}`,
-    html`<h1 id="gr-number" data-testid="gr-number">${gr.gr_number}</h1>
-      <p class="muted">Against PO <a class="link" href="/purchase-orders/${po.po_number}">${po.po_number}</a> · ${statusBadge(gr.status, "gr-status-badge")}</p>
+    html`${objectPageHeader({
+        title: gr.gr_number,
+        titleTestid: "gr-number",
+        status: gr.status,
+        statusTestid: "gr-status-badge",
+        facets: [{ label: "Purchase Order", value: html`<a class="link" href="/purchase-orders/${po.po_number}">${po.po_number}</a>` }],
+      })}
+      ${anchorBar([
+        { href: "#items-section", label: "Items" },
+        { href: "#doc-flow-panel", label: "Document Flow" },
+      ])}
 
-      <div class="actions-row">
-        <a class="btn secondary" id="back-btn" data-testid="back-btn" href="/goods-receipts">Back to list</a>
-      </div>
-
-      <h2>Line Items</h2>
+      <h2 id="items-section">Line Items</h2>
       <div class="panel">
         <table id="gr-items-table" data-testid="gr-items-table">
           <thead><tr><th>Material</th><th>Qty Received</th></tr></thead>
@@ -273,7 +292,11 @@ export function goodsReceiptDetailPage(
         </table>
       </div>
 
-      ${docFlowPanel(flow)}`,
+      ${docFlowPanel(flow)}
+
+      <div class="actions-row">
+        <a class="btn transparent" id="back-btn" data-testid="back-btn" href="/goods-receipts">Back to list</a>
+      </div>`,
     { loggedIn: true }
   );
 }
@@ -307,7 +330,7 @@ export function newGoodsReceiptPage(po: PurchaseOrderWithItems, materialsById: M
         </div>
         <div class="actions-row">
           <button type="submit" class="btn" id="save-gr-btn" data-testid="save-gr-btn">Post Goods Receipt</button>
-          <a class="btn secondary" href="/purchase-orders/${po.po_number}" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
+          <a class="btn transparent" href="/purchase-orders/${po.po_number}" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
         </div>
       </form>`,
     { loggedIn: true }
@@ -334,10 +357,11 @@ export function supplierInvoicesListPage(rows: SupplierInvoiceListRow[]) {
     "Supplier Invoices",
     html`<div class="page-header">
         <div>
-          <h1>Supplier Invoices</h1>
+          <h1>Supplier Invoices (${rows.length})</h1>
           <p class="muted">Posted against purchase orders — open a PO to create one.</p>
         </div>
       </div>
+      ${filterBar("si-table")}
       <div class="panel">
         <table id="si-table" data-testid="si-table">
           <thead><tr><th>Invoice</th><th>Vendor</th><th>PO Number</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
@@ -370,11 +394,16 @@ export function supplierInvoiceDetailPage(
 
   return layout(
     `Invoice ${si.inv_number}`,
-    html`<h1 id="si-number" data-testid="si-number">${si.inv_number}</h1>
-      <p class="muted">
-        ${vendor.name} (${vendor.ref_id}) · PO <a class="link" href="/purchase-orders/${po.po_number}">${po.po_number}</a> ·
-        ${statusBadge(si.status, "si-status-badge")}
-      </p>
+    html`${objectPageHeader({
+        title: si.inv_number,
+        titleTestid: "si-number",
+        status: si.status,
+        statusTestid: "si-status-badge",
+        facets: [
+          { label: "Vendor", value: html`${vendor.name} (${vendor.ref_id})` },
+          { label: "Purchase Order", value: html`<a class="link" href="/purchase-orders/${po.po_number}">${po.po_number}</a>` },
+        ],
+      })}
 
       ${si.status === "Blocked"
         ? html`<div class="block-banner" id="block-reason-banner" data-testid="block-reason-banner">Blocked: ${si.block_reason}</div>`
@@ -382,6 +411,24 @@ export function supplierInvoiceDetailPage(
       ${si.status === "Paid"
         ? html`<div class="locked-banner" id="paid-locked-banner" data-testid="paid-locked-banner">This invoice is Paid and is locked.</div>`
         : ""}
+
+      ${anchorBar([
+        { href: "#items-section", label: "Items" },
+        { href: "#doc-flow-panel", label: "Document Flow" },
+      ])}
+
+      <h2 id="items-section">Line Items</h2>
+      <div class="panel">
+        <table id="si-items-table" data-testid="si-items-table">
+          <thead><tr><th>Material</th><th>Qty</th><th>Price</th><th>Line Total</th></tr></thead>
+          <tbody>${raw(rows)}</tbody>
+        </table>
+        <div class="totals">
+          <div class="box"><div class="label">Amount</div><div class="value" id="si-amount" data-testid="si-amount">${money(si.amount)}</div></div>
+        </div>
+      </div>
+
+      ${docFlowPanel(flow)}
 
       <div class="actions-row">
         ${si.status === "Invoiced"
@@ -393,21 +440,8 @@ export function supplierInvoiceDetailPage(
         ${si.status === "Matched" || si.status === "Released"
           ? html`<form method="post" action="/supplier-invoices/${si.inv_number}/pay"><button type="submit" class="btn" id="btn-pay" data-testid="btn-pay">Pay</button></form>`
           : ""}
-        <a class="btn secondary" id="back-btn" data-testid="back-btn" href="/supplier-invoices">Back to list</a>
-      </div>
-
-      <h2>Line Items</h2>
-      <div class="panel">
-        <table id="si-items-table" data-testid="si-items-table">
-          <thead><tr><th>Material</th><th>Qty</th><th>Price</th><th>Line Total</th></tr></thead>
-          <tbody>${raw(rows)}</tbody>
-        </table>
-        <div class="totals">
-          <div class="box"><div class="label">Amount</div><div class="value" id="si-amount" data-testid="si-amount">${money(si.amount)}</div></div>
-        </div>
-      </div>
-
-      ${docFlowPanel(flow)}`,
+        <a class="btn transparent" id="back-btn" data-testid="back-btn" href="/supplier-invoices">Back to list</a>
+      </div>`,
     { loggedIn: true }
   );
 }
@@ -446,7 +480,7 @@ export function newSupplierInvoicePage(po: PurchaseOrderWithItems, materialsById
         </div>
         <div class="actions-row">
           <button type="submit" class="btn" id="save-si-btn" data-testid="save-si-btn">Create Supplier Invoice</button>
-          <a class="btn secondary" href="/purchase-orders/${po.po_number}" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
+          <a class="btn transparent" href="/purchase-orders/${po.po_number}" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
         </div>
       </form>
       <script>${raw(siFormScript())}</script>`,
