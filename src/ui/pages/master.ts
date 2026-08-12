@@ -35,7 +35,7 @@ export function customersListPage(customers: Customer[]) {
           <tbody>${raw(body || `<tr><td colspan="6" class="muted">No customers yet.</td></tr>`)}</tbody>
         </table>
       </div>`,
-    { loggedIn: true }
+    { loggedIn: true, active: "customers" }
   );
 }
 

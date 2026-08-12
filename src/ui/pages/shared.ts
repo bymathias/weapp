@@ -162,7 +162,6 @@ interface LaunchpadTile {
 }
 
 const TILES: LaunchpadTile[] = [
-  { href: "/customers", icon: ICONS.customer, title: "Customers", sub: "Master Data", testid: "tile-customers" },
   { href: "/purchase-orders", icon: ICONS.po, title: "Purchase Orders", sub: "Purchase-to-Pay", testid: "tile-purchase-orders" },
   { href: "/goods-receipts", icon: ICONS.gr, title: "Goods Receipts", sub: "Purchase-to-Pay", testid: "tile-goods-receipts" },
   { href: "/supplier-invoices", icon: ICONS.si, title: "Supplier Invoices", sub: "Purchase-to-Pay", testid: "tile-supplier-invoices" },
@@ -174,7 +173,7 @@ const TILES: LaunchpadTile[] = [
 // Fiori launchpad: tiles grouped under a header per functional area, in a
 // fixed order — the groups themselves are new wrapper markup only, every
 // tile keeps its existing id/data-testid/href unchanged.
-const GROUP_ORDER = ["Insights", "Master Data", "Purchase-to-Pay", "Order-to-Cash"] as const;
+const GROUP_ORDER = ["Insights", "Purchase-to-Pay", "Order-to-Cash"] as const;
 
 function tileHtml(t: LaunchpadTile, subTestid: string, subOverride?: string): string {
   return `<a class="tile" id="${t.testid}" data-testid="${t.testid}" href="${t.href}">

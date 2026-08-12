@@ -17,15 +17,15 @@ export const ICONS = {
   notFound: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M21 21l-4.35-4.35"/><path d="M8.5 8.5l4 4M12.5 8.5l-4 4"/></svg>`,
 };
 
-const NAV_ITEMS: { key: "launchpad" | "worklist"; href: string; icon: string; label: string; testid: string }[] = [
+const NAV_ITEMS: { key: "launchpad" | "customers"; href: string; icon: string; label: string; testid: string }[] = [
   { key: "launchpad", href: "/", icon: ICONS.home, label: "Home", testid: "nav-home" },
-  { key: "worklist", href: "/worklist", icon: ICONS.worklist, label: "Worklist", testid: "nav-worklist" },
+  { key: "customers", href: "/customers", icon: ICONS.customer, label: "Customers", testid: "nav-customers" },
 ];
 
 export function layout(
   title: string,
   body: HtmlEscapedString | Promise<HtmlEscapedString> | string,
-  opts: { loggedIn?: boolean; active?: "launchpad" | "worklist" } = {}
+  opts: { loggedIn?: boolean; active?: "launchpad" | "worklist" | "customers" } = {}
 ) {
   return html`<!doctype html>
 <html lang="en">
