@@ -124,10 +124,10 @@ function soItemRowHtml(materials: Material[]) {
     `<option value="">— none —</option>` +
     materials.map((m) => `<option value="${m.material_code}">${m.material_code} — ${m.description}</option>`).join("");
   return html`<tr class="item-row" data-testid="so-item-row">
+    <td><select name="material_code[]" class="item-material-code" data-testid="so-item-material-code">${raw(options)}</select></td>
     <td><input type="text" name="description[]" class="item-description" data-testid="so-item-description" required /></td>
     <td><input type="number" name="qty[]" class="item-qty" data-testid="so-item-qty" min="1" step="1" value="1" required /></td>
     <td><input type="number" name="unit_price[]" class="item-unit-price" data-testid="so-item-unit-price" min="0" step="0.01" value="0" required /></td>
-    <td><select name="material_code[]" class="item-material-code" data-testid="so-item-material-code">${raw(options)}</select></td>
     <td class="item-line-total" data-testid="so-item-line-total">$0.00</td>
     <td><button type="button" class="btn secondary remove-row-btn" data-testid="remove-row-btn">Remove</button></td>
   </tr>`;
@@ -159,10 +159,10 @@ export function newSalesOrderPage(customers: Customer[], materials: Material[], 
           <table id="items-table" class="items-table" data-testid="so-items-table">
             <thead>
               <tr>
+                <th style="width:22%">Material Code</th>
                 <th style="width:30%">Description</th>
                 <th style="width:10%">Qty</th>
                 <th style="width:14%">Unit Price</th>
-                <th style="width:22%">Material</th>
                 <th style="width:14%">Line Total</th>
                 <th style="width:10%"></th>
               </tr>
