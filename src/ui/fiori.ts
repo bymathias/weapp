@@ -264,7 +264,8 @@ export const FIORI_CSS = `
   .anchor-bar a:hover { color: var(--brand); }
 
   /* Launchpad -------------------------------------------------------------------- */
-  .tile-group { margin-bottom: 1.5rem; }
+  #launchpad-tiles { display: grid; grid-template-columns: 1fr; gap: 1.75rem; align-items: start; }
+  .tile-group { margin-bottom: 0; }
   .tile-group-header { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.6rem; }
   .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, 11rem); gap: 1rem; }
   .tile {
@@ -303,6 +304,9 @@ export const FIORI_CSS = `
   .worklist-item .worklist-detail { font-size: 0.75rem; color: var(--text-secondary); }
   .worklist-kind { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.15rem 0.5rem; border-radius: var(--radius); background: var(--accent-bg); color: var(--brand); flex-shrink: 0; }
 
+  @media (min-width: 1100px) {
+    #launchpad-tiles { grid-template-columns: repeat(2, 1fr); gap: 1.75rem 2.5rem; }
+  }
   @media (max-width: 1100px) {
     .tile-grid { grid-template-columns: repeat(auto-fill, 11rem); }
   }
