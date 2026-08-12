@@ -3,6 +3,62 @@ import { layout, ICONS } from "./layout";
 import type { Customer, Quote, QuoteStatus, QuoteWithItems } from "../types";
 import type { DashboardStats, QuoteListResult } from "../db/queries";
 
+// Debounced as-you-type search: on input, fetch the endpoint with the
+// current query and swap the response HTML straight into the results
+// container (marked with X-Requested-With so the server returns just that
+// fragment). The form still submits normally without JS.
+function liveSearchScript(opts: { formId: string; inputId: string; clearId: string; resultsId: string; endpoint: string }): string {
+  return `
+    (function () {
+      var form = document.getElementById(${JSON.stringify(opts.formId)});
+      var input = document.getElementById(${JSON.stringify(opts.inputId)});
+      var clearBtn = document.getElementById(${JSON.stringify(opts.clearId)});
+      var results = document.getElementById(${JSON.stringify(opts.resultsId)});
+      var endpoint = ${JSON.stringify(opts.endpoint)};
+      var timer = null;
+      var controller = null;
+
+      function urlFor(q) {
+        return endpoint + (q ? '?q=' + encodeURIComponent(q) : '');
+      }
+
+      function load(q) {
+        if (controller) controller.abort();
+        controller = new AbortController();
+        fetch(urlFor(q), { headers: { 'X-Requested-With': 'fetch' }, signal: controller.signal })
+          .then(function (res) { return res.text(); })
+          .then(function (fragment) {
+            results.innerHTML = fragment;
+          })
+          .catch(function (err) {
+            if (err.name !== 'AbortError') throw err;
+          });
+        clearBtn.style.display = q ? 'inline-block' : 'none';
+        history.replaceState(null, '', urlFor(q));
+      }
+
+      input.addEventListener('input', function () {
+        clearTimeout(timer);
+        var q = input.value;
+        timer = setTimeout(function () { load(q); }, 250);
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearTimeout(timer);
+        load(input.value);
+      });
+
+      clearBtn.addEventListener('click', function () {
+        input.value = '';
+        clearTimeout(timer);
+        load('');
+        input.focus();
+      });
+    })();
+  `;
+}
+
 export function loginPage(opts: { error?: "missing" | "invalid"; username?: string } = {}) {
   const errorMessage =
     opts.error === "missing"
@@ -55,7 +111,9 @@ export function notFoundPage(opts: { entity: "Customer" | "Quote"; identifier: s
   );
 }
 
-export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult, search: string) {
+// The table + pagination block, shared between the full dashboard page and
+// the live-search fragment response (GET / with X-Requested-With: fetch).
+export function quotesResultsPanel(quoteList: QuoteListResult, search: string) {
   const rows = quoteList.quotes
     .map(
       (q) => html`<tr id="quote-row-${q.ref}" data-testid="quote-row">
@@ -81,6 +139,30 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
     )
     .join("");
 
+  return html`<div class="panel" id="quotes-results" data-testid="quotes-results">
+    <table id="all-quotes-table" data-testid="all-quotes-table">
+      <thead>
+        <tr>
+          <th>Ref</th>
+          <th>Customer</th>
+          <th>Customer ID</th>
+          <th>Vendor</th>
+          <th>Status</th>
+          <th>Total</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>${raw(rows || `<tr><td colspan="7" class="muted">${emptyMessage}</td></tr>`)}</tbody>
+    </table>
+
+    <div class="pagination" id="quotes-pagination" data-testid="quotes-pagination">
+      <span class="muted" id="pagination-info" data-testid="pagination-info">${quoteList.total} quotes</span>
+      <div class="page-numbers">${raw(pageLinks)}</div>
+    </div>
+  </div>`;
+}
+
+export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult, search: string) {
   return layout(
     "Dashboard",
     html`<div class="page-header">
@@ -107,7 +189,7 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
         </div>
       </div>
 
-      <div class="dash-quotes-header">
+      <div class="list-toolbar">
         <h2>Quotes</h2>
         <form id="quote-search-form" data-testid="quote-search-form" method="get" action="/" class="search-form">
           <input
@@ -117,40 +199,29 @@ export function dashboardPage(stats: DashboardStats, quoteList: QuoteListResult,
             data-testid="quote-search-input"
             placeholder="Search by quote ref, customer name, or ID"
             value="${search}"
+            autocomplete="off"
           />
           <button type="submit" class="btn" id="quote-search-submit" data-testid="quote-search-submit">Search</button>
-          ${search
-            ? html`<a class="btn secondary" id="quote-search-clear" data-testid="quote-search-clear" href="/">Clear</a>`
-            : ""}
+          <button
+            type="button"
+            class="btn secondary"
+            id="quote-search-clear"
+            data-testid="quote-search-clear"
+            style="display:${search ? "inline-block" : "none"}"
+          >Clear</button>
         </form>
       </div>
 
-      <div class="panel">
-        <table id="all-quotes-table" data-testid="all-quotes-table">
-          <thead>
-            <tr>
-              <th>Ref</th>
-              <th>Customer</th>
-              <th>Customer ID</th>
-              <th>Vendor</th>
-              <th>Status</th>
-              <th>Total</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>${raw(rows || `<tr><td colspan="7" class="muted">${emptyMessage}</td></tr>`)}</tbody>
-        </table>
+      ${quotesResultsPanel(quoteList, search)}
 
-        <div class="pagination" id="quotes-pagination" data-testid="quotes-pagination">
-          <span class="muted" id="pagination-info" data-testid="pagination-info">${quoteList.total} quotes</span>
-          <div class="page-numbers">${raw(pageLinks)}</div>
-        </div>
-      </div>`,
+      <script>${raw(liveSearchScript({ formId: "quote-search-form", inputId: "quote-search-input", clearId: "quote-search-clear", resultsId: "quotes-results", endpoint: "/" }))}</script>`,
     { loggedIn: true, active: "dashboard" }
   );
 }
 
-export function customersPage(customers: Customer[]) {
+// The table block, shared between the full customers page and the
+// live-search fragment response (GET /customers with X-Requested-With: fetch).
+export function customersResultsPanel(customers: Customer[], search: string) {
   const rows = customers
     .map(
       (c) => html`<tr id="customer-row-${c.id}" data-testid="customer-row" data-customer-id="${c.id}">
@@ -163,29 +234,58 @@ export function customersPage(customers: Customer[]) {
     )
     .join("");
 
+  const emptyMessage = search ? "No customers match your search." : "No customers yet.";
+
+  return html`<div class="panel" id="customers-results" data-testid="customers-results">
+    <table id="customers-table" data-testid="customers-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Ref ID</th>
+          <th>Industry</th>
+          <th>Country</th>
+          <th>Account Owner</th>
+        </tr>
+      </thead>
+      <tbody id="customers-table-body">${raw(rows || `<tr><td colspan="5" class="muted">${emptyMessage}</td></tr>`)}</tbody>
+    </table>
+  </div>`;
+}
+
+export function customersPage(customers: Customer[], search: string) {
   return layout(
     "Customers",
     html`<div class="page-header">
         <h1>Customers</h1>
         <p class="muted">All accounts in WeCPQ.</p>
       </div>
-      <div class="actions-row" style="margin-bottom:16px">
+
+      <div class="list-toolbar">
         <a class="btn" id="new-customer-btn" data-testid="new-customer-btn" href="/customers/new">+ New Customer</a>
+        <form id="customer-search-form" data-testid="customer-search-form" method="get" action="/customers" class="search-form">
+          <input
+            type="text"
+            id="customer-search-input"
+            name="q"
+            data-testid="customer-search-input"
+            placeholder="Search by name, ID, industry, country, or owner"
+            value="${search}"
+            autocomplete="off"
+          />
+          <button type="submit" class="btn" id="customer-search-submit" data-testid="customer-search-submit">Search</button>
+          <button
+            type="button"
+            class="btn secondary"
+            id="customer-search-clear"
+            data-testid="customer-search-clear"
+            style="display:${search ? "inline-block" : "none"}"
+          >Clear</button>
+        </form>
       </div>
-      <div class="panel">
-        <table id="customers-table" data-testid="customers-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Ref ID</th>
-              <th>Industry</th>
-              <th>Country</th>
-              <th>Account Owner</th>
-            </tr>
-          </thead>
-          <tbody id="customers-table-body">${raw(rows)}</tbody>
-        </table>
-      </div>`,
+
+      ${customersResultsPanel(customers, search)}
+
+      <script>${raw(liveSearchScript({ formId: "customer-search-form", inputId: "customer-search-input", clearId: "customer-search-clear", resultsId: "customers-results", endpoint: "/customers" }))}</script>`,
     { loggedIn: true, active: "customers" }
   );
 }

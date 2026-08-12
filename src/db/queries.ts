@@ -1,8 +1,19 @@
 import type { Customer, Quote, QuoteItem, QuoteStatus, QuoteWithItems } from "../types";
 import { computeItems, computeSubtotal, computeTotalAmount, nextCustomerRefId, nextQuoteRef, type LineItemInput } from "../lib/totals";
 
-export async function listCustomers(db: D1Database): Promise<Customer[]> {
-  const { results } = await db.prepare(`SELECT * FROM customers ORDER BY name`).all<Customer>();
+// Matches name, ref_id, industry, country, or account owner — the columns
+// shown in the customers table.
+export async function listCustomers(db: D1Database, search = ""): Promise<Customer[]> {
+  const trimmed = search.trim();
+  const like = `%${trimmed}%`;
+  const { results } = await db
+    .prepare(
+      `SELECT * FROM customers
+       WHERE ?1 = '' OR name LIKE ?2 OR ref_id LIKE ?2 OR industry LIKE ?2 OR country LIKE ?2 OR account_owner LIKE ?2
+       ORDER BY name`
+    )
+    .bind(trimmed, like)
+    .all<Customer>();
   return results ?? [];
 }
 

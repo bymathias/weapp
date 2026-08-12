@@ -16,7 +16,9 @@ import {
 import {
   loginPage,
   dashboardPage,
+  quotesResultsPanel,
   customersPage,
+  customersResultsPanel,
   customerPage,
   newCustomerPage,
   newQuotePage,
@@ -30,6 +32,12 @@ export const uiRouter = new Hono<Env>();
 
 function notFound(c: Context<Env>, entity: "Customer" | "Quote", identifier: string) {
   return c.html(notFoundPage({ entity, identifier }), 404);
+}
+
+// Live search sends this header on its fetch() calls so the route can
+// respond with just the results fragment instead of the full page.
+function isLiveSearch(c: Context<Env>): boolean {
+  return c.req.header("X-Requested-With") === "fetch";
 }
 
 uiRouter.get("/login", async (c) => {
@@ -69,6 +77,12 @@ uiRouter.use("/*", requireUiAuth);
 uiRouter.get("/", async (c) => {
   const search = c.req.query("q") ?? "";
   const page = Math.max(1, Number(c.req.query("page")) || 1);
+
+  if (isLiveSearch(c)) {
+    const quoteList = await listQuotes(c.env.DB, { search, page, pageSize: 10 });
+    return c.html(quotesResultsPanel(quoteList, search));
+  }
+
   const [stats, quoteList] = await Promise.all([
     getDashboardStats(c.env.DB),
     listQuotes(c.env.DB, { search, page, pageSize: 10 }),
@@ -77,8 +91,14 @@ uiRouter.get("/", async (c) => {
 });
 
 uiRouter.get("/customers", async (c) => {
-  const customers = await listCustomers(c.env.DB);
-  return c.html(customersPage(customers));
+  const search = c.req.query("q") ?? "";
+  const customers = await listCustomers(c.env.DB, search);
+
+  if (isLiveSearch(c)) {
+    return c.html(customersResultsPanel(customers, search));
+  }
+
+  return c.html(customersPage(customers, search));
 });
 
 uiRouter.get("/customers/new", async (c) => {

@@ -166,8 +166,8 @@ const STYLE = `
   .stat-value { font-size: 26px; font-weight: 800; line-height: 1.1; }
   .stat-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
 
-  .dash-quotes-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 24px 0 12px; }
-  .dash-quotes-header h2 { margin: 0; }
+  .list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 24px 0 12px; }
+  .list-toolbar h2 { margin: 0; }
   .search-form { display: flex; gap: 8px; align-items: center; }
   .search-form input[type=text] { width: 300px; }
   .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 18px; }
