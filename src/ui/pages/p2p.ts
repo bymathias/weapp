@@ -135,7 +135,7 @@ export function newPurchaseOrderPage(vendors: Vendor[], materials: Material[], o
         <div class="panel">
           <table id="items-table" class="items-table" data-testid="po-items-table">
             <thead>
-              <tr><th style="width:45%">Material</th><th style="width:15%">Qty</th><th style="width:18%">Price</th><th style="width:15%">Line Total</th><th style="width:7%"></th></tr>
+              <tr><th style="width:45%">Material Code</th><th style="width:15%">Qty</th><th style="width:18%">Price</th><th style="width:15%">Line Total</th><th style="width:7%"></th></tr>
             </thead>
             <tbody id="items-table-body"></tbody>
           </table>
