@@ -70,7 +70,8 @@ export async function generatePurchaseOrderPdf(
 
   // Line items table
   const col = {
-    desc: MARGIN,
+    code: MARGIN,
+    desc: MARGIN + 70,
     qty: PAGE_WIDTH - MARGIN - 190,
     unit: PAGE_WIDTH - MARGIN - 130,
     total: PAGE_WIDTH - MARGIN - 60,
@@ -83,7 +84,8 @@ export async function generatePurchaseOrderPdf(
     height: 18,
     color: rgb(0.94, 0.95, 0.97),
   });
-  draw("Material", col.desc + 4, { size: 9, f: bold });
+  draw("Code", col.code + 4, { size: 9, f: bold });
+  draw("Description", col.desc + 4, { size: 9, f: bold });
   draw("Qty", col.qty, { size: 9, f: bold });
   draw("Unit Price", col.unit, { size: 9, f: bold });
   draw("Line Total", col.total, { size: 9, f: bold });
@@ -97,8 +99,10 @@ export async function generatePurchaseOrderPdf(
       break;
     }
     const material = materialsById.get(item.material_id);
-    const label = material ? `${material.material_code} — ${material.description}` : `Material #${item.material_id}`;
-    const desc = label.length > 46 ? `${label.slice(0, 43)}...` : label;
+    const code = material ? material.material_code : `#${item.material_id}`;
+    const description = material ? material.description : "Unknown material";
+    const desc = description.length > 34 ? `${description.slice(0, 31)}...` : description;
+    draw(code, col.code + 4, { size: 9 });
     draw(desc, col.desc + 4, { size: 9 });
     draw(String(item.qty), col.qty, { size: 9 });
     draw(money(item.price), col.unit, { size: 9 });
@@ -203,7 +207,8 @@ export async function generateSalesOrderPdf(so: SalesOrderWithItems, customer: C
 
   // Line items table
   const col = {
-    desc: MARGIN,
+    code: MARGIN,
+    desc: MARGIN + 70,
     qty: PAGE_WIDTH - MARGIN - 190,
     unit: PAGE_WIDTH - MARGIN - 130,
     total: PAGE_WIDTH - MARGIN - 60,
@@ -216,6 +221,7 @@ export async function generateSalesOrderPdf(so: SalesOrderWithItems, customer: C
     height: 18,
     color: rgb(0.94, 0.95, 0.97),
   });
+  draw("Code", col.code + 4, { size: 9, f: bold });
   draw("Description", col.desc + 4, { size: 9, f: bold });
   draw("Qty", col.qty, { size: 9, f: bold });
   draw("Unit Price", col.unit, { size: 9, f: bold });
@@ -229,8 +235,8 @@ export async function generateSalesOrderPdf(so: SalesOrderWithItems, customer: C
       y -= 14;
       break;
     }
-    const label = item.material_code ? `${item.description} (${item.material_code})` : item.description;
-    const desc = label.length > 46 ? `${label.slice(0, 43)}...` : label;
+    const desc = item.description.length > 34 ? `${item.description.slice(0, 31)}...` : item.description;
+    draw(item.material_code ?? "—", col.code + 4, { size: 9 });
     draw(desc, col.desc + 4, { size: 9 });
     draw(String(item.qty), col.qty, { size: 9 });
     draw(money(item.unit_price), col.unit, { size: 9 });

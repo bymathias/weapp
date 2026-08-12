@@ -51,7 +51,8 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
   const rows = so.items
     .map(
       (item) => html`<tr data-testid="so-item-row">
-        <td>${item.description}${item.material_code ? html` <span class="muted">(${item.material_code})</span>` : ""}</td>
+        <td data-testid="so-item-material-code">${item.material_code ?? "—"}</td>
+        <td data-testid="so-item-description">${item.description}</td>
         <td>${item.qty}</td>
         <td>${money(item.unit_price)}</td>
         <td>${money(item.line_total)}</td>
@@ -91,7 +92,7 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
       <h2 id="items-section">Line Items</h2>
       <div class="panel">
         <table id="so-items-table" data-testid="so-items-table">
-          <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
+          <thead><tr><th>Material Code</th><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
           <tbody>${raw(rows)}</tbody>
         </table>
         <div class="totals">
@@ -264,7 +265,8 @@ export function deliveryDetailPage(dlv: Delivery, so: SalesOrderWithItems, custo
   const rows = so.items
     .map(
       (item) => html`<tr data-testid="dlv-item-row">
-        <td>${item.description}${item.material_code ? html` <span class="muted">(${item.material_code})</span>` : ""}</td>
+        <td data-testid="dlv-item-material-code">${item.material_code ?? "—"}</td>
+        <td data-testid="dlv-item-description">${item.description}</td>
         <td>${item.qty}</td>
       </tr>`
     )
@@ -290,7 +292,7 @@ export function deliveryDetailPage(dlv: Delivery, so: SalesOrderWithItems, custo
       <h2 id="items-section">Line Items</h2>
       <div class="panel">
         <table id="dlv-items-table" data-testid="dlv-items-table">
-          <thead><tr><th>Description</th><th>Qty</th></tr></thead>
+          <thead><tr><th>Material Code</th><th>Description</th><th>Qty</th></tr></thead>
           <tbody>${raw(rows)}</tbody>
         </table>
       </div>

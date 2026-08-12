@@ -5,9 +5,9 @@ import type { FlowEntry, Material, PoItem, PurchaseOrder, PurchaseOrderWithItems
 import type { GoodsReceiptListRow, PurchaseOrderListRow, SupplierInvoiceListRow } from "../../db/p2p";
 import type { GoodsReceiptWithItems, SupplierInvoiceWithItems } from "../../types";
 
-function materialLabel(materialsById: Map<number, Material>, materialId: number): string {
+function materialInfo(materialsById: Map<number, Material>, materialId: number): { code: string; description: string } {
   const m = materialsById.get(materialId);
-  return m ? `${m.material_code} — ${m.description}` : `Material #${materialId}`;
+  return m ? { code: m.material_code, description: m.description } : { code: "—", description: `Material #${materialId}` };
 }
 
 // Purchase Orders --------------------------------------------------------------
@@ -54,14 +54,16 @@ export function purchaseOrderDetailPage(
 ) {
   const total = po.items.reduce((s, i) => s + i.line_total, 0);
   const rows = po.items
-    .map(
-      (item) => html`<tr data-testid="po-item-row">
-        <td>${materialLabel(materialsById, item.material_id)}</td>
+    .map((item) => {
+      const mat = materialInfo(materialsById, item.material_id);
+      return html`<tr data-testid="po-item-row">
+        <td data-testid="po-item-material-code">${mat.code}</td>
+        <td data-testid="po-item-material-description">${mat.description}</td>
         <td>${item.qty}</td>
         <td>${money(item.price)}</td>
         <td>${money(item.line_total)}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
 
   return layout(
@@ -84,7 +86,7 @@ export function purchaseOrderDetailPage(
       <h2 id="items-section">Line Items</h2>
       <div class="panel">
         <table id="po-items-table" data-testid="po-items-table">
-          <thead><tr><th>Material</th><th>Qty</th><th>Price</th><th>Line Total</th></tr></thead>
+          <thead><tr><th>Material Code</th><th>Description</th><th>Qty</th><th>Price</th><th>Line Total</th></tr></thead>
           <tbody>${raw(rows)}</tbody>
         </table>
         <div class="totals">
@@ -263,8 +265,10 @@ export function goodsReceiptDetailPage(
   const rows = gr.items
     .map((item) => {
       const poItem = poItemsById.get(item.po_item_id);
+      const mat = poItem ? materialInfo(materialsById, poItem.material_id) : null;
       return html`<tr data-testid="gr-item-row">
-        <td>${poItem ? materialLabel(materialsById, poItem.material_id) : `PO item #${item.po_item_id}`}</td>
+        <td data-testid="gr-item-material-code">${mat ? mat.code : "—"}</td>
+        <td data-testid="gr-item-material-description">${mat ? mat.description : `PO item #${item.po_item_id}`}</td>
         <td>${item.qty_received}</td>
       </tr>`;
     })
@@ -287,7 +291,7 @@ export function goodsReceiptDetailPage(
       <h2 id="items-section">Line Items</h2>
       <div class="panel">
         <table id="gr-items-table" data-testid="gr-items-table">
-          <thead><tr><th>Material</th><th>Qty Received</th></tr></thead>
+          <thead><tr><th>Material Code</th><th>Description</th><th>Qty Received</th></tr></thead>
           <tbody>${raw(rows)}</tbody>
         </table>
       </div>
@@ -303,16 +307,18 @@ export function goodsReceiptDetailPage(
 
 export function newGoodsReceiptPage(po: PurchaseOrderWithItems, materialsById: Map<number, Material>, opts: { error?: string } = {}) {
   const rows = po.items
-    .map(
-      (item) => html`<tr data-testid="gr-item-row">
-        <td>${materialLabel(materialsById, item.material_id)}</td>
+    .map((item) => {
+      const mat = materialInfo(materialsById, item.material_id);
+      return html`<tr data-testid="gr-item-row">
+        <td data-testid="gr-item-material-code">${mat.code}</td>
+        <td data-testid="gr-item-material-description">${mat.description}</td>
         <td>${item.qty}</td>
         <td>
           <input type="hidden" name="po_item_id[]" value="${item.id}" />
           <input type="number" name="qty_received[]" class="item-qty-received" data-testid="gr-item-qty-received" min="0" step="1" value="${item.qty}" required />
         </td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
 
   return layout(
@@ -324,7 +330,7 @@ export function newGoodsReceiptPage(po: PurchaseOrderWithItems, materialsById: M
         <input type="hidden" name="po_number" value="${po.po_number}" />
         <div class="panel">
           <table id="gr-items-table" data-testid="gr-items-table">
-            <thead><tr><th>Material</th><th>PO Qty</th><th>Qty Received</th></tr></thead>
+            <thead><tr><th>Material Code</th><th>Description</th><th>PO Qty</th><th>Qty Received</th></tr></thead>
             <tbody>${raw(rows)}</tbody>
           </table>
         </div>
@@ -383,8 +389,10 @@ export function supplierInvoiceDetailPage(
   const rows = si.items
     .map((item) => {
       const poItem = poItemsById.get(item.po_item_id);
+      const mat = poItem ? materialInfo(materialsById, poItem.material_id) : null;
       return html`<tr data-testid="si-item-row">
-        <td>${poItem ? materialLabel(materialsById, poItem.material_id) : `PO item #${item.po_item_id}`}</td>
+        <td data-testid="si-item-material-code">${mat ? mat.code : "—"}</td>
+        <td data-testid="si-item-material-description">${mat ? mat.description : `PO item #${item.po_item_id}`}</td>
         <td>${item.qty}</td>
         <td>${money(item.price)}</td>
         <td>${money(item.line_total)}</td>
@@ -420,7 +428,7 @@ export function supplierInvoiceDetailPage(
       <h2 id="items-section">Line Items</h2>
       <div class="panel">
         <table id="si-items-table" data-testid="si-items-table">
-          <thead><tr><th>Material</th><th>Qty</th><th>Price</th><th>Line Total</th></tr></thead>
+          <thead><tr><th>Material Code</th><th>Description</th><th>Qty</th><th>Price</th><th>Line Total</th></tr></thead>
           <tbody>${raw(rows)}</tbody>
         </table>
         <div class="totals">
@@ -448,17 +456,19 @@ export function supplierInvoiceDetailPage(
 
 export function newSupplierInvoicePage(po: PurchaseOrderWithItems, materialsById: Map<number, Material>, opts: { error?: string } = {}) {
   const rows = po.items
-    .map(
-      (item) => html`<tr class="item-row" data-testid="si-item-row">
-        <td>
-          ${materialLabel(materialsById, item.material_id)}
+    .map((item) => {
+      const mat = materialInfo(materialsById, item.material_id);
+      return html`<tr class="item-row" data-testid="si-item-row">
+        <td data-testid="si-item-material-code">
+          ${mat.code}
           <input type="hidden" name="po_item_id[]" value="${item.id}" />
         </td>
+        <td data-testid="si-item-material-description">${mat.description}</td>
         <td><input type="number" name="qty[]" class="item-qty" data-testid="si-item-qty" min="1" step="1" value="${item.qty}" required /></td>
         <td><input type="number" name="price[]" class="item-price" data-testid="si-item-price" min="0" step="0.01" value="${item.price}" required /></td>
         <td class="item-line-total" data-testid="si-item-line-total">${money(item.line_total)}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
   const initialAmount = po.items.reduce((s, i) => s + i.line_total, 0);
 
@@ -471,7 +481,7 @@ export function newSupplierInvoicePage(po: PurchaseOrderWithItems, materialsById
         <input type="hidden" name="po_number" value="${po.po_number}" />
         <div class="panel">
           <table id="items-table" class="items-table" data-testid="si-items-table">
-            <thead><tr><th style="width:45%">Material</th><th style="width:15%">Qty</th><th style="width:18%">Price</th><th style="width:15%">Line Total</th></tr></thead>
+            <thead><tr><th style="width:15%">Material Code</th><th style="width:30%">Description</th><th style="width:15%">Qty</th><th style="width:18%">Price</th><th style="width:15%">Line Total</th></tr></thead>
             <tbody id="items-table-body">${raw(rows)}</tbody>
           </table>
           <div class="totals">
