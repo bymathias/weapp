@@ -157,41 +157,54 @@ interface LaunchpadTile {
   href: string;
   icon: string;
   title: string;
-  sub: string;
+  role: string; // launchpad group header
+  process: string; // subtitle tag shown under the tile name
   testid: string;
 }
 
+// Role-based launchpad grouping. Order here is the display order within
+// each group; TILES order + GROUP_ORDER together fix the full layout.
 const TILES: LaunchpadTile[] = [
-  { href: "/purchase-orders", icon: ICONS.po, title: "Purchase Orders", sub: "Purchase-to-Pay", testid: "tile-purchase-orders" },
-  { href: "/goods-receipts", icon: ICONS.gr, title: "Goods Receipts", sub: "Purchase-to-Pay", testid: "tile-goods-receipts" },
-  { href: "/supplier-invoices", icon: ICONS.si, title: "Supplier Invoices", sub: "Purchase-to-Pay", testid: "tile-supplier-invoices" },
-  { href: "/sales-orders", icon: ICONS.so, title: "Sales Orders", sub: "Order-to-Cash", testid: "tile-sales-orders" },
-  { href: "/deliveries", icon: ICONS.delivery, title: "Deliveries", sub: "Order-to-Cash", testid: "tile-deliveries" },
-  { href: "/billing", icon: ICONS.billing, title: "Billing", sub: "Order-to-Cash", testid: "tile-billing" },
+  { href: "/purchase-orders", icon: ICONS.po, title: "Purchase Orders", role: "Purchaser", process: "Purchase-to-Pay", testid: "tile-purchase-orders" },
+  { href: "/goods-receipts", icon: ICONS.gr, title: "Goods Receipts", role: "Purchaser", process: "Purchase-to-Pay", testid: "tile-goods-receipts" },
+  { href: "/supplier-invoices", icon: ICONS.si, title: "Supplier Invoices", role: "Accounts Payable", process: "Purchase-to-Pay", testid: "tile-supplier-invoices" },
+  { href: "/payments", icon: ICONS.payments, title: "Payments", role: "Accounts Payable", process: "Purchase-to-Pay", testid: "tile-payments" },
+  { href: "/sales-orders", icon: ICONS.so, title: "Sales Orders", role: "Sales", process: "Order-to-Cash", testid: "tile-sales-orders" },
+  { href: "/deliveries", icon: ICONS.delivery, title: "Deliveries", role: "Sales", process: "Order-to-Cash", testid: "tile-deliveries" },
+  { href: "/billing", icon: ICONS.billing, title: "Billing", role: "Billing / Accounts Receivable", process: "Order-to-Cash", testid: "tile-billing" },
+  {
+    href: "/incoming-payments",
+    icon: ICONS.incomingPayments,
+    title: "Incoming Payments",
+    role: "Billing / Accounts Receivable",
+    process: "Order-to-Cash",
+    testid: "tile-incoming-payments",
+  },
 ];
 
-// Fiori launchpad: tiles grouped under a header per functional area, in a
-// fixed order — the groups themselves are new wrapper markup only, every
-// tile keeps its existing id/data-testid/href unchanged.
-const GROUP_ORDER = ["Insights", "Purchase-to-Pay", "Order-to-Cash"] as const;
+// Fiori launchpad: tiles grouped under a role header, in a fixed order —
+// the groups themselves are new wrapper markup only, every tile keeps its
+// existing id/data-testid/href unchanged.
+const GROUP_ORDER = ["Purchaser", "Accounts Payable", "Sales", "Billing / Accounts Receivable"] as const;
 
 function tileHtml(t: LaunchpadTile, subTestid: string, subOverride?: string): string {
   return `<a class="tile" id="${t.testid}" data-testid="${t.testid}" href="${t.href}">
     <span class="tile-icon">${t.icon}</span>
-    <div><div class="tile-title">${t.title}</div><div class="tile-sub" data-testid="${subTestid}">${subOverride ?? t.sub}</div></div>
+    <div><div class="tile-title">${t.title}</div><div class="tile-sub" data-testid="${subTestid}">${subOverride ?? t.process}</div></div>
   </a>`;
 }
 
 export function launchpadPage(worklistCount: number) {
   const groups = new Map<string, string[]>(GROUP_ORDER.map((g) => [g, []]));
-  groups.get("Insights")!.push(
+  for (const t of TILES) groups.get(t.role)!.push(tileHtml(t, `${t.testid}-sub`));
+  // Worklist lives under Accounts Payable, keeping its live item-count subtitle.
+  groups.get("Accounts Payable")!.push(
     tileHtml(
-      { href: "/worklist", icon: ICONS.worklist, title: "Worklist", sub: "", testid: "tile-worklist" },
+      { href: "/worklist", icon: ICONS.worklist, title: "Worklist", role: "Accounts Payable", process: "", testid: "tile-worklist" },
       "worklist-tile-count",
       `${worklistCount} item${worklistCount === 1 ? "" : "s"} need attention`
     )
   );
-  for (const t of TILES) groups.get(t.sub)!.push(tileHtml(t, `${t.testid}-sub`));
 
   const groupsHtml = GROUP_ORDER.filter((g) => (groups.get(g)?.length ?? 0) > 0)
     .map(

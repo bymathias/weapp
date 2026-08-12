@@ -3,7 +3,7 @@ import type { Env } from "../../types";
 import { createPayment, getPaymentByNumber, listPayments } from "../../db/payments";
 import { getFlow } from "../../lib/flow";
 import { mapActionError } from "../errors";
-import { ErrorSchema, FlowEntrySchema, PayNumberParamSchema, PaymentInputSchema, PaymentSchema } from "../schemas";
+import { ErrorSchema, FlowEntrySchema, PayNumberParamSchema, PaymentInputSchema, PaymentListQuerySchema, PaymentSchema } from "../schemas";
 
 export function registerPaymentsRoutes(api: OpenAPIHono<Env>) {
   api.openapi(
@@ -12,10 +12,15 @@ export function registerPaymentsRoutes(api: OpenAPIHono<Env>) {
       path: "/payments",
       tags: ["Payments"],
       summary: "List payments",
+      description: "Optionally filter by direction: 'out' for vendor payments (AP), 'in' for customer receipts (AR).",
       security: [{ Bearer: [] }],
+      request: { query: PaymentListQuerySchema },
       responses: { 200: { description: "List of payments", content: { "application/json": { schema: z.array(PaymentSchema) } } } },
     }),
-    async (c) => c.json(await listPayments(c.env.DB), 200)
+    async (c) => {
+      const { direction } = c.req.valid("query");
+      return c.json(await listPayments(c.env.DB, direction), 200);
+    }
   );
 
   // Unified Pay (supplier invoice, AP/"out") / Clear (billing document,

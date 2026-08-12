@@ -7,6 +7,7 @@ import { worklistPage } from "./pages/worklist";
 import { registerP2PUiRoutes } from "./routes/p2p";
 import { registerO2CUiRoutes } from "./routes/o2c";
 import { registerMasterUiRoutes } from "./routes/master";
+import { registerPaymentsUiRoutes } from "./routes/payments";
 
 export const uiRouter = new Hono<Env>();
 
@@ -57,3 +58,4 @@ uiRouter.get("/worklist", async (c) => {
 registerMasterUiRoutes(uiRouter);
 registerP2PUiRoutes(uiRouter);
 registerO2CUiRoutes(uiRouter);
+registerPaymentsUiRoutes(uiRouter);

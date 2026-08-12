@@ -1,4 +1,4 @@
-import type { Payment, PaymentRefType } from "../types";
+import type { Payment, PaymentDirection, PaymentRefType } from "../types";
 import { nextDocNumber } from "../lib/numbering";
 import { recordFlow } from "../lib/flow";
 import { getSupplierInvoiceByNumber } from "./p2p";
@@ -6,28 +6,47 @@ import { getBillingByNumber } from "./o2c";
 
 export interface PaymentListRow extends Payment {
   ref_number: string;
+  party_name: string;
 }
 
-async function resolveRefNumber(db: D1Database, refType: PaymentRefType, refId: number): Promise<string> {
-  const table = refType === "supplier_invoice" ? "supplier_invoices" : "billing_documents";
-  const column = refType === "supplier_invoice" ? "inv_number" : "bill_number";
-  const row = await db.prepare(`SELECT ${column} as num FROM ${table} WHERE id = ?1`).bind(refId).first<{ num: string }>();
-  return row?.num ?? "";
+async function resolveRefAndParty(db: D1Database, refType: PaymentRefType, refId: number): Promise<{ ref_number: string; party_name: string }> {
+  const row =
+    refType === "supplier_invoice"
+      ? await db
+          .prepare(`SELECT si.inv_number as ref_number, v.name as party_name FROM supplier_invoices si JOIN vendors v ON v.id = si.vendor_id WHERE si.id = ?1`)
+          .bind(refId)
+          .first<{ ref_number: string; party_name: string }>()
+      : await db
+          .prepare(`SELECT bd.bill_number as ref_number, c.name as party_name FROM billing_documents bd JOIN customers c ON c.id = bd.customer_id WHERE bd.id = ?1`)
+          .bind(refId)
+          .first<{ ref_number: string; party_name: string }>();
+  return row ?? { ref_number: "", party_name: "" };
 }
 
-export async function listPayments(db: D1Database): Promise<PaymentListRow[]> {
-  const { results } = await db.prepare(`SELECT * FROM payments ORDER BY created_at DESC, id DESC`).all<Payment>();
-  const rows: PaymentListRow[] = [];
-  for (const p of results ?? []) {
-    rows.push({ ...p, ref_number: await resolveRefNumber(db, p.ref_type, p.ref_id) });
-  }
-  return rows;
+// direction omitted -> all payments (both AP/"out" and AR/"in").
+export async function listPayments(db: D1Database, direction?: PaymentDirection): Promise<PaymentListRow[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT p.*,
+         CASE WHEN p.ref_type = 'supplier_invoice' THEN si.inv_number ELSE bd.bill_number END AS ref_number,
+         CASE WHEN p.ref_type = 'supplier_invoice' THEN v.name ELSE c.name END AS party_name
+       FROM payments p
+       LEFT JOIN supplier_invoices si ON p.ref_type = 'supplier_invoice' AND si.id = p.ref_id
+       LEFT JOIN vendors v ON v.id = si.vendor_id
+       LEFT JOIN billing_documents bd ON p.ref_type = 'billing_document' AND bd.id = p.ref_id
+       LEFT JOIN customers c ON c.id = bd.customer_id
+       WHERE ?1 IS NULL OR p.direction = ?1
+       ORDER BY p.created_at DESC, p.id DESC`
+    )
+    .bind(direction ?? null)
+    .all<PaymentListRow>();
+  return results ?? [];
 }
 
 export async function getPaymentByNumber(db: D1Database, payNumber: string): Promise<PaymentListRow | null> {
   const p = await db.prepare(`SELECT * FROM payments WHERE pay_number = ?1`).bind(payNumber).first<Payment>();
   if (!p) return null;
-  return { ...p, ref_number: await resolveRefNumber(db, p.ref_type, p.ref_id) };
+  return { ...p, ...(await resolveRefAndParty(db, p.ref_type, p.ref_id)) };
 }
 
 // Unified Pay/Clear action for both AP (supplier invoice) and AR (billing

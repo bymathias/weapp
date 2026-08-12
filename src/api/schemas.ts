@@ -311,12 +311,17 @@ export const PaymentSchema = z
     ref_type: PaymentRefTypeSchema,
     ref_id: z.number().int(),
     ref_number: z.string(),
+    party_name: z.string(),
     direction: PaymentDirectionSchema,
     amount: z.number(),
     status: PaymentStatusSchema,
     created_at: z.string(),
   })
   .openapi("Payment");
+
+export const PaymentListQuerySchema = z.object({
+  direction: PaymentDirectionSchema.optional().openapi({ param: { name: "direction", in: "query" } }),
+});
 
 export const PaymentInputSchema = z
   .object({
