@@ -108,6 +108,15 @@ const STYLE = `
   .badge.Sent { background: var(--accent-bg); color: var(--accent); }
   .badge.Won { background: var(--ok-bg); color: var(--ok); }
   .badge.Lost { background: var(--danger-bg); color: var(--danger); }
+  .warn-banner {
+    background: var(--warn-bg);
+    color: var(--warn);
+    border: 1px solid #f7dfa6;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    font-weight: 600;
+  }
   .locked-banner {
     background: var(--danger-bg);
     color: var(--danger);

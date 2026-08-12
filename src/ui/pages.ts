@@ -446,6 +446,12 @@ function quoteFormPage(opts: QuoteFormPageOptions) {
               <select id="status" name="status" data-testid="quote-status" required>${raw(statusOptions)}</select>
             </div>
           </div>
+          <div
+            class="warn-banner"
+            id="won-status-warning"
+            data-testid="won-status-warning"
+            style="display:${opts.initialStatus === "Won" ? "block" : "none"}"
+          >Saving this quote as Won will lock it — it cannot be edited afterward.</div>
           <div class="field" style="max-width:200px">
             <label for="margin_pct">Margin %</label>
             <input type="number" id="margin_pct" name="margin_pct" data-testid="quote-margin" value="${opts.initialMarginPct}" min="0" step="0.1" required />
@@ -586,6 +592,12 @@ function quoteFormScript(): string {
 
       document.getElementById('add-row-btn').addEventListener('click', addRow);
       marginEl.addEventListener('input', recalc);
+
+      var statusEl = document.getElementById('status');
+      var wonWarningEl = document.getElementById('won-status-warning');
+      statusEl.addEventListener('change', function () {
+        wonWarningEl.style.display = statusEl.value === 'Won' ? 'block' : 'none';
+      });
 
       var existingRows = tbody.querySelectorAll('.item-row');
       if (existingRows.length === 0) {
