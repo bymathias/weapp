@@ -11,6 +11,8 @@
     "db:seed:remote": "wrangler d1 execute wesap --remote --file=./seed.sql",
     "db:migrate-incremental:local": "wrangler d1 execute wesap --local --file=./migrations/0001_add_customer_po_number.sql",
     "db:migrate-incremental:remote": "wrangler d1 execute wesap --remote --file=./migrations/0001_add_customer_po_number.sql",
+    "seed:gen": "node scripts/gen-seed.mjs",
+    "reset": "wrangler d1 execute wesap --remote --file reset.sql",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
