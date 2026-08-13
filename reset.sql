@@ -4,9 +4,12 @@
 --
 -- Run against the deployed DB:
 --   wrangler d1 execute <wecpq_db> --remote --file ./reset.sql
+--
+-- No explicit BEGIN/COMMIT: D1 rejects manual transaction control
+-- statements and already executes each --file atomically, rolling back
+-- the whole batch on any failure.
 
 PRAGMA defer_foreign_keys=TRUE;
-BEGIN;
 
 DELETE FROM quote_items;
 DELETE FROM quotes;
@@ -87,6 +90,3 @@ INSERT INTO quote_items (id, quote_id, sku, description, quantity, unit_price, l
   (29, 18, 'MX85-HW', 'Cisco Meraki MX85 Security Appliance', 2, 1650, 3300),
   (30, 19, 'M365-E5-ANN', 'Microsoft 365 E5 License (annual)', 90, 57, 5130),
   (31, 20, 'CP-HARM-EP', 'Check Point Harmony Endpoint (per seat, annual)', 120, 55, 6600);
-
-
-COMMIT;
