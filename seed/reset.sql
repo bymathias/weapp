@@ -1,0 +1,210 @@
+-- WeSAP demo reset: wipe all demo-data tables and reseed from
+-- seed/demo-seed-data.json. Data rows only — no DROP/CREATE/ALTER.
+-- Idempotent: safe to run repeatedly.
+--
+-- Run against the deployed DB:
+--   wrangler d1 execute <wesap_db> --remote --file ./seed/reset.sql
+--
+-- company_code is left untouched (static config, not demo data).
+--
+-- No explicit BEGIN/COMMIT: D1 rejects BEGIN TRANSACTION/SAVEPOINT in SQL
+-- (local and remote both error — "use state.storage.transaction() ...
+-- instead of the SQL BEGIN TRANSACTION or SAVEPOINT statements"). A whole
+-- --file is already sent to D1 as one atomic batch, so this stays
+-- one-transaction in practice without the SQL wrapper.
+
+PRAGMA defer_foreign_keys=TRUE;
+
+-- Delete children -> parents ------------------------------------------------
+DELETE FROM doc_flow;
+DELETE FROM payments;
+DELETE FROM billing_documents;
+DELETE FROM deliveries;
+DELETE FROM so_items;
+DELETE FROM sales_orders;
+DELETE FROM si_items;
+DELETE FROM supplier_invoices;
+DELETE FROM gr_items;
+DELETE FROM goods_receipts;
+DELETE FROM po_items;
+DELETE FROM purchase_orders;
+DELETE FROM materials;
+DELETE FROM vendors;
+DELETE FROM customers;
+DELETE FROM sqlite_sequence;
+
+-- Insert parents -> children (same data as seed.sql) ------------------------
+
+-- Customers — shared with WeCPQ (same id/ref_id)
+INSERT INTO customers (id, name, ref_id, industry, country, account_owner, credit_limit) VALUES
+  (1, 'Northbridge Systems', 'CUST-0001', 'MSP', 'United States', 'Alice Turner', 60000),
+  (2, 'Datapoint Solutions', 'CUST-0002', 'SaaS', 'United Kingdom', 'Ben Carter', 40000),
+  (3, 'Meridian IT Group', 'CUST-0003', 'Systems Integration', 'Germany', 'Clara Nguyen', 80000),
+  (4, 'Cirrus Cloud Services', 'CUST-0004', 'Cloud Hosting', 'Canada', 'David Kim', 50000),
+  (5, 'Vertex Software Labs', 'CUST-0005', 'SaaS', 'Ireland', 'Emma Ross', 35000),
+  (6, 'Harbor Networks', 'CUST-0006', 'Cybersecurity Reseller', 'Australia', 'Frank Lopez', 90000),
+  (7, 'Solstice Data Group', 'CUST-0007', 'MSP', 'Netherlands', 'Grace Patel', 45000),
+  (8, 'Apex Managed IT', 'CUST-0008', 'MSP', 'United States', 'Henry Wall', 30000),
+  (9, 'Ironclad Security Partners', 'CUST-0009', 'Cybersecurity Reseller', 'France', 'Clara Nguyen', 40000),
+  (10, 'Blue Harbor Analytics', 'CUST-0010', 'Data Analytics', 'Italy', 'Emma Ross', 55000),
+  (11, 'Northwind Technologies', 'CUST-0011', 'IT Consulting', 'Poland', 'Ben Carter', 45000),
+  (12, 'Silverline Cloud Co', 'CUST-0012', 'Cloud Hosting', 'Portugal', 'David Kim', 70000),
+  (13, 'Kestrel Digital', 'CUST-0013', 'Digital Services', 'United Kingdom', 'Alice Turner', 40000),
+  (14, 'Onyx Infrastructure', 'CUST-0014', 'Systems Integration', 'Germany', 'Frank Lopez', 85000),
+  (15, 'Beacon Systems Group', 'CUST-0015', 'Managed Security', 'Netherlands', 'Grace Patel', 50000);
+
+-- Vendors
+INSERT INTO vendors (id, name, ref_id) VALUES
+  (1, 'Fortinet', 'VEND-0001'),
+  (2, 'Cisco', 'VEND-0002'),
+  (3, 'Palo Alto Networks', 'VEND-0003'),
+  (4, 'Check Point', 'VEND-0004'),
+  (5, 'CrowdStrike', 'VEND-0005'),
+  (6, 'Microsoft', 'VEND-0006'),
+  (7, 'Veeam', 'VEND-0007'),
+  (8, 'Zscaler', 'VEND-0008');
+
+-- Materials (all 40)
+INSERT INTO materials (id, material_code, description, vendor_id, standard_price, stock_qty) VALUES
+  (1, 'MAT-0001', 'FortiGate 100F Firewall Appliance', 1, 1850, 25),
+  (2, 'MAT-0002', 'Cisco Catalyst 9300 Switch', 2, 4200, 15),
+  (3, 'MAT-0003', 'PA-440 Next-Gen Firewall', 3, 2100, 20),
+  (4, 'MAT-0004', 'Check Point Quantum Spark 1590 Appliance', 4, 980, 30),
+  (5, 'MAT-0005', 'CrowdStrike Falcon Insight XDR License (per endpoint)', 5, 65, 500),
+  (6, 'MAT-0006', 'Microsoft 365 E5 License (annual)', 6, 57, 1000),
+  (7, 'MAT-0007', 'Veeam Backup & Replication Enterprise Plus (per socket)', 7, 1150, 40),
+  (8, 'MAT-0008', 'Zscaler Internet Access Business (per user, annual)', 8, 42, 800),
+  (9, 'MAT-0009', 'Cisco Meraki MX85 Security Appliance', 2, 1650, 18),
+  (10, 'MAT-0010', 'FortiAnalyzer 200G', 1, 5200, 10),
+  (11, 'MAT-0011', 'PA-850 Next-Gen Firewall', 3, 6800, 12),
+  (12, 'MAT-0012', 'Check Point Harmony Endpoint License (per seat)', 4, 38, 600),
+  (13, 'MAT-0013', 'CrowdStrike Falcon Complete MDR (per endpoint)', 5, 110, 350),
+  (14, 'MAT-0014', 'Microsoft Defender for Endpoint P2 (per user)', 6, 24, 900),
+  (15, 'MAT-0015', 'Veeam ONE Monitoring & Analytics (per socket)', 7, 340, 60),
+  (16, 'MAT-0016', 'Zscaler Private Access Business (per user, annual)', 8, 48, 700),
+  (17, 'MAT-0017', 'FortiSwitch 448E-FPOE', 1, 3100, 14),
+  (18, 'MAT-0018', 'FortiClient EMS License (per endpoint)', 1, 22, 750),
+  (19, 'MAT-0019', 'FortiMail 200F Secure Email Gateway', 1, 4600, 8),
+  (20, 'MAT-0020', 'Cisco Identity Services Engine (ISE) License', 2, 95, 400),
+  (21, 'MAT-0021', 'Cisco Umbrella DNS Security (per user, annual)', 2, 28, 950),
+  (22, 'MAT-0022', 'Cisco Duo MFA (per user, annual)', 2, 18, 1200),
+  (23, 'MAT-0023', 'Prisma Access License (per user, annual)', 3, 72, 600),
+  (24, 'MAT-0024', 'Cortex XDR Pro (per endpoint)', 3, 85, 450),
+  (25, 'MAT-0025', 'GlobalProtect Subscription (per user, annual)', 3, 34, 700),
+  (26, 'MAT-0026', 'Check Point CloudGuard Network Security', 4, 5400, 9),
+  (27, 'MAT-0027', 'Check Point Harmony Email & Collaboration (per seat)', 4, 26, 850),
+  (28, 'MAT-0028', 'Check Point Quantum Maestro Orchestrator', 4, 12500, 4),
+  (29, 'MAT-0029', 'CrowdStrike Falcon Prevent (per endpoint)', 5, 45, 900),
+  (30, 'MAT-0030', 'CrowdStrike Falcon Identity Threat Protection (per user)', 5, 58, 500),
+  (31, 'MAT-0031', 'CrowdStrike Falcon Cloud Security (per workload)', 5, 130, 300),
+  (32, 'MAT-0032', 'Microsoft Sentinel (per GB ingested, monthly)', 6, 2.75, 5000),
+  (33, 'MAT-0033', 'Microsoft Entra ID P2 License (per user)', 6, 9, 1500),
+  (34, 'MAT-0034', 'Microsoft Intune License (per user)', 6, 8, 1500),
+  (35, 'MAT-0035', 'Veeam Backup for Microsoft 365 (per user)', 7, 4, 2000),
+  (36, 'MAT-0036', 'Veeam Recovery Orchestrator (per socket)', 7, 950, 30),
+  (37, 'MAT-0037', 'Veeam CDP for Continuous Data Protection (per VM)', 7, 210, 100),
+  (38, 'MAT-0038', 'Zscaler Digital Experience (per user, annual)', 8, 20, 900),
+  (39, 'MAT-0039', 'Zscaler Cloud Protection (per workload)', 8, 95, 250),
+  (40, 'MAT-0040', 'Zscaler Deception (per user, annual)', 8, 30, 600);
+
+-- Purchase-to-Pay ------------------------------------------------------
+INSERT INTO purchase_orders (id, po_number, vendor_id, status) VALUES
+  (1, '4500000001', 1, 'Invoiced'),
+  (2, '4500000002', 3, 'Invoiced'),
+  (3, '4500000003', 2, 'Invoiced'),
+  (4, '4500000004', 7, 'Invoiced'),
+  (5, '4500000005', 5, 'Received'),
+  (6, '4500000006', 6, 'Open');
+
+INSERT INTO po_items (id, po_id, material_id, qty, price, line_total) VALUES
+  (1, 1, 1, 10, 1850, 18500),
+  (2, 2, 3, 10, 2100, 21000),
+  (3, 3, 2, 5, 4200, 21000),
+  (4, 3, 9, 4, 1650, 6600),
+  (5, 4, 7, 40, 1150, 46000),
+  (6, 5, 5, 500, 65, 32500),
+  (7, 6, 6, 300, 57, 17100);
+
+INSERT INTO goods_receipts (id, gr_number, po_id, status) VALUES
+  (1, '5000000001', 1, 'Posted'),
+  (2, '5000000002', 2, 'Posted'),
+  (3, '5000000003', 3, 'Posted'),
+  (4, '5000000004', 4, 'Posted'),
+  (5, '5000000005', 5, 'Posted');
+
+INSERT INTO gr_items (id, gr_id, po_item_id, qty_received) VALUES
+  (1, 1, 1, 10),
+  (2, 2, 2, 10),
+  (3, 3, 3, 5),
+  (4, 3, 4, 4),
+  (5, 4, 5, 30),
+  (6, 5, 6, 500);
+
+INSERT INTO supplier_invoices (id, inv_number, po_id, vendor_id, amount, status, block_reason) VALUES
+  (1, '5100000001', 1, 1, 18500, 'Paid', NULL),
+  (2, '5100000002', 2, 3, 23000, 'Blocked', 'Line 1: invoice price 2300.00 vs PO price 2100.00 exceeds 5% tolerance'),
+  (3, '5100000003', 3, 2, 27600, 'Matched', NULL),
+  (4, '5100000004', 4, 7, 46000, 'Blocked', 'Quantity mismatch: invoiced 40 vs 30 received on goods receipt 5000000004');
+
+INSERT INTO si_items (id, si_id, po_item_id, qty, price, line_total) VALUES
+  (1, 1, 1, 10, 1850, 18500),
+  (2, 2, 2, 10, 2300, 23000),
+  (3, 3, 3, 5, 4200, 21000),
+  (4, 3, 4, 4, 1650, 6600),
+  (5, 4, 5, 40, 1150, 46000);
+
+-- Order-to-Cash ---------------------------------------------------------
+INSERT INTO sales_orders (id, so_number, customer_id, status, source_quote_ref, total_amount, customer_po_number) VALUES
+  (1, '1000000001', 1, 'Paid', 'Q-2026-0001', 4600, 'PO-NORTHBRIDGE-2026-0142'),
+  (2, '1000000002', 2, 'Delivered', 'Q-2026-0003', 3450, 'DPS-PO-88231'),
+  (3, '1000000003', 4, 'Billed', 'Q-2026-0007', 16000, 'CCS2026-0219'),
+  (4, '1000000004', 6, 'Open', 'Q-2026-0011', 13000, 'HN-2026-PO-0088'),
+  (5, '1000000005', 7, 'Blocked (Credit)', 'Q-2026-0013', 51000, 'SDG-PO-30187'),
+  (6, '1000000006', 12, 'Delivered', 'Q-2026-0017', 10750, 'SLV-2026-PO-114');
+
+INSERT INTO so_items (id, so_id, description, qty, unit_price, line_total, material_code) VALUES
+  (1, 1, 'FortiGate 100F Firewall Appliance', 2, 1850, 3700, 'MAT-0001'),
+  (2, 1, 'FortiCare 24x7 Support (1yr)', 2, 450, 900, NULL),
+  (3, 2, 'Microsoft 365 E5 License (annual)', 50, 57, 2850, 'MAT-0006'),
+  (4, 2, 'Microsoft Defender for Endpoint P2', 50, 12, 600, 'MAT-0014'),
+  (5, 3, 'Zscaler Internet Access Business (per user, annual)', 200, 42, 8400, 'MAT-0008'),
+  (6, 3, 'Deployment & Migration Services', 40, 190, 7600, NULL),
+  (7, 4, 'CrowdStrike Falcon Insight XDR (annual, per endpoint)', 200, 65, 13000, 'MAT-0005'),
+  (8, 5, 'Veeam Backup & Replication Enterprise Plus (per socket)', 40, 1150, 46000, 'MAT-0007'),
+  (9, 5, 'Onboarding & Training Services', 25, 200, 5000, NULL),
+  (10, 6, 'FortiGate 100F Firewall Appliance', 3, 1850, 5550, 'MAT-0001'),
+  (11, 6, 'FortiAnalyzer 200G', 1, 5200, 5200, 'MAT-0010');
+
+INSERT INTO deliveries (id, dlv_number, so_id, status) VALUES
+  (1, '8000000001', 1, 'Posted'),
+  (2, '8000000002', 2, 'Posted'),
+  (3, '8000000003', 3, 'Posted'),
+  (4, '8000000004', 6, 'Posted');
+
+INSERT INTO billing_documents (id, bill_number, so_id, customer_id, amount, status, customer_po_number) VALUES
+  (1, '9000000001', 1, 1, 4600, 'Paid', 'PO-NORTHBRIDGE-2026-0142'),
+  (2, '9000000002', 3, 4, 16000, 'Open', 'CCS2026-0219');
+
+-- Cross-process -----------------------------------------------------------
+INSERT INTO payments (id, pay_number, ref_type, ref_id, direction, amount, status) VALUES
+  (1, '7000000001', 'supplier_invoice', 1, 'out', 18500, 'Cleared'),
+  (2, '7000000002', 'billing_document', 1, 'in', 4600, 'Cleared');
+
+INSERT INTO doc_flow (id, from_type, from_id, to_type, to_id) VALUES
+  (1, 'purchase_order', 1, 'goods_receipt', 1),
+  (2, 'goods_receipt', 1, 'supplier_invoice', 1),
+  (3, 'supplier_invoice', 1, 'payment', 1),
+  (4, 'purchase_order', 2, 'goods_receipt', 2),
+  (5, 'goods_receipt', 2, 'supplier_invoice', 2),
+  (6, 'purchase_order', 3, 'goods_receipt', 3),
+  (7, 'goods_receipt', 3, 'supplier_invoice', 3),
+  (8, 'purchase_order', 4, 'goods_receipt', 4),
+  (9, 'goods_receipt', 4, 'supplier_invoice', 4),
+  (10, 'purchase_order', 5, 'goods_receipt', 5),
+  (11, 'sales_order', 1, 'delivery', 1),
+  (12, 'delivery', 1, 'billing_document', 1),
+  (13, 'billing_document', 1, 'payment', 2),
+  (14, 'sales_order', 2, 'delivery', 2),
+  (15, 'sales_order', 3, 'delivery', 3),
+  (16, 'delivery', 3, 'billing_document', 2),
+  (17, 'sales_order', 6, 'delivery', 4);
