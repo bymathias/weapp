@@ -266,7 +266,7 @@ export function registerP2PRoutes(api: OpenAPIHono<Env>) {
       const body = c.req.valid("json");
       const po = await getPurchaseOrderByNumber(c.env.DB, body.po_number);
       if (!po) return c.json({ error: "not_found", message: "Purchase order not found" }, 404);
-      const si = await createSupplierInvoice(c.env.DB, po.id, po.vendor_id, body.items);
+      const si = await createSupplierInvoice(c.env.DB, po.id, po.vendor_id, body.items, body.supplier_ref ?? null);
       return c.json(si, 201);
     }
   );

@@ -92,6 +92,7 @@ CREATE TABLE supplier_invoices (
   amount REAL NOT NULL DEFAULT 0,
   status TEXT NOT NULL CHECK (status IN ('Invoiced', 'Matched', 'Blocked', 'Released', 'Paid')) DEFAULT 'Invoiced',
   block_reason TEXT,
+  supplier_ref TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

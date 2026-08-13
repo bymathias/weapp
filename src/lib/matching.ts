@@ -12,8 +12,11 @@ function withinTolerance(actual: number, expected: number): boolean {
   return Math.abs(actual - expected) <= expected * MATCH_TOLERANCE;
 }
 
-// 2-way (PO vs Invoice) if the PO has no goods receipt yet; 3-way (PO vs GR
-// vs Invoice) once one exists — same tolerance either way.
+// Real 3-way match: PO vs Goods Receipt vs Invoice. No goods receipt on the
+// PO at all means there's nothing to 3-way match against, so the invoice is
+// blocked outright rather than falling back to a 2-way (PO vs Invoice)
+// match. Stops at the first failing line — block_reason describes just
+// that one line, not every mismatch.
 export async function evaluateMatch(
   db: D1Database,
   poId: number,
@@ -31,36 +34,34 @@ export async function evaluateMatch(
     .bind(poId)
     .all<{ po_item_id: number; received: number }>();
   const receivedByPoItem = new Map((grRows ?? []).map((r) => [r.po_item_id, r.received]));
-  const hasGR = receivedByPoItem.size > 0;
 
-  const reasons: string[] = [];
-  siItems.forEach((si, idx) => {
+  if (receivedByPoItem.size === 0) {
+    return { status: "Blocked", block_reason: "No goods receipt posted." };
+  }
+
+  for (let idx = 0; idx < siItems.length; idx++) {
+    const si = siItems[idx];
     const line = idx + 1;
     const poItem = poItemById.get(si.po_item_id);
     if (!poItem) {
-      reasons.push(`Line ${line}: no matching PO line`);
-      return;
+      return { status: "Blocked", block_reason: `Line ${line}: no matching PO line` };
     }
-    if (!withinTolerance(si.price, poItem.price)) {
-      reasons.push(
-        `Line ${line}: invoice price ${si.price.toFixed(2)} vs PO price ${poItem.price.toFixed(2)} exceeds ${MATCH_TOLERANCE * 100}% tolerance`
-      );
-    }
-    if (!withinTolerance(si.qty, poItem.qty)) {
-      reasons.push(`Line ${line}: invoice qty ${si.qty} vs PO qty ${poItem.qty} exceeds ${MATCH_TOLERANCE * 100}% tolerance`);
-    }
-    if (hasGR) {
-      const received = receivedByPoItem.get(si.po_item_id) ?? 0;
-      if (!withinTolerance(si.qty, received)) {
-        reasons.push(
-          `Line ${line}: invoice qty ${si.qty} vs goods receipt qty ${received} exceeds ${MATCH_TOLERANCE * 100}% tolerance`
-        );
-      }
-    }
-  });
 
-  if (reasons.length > 0) {
-    return { status: "Blocked", block_reason: reasons.join("; ") };
+    if (!withinTolerance(si.price, poItem.price)) {
+      return {
+        status: "Blocked",
+        block_reason: `Line ${line}: invoice price ${si.price.toFixed(2)} vs PO price ${poItem.price.toFixed(2)} exceeds ${MATCH_TOLERANCE * 100}% tolerance`,
+      };
+    }
+
+    const received = receivedByPoItem.get(si.po_item_id) ?? 0;
+    if (!withinTolerance(si.qty, received)) {
+      return {
+        status: "Blocked",
+        block_reason: `Quantity mismatch: invoiced ${si.qty} vs ${received} received`,
+      };
+    }
   }
+
   return { status: "Matched", block_reason: null };
 }

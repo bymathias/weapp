@@ -103,6 +103,7 @@ export interface SupplierInvoice {
   amount: number;
   status: SiStatus;
   block_reason: string | null;
+  supplier_ref: string | null;
   created_at: string;
 }
 

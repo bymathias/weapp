@@ -175,7 +175,8 @@ export function registerP2PUiRoutes(ui: Hono<Env>) {
       return c.html(newSupplierInvoicePage(po, matById, { error: "Enter at least one line item." }), 400);
     }
 
-    const si = await createSupplierInvoice(c.env.DB, po.id, po.vendor_id, items);
+    const supplierRef = typeof body.supplier_ref === "string" && body.supplier_ref.trim() !== "" ? body.supplier_ref.trim() : null;
+    const si = await createSupplierInvoice(c.env.DB, po.id, po.vendor_id, items, supplierRef);
     return c.redirect(`/supplier-invoices/${si.inv_number}`);
   });
 

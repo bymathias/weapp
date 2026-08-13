@@ -178,6 +178,7 @@ export const SupplierInvoiceSchema = z
     amount: z.number(),
     status: SiStatusSchema,
     block_reason: z.string().nullable(),
+    supplier_ref: z.string().nullable(),
     created_at: z.string(),
   })
   .openapi("SupplierInvoice");
@@ -198,6 +199,8 @@ export const SupplierInvoiceInputSchema = z
   .object({
     po_number: z.string().min(1),
     items: z.array(SiItemInputSchema).min(1),
+    // The vendor's own invoice number, e.g. FTNT-2026-4471 — optional.
+    supplier_ref: z.string().optional(),
   })
   .openapi("SupplierInvoiceInput");
 

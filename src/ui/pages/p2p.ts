@@ -97,8 +97,12 @@ export function purchaseOrderDetailPage(
       ${docFlowPanel(flow)}
 
       <div class="actions-row">
-        <a class="btn" id="btn-post-gr" data-testid="btn-post-gr" href="/goods-receipts/new?po_number=${po.po_number}">Post Goods Receipt</a>
-        <a class="btn secondary" id="btn-create-invoice" data-testid="btn-create-invoice" href="/supplier-invoices/new?po_number=${po.po_number}">Create Supplier Invoice</a>
+        ${po.status === "Open"
+          ? html`<a class="btn" id="btn-post-gr" data-testid="btn-post-gr" href="/goods-receipts/new?po_number=${po.po_number}">Post Goods Receipt</a>`
+          : ""}
+        ${po.status === "Received"
+          ? html`<a class="btn secondary" id="btn-create-invoice" data-testid="btn-create-invoice" href="/supplier-invoices/new?po_number=${po.po_number}">Register Supplier Invoice</a>`
+          : ""}
         <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/purchase-orders/${po.po_number}/pdf" target="_blank" rel="noopener">Download PDF</a>
         <a class="btn transparent" id="back-btn" data-testid="back-btn" href="/purchase-orders">Back to list</a>
       </div>`,
@@ -352,6 +356,7 @@ export function supplierInvoicesListPage(rows: SupplierInvoiceListRow[]) {
         <td><a class="link" data-testid="si-link" href="/supplier-invoices/${si.inv_number}">${si.inv_number}</a></td>
         <td>${si.vendor_name}</td>
         <td><a class="link" href="/purchase-orders/${si.po_number}">${si.po_number}</a></td>
+        <td data-testid="si-supplier-ref">${si.supplier_ref ?? "—"}</td>
         <td>${money(si.amount)}</td>
         <td>${statusBadge(si.status, `si-status-${si.inv_number}`)}</td>
         <td>${si.created_at.slice(0, 10)}</td>
@@ -370,8 +375,8 @@ export function supplierInvoicesListPage(rows: SupplierInvoiceListRow[]) {
       ${filterBar("si-table")}
       <div class="panel">
         <table id="si-table" data-testid="si-table">
-          <thead><tr><th>Invoice</th><th>Vendor</th><th>PO Number</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
-          <tbody>${raw(body || `<tr><td colspan="6" class="muted">No supplier invoices yet.</td></tr>`)}</tbody>
+          <thead><tr><th>Invoice</th><th>Vendor</th><th>PO Number</th><th>Supplier Ref</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
+          <tbody>${raw(body || `<tr><td colspan="7" class="muted">No supplier invoices yet.</td></tr>`)}</tbody>
         </table>
       </div>`,
     { loggedIn: true }
@@ -400,6 +405,14 @@ export function supplierInvoiceDetailPage(
     })
     .join("");
 
+  const facets = [
+    { label: "Vendor", value: html`${vendor.name} (${vendor.ref_id})` },
+    { label: "Purchase Order", value: html`<a class="link" href="/purchase-orders/${po.po_number}">${po.po_number}</a>` },
+  ];
+  if (si.supplier_ref) {
+    facets.push({ label: "Supplier Ref", value: html`<span data-testid="si-supplier-ref-value">${si.supplier_ref}</span>` });
+  }
+
   return layout(
     `Invoice ${si.inv_number}`,
     html`${objectPageHeader({
@@ -407,10 +420,7 @@ export function supplierInvoiceDetailPage(
         titleTestid: "si-number",
         status: si.status,
         statusTestid: "si-status-badge",
-        facets: [
-          { label: "Vendor", value: html`${vendor.name} (${vendor.ref_id})` },
-          { label: "Purchase Order", value: html`<a class="link" href="/purchase-orders/${po.po_number}">${po.po_number}</a>` },
-        ],
+        facets,
       })}
 
       ${si.status === "Blocked"
@@ -480,6 +490,12 @@ export function newSupplierInvoicePage(po: PurchaseOrderWithItems, materialsById
       <form id="si-form" data-testid="si-form" method="post" action="/supplier-invoices/new">
         <input type="hidden" name="po_number" value="${po.po_number}" />
         <div class="panel">
+          <div class="field" style="max-width:400px">
+            <label for="supplier_ref">Supplier Ref</label>
+            <input type="text" id="supplier_ref" name="supplier_ref" data-testid="input-supplier-ref" placeholder="e.g. FTNT-2026-4471" />
+          </div>
+        </div>
+        <div class="panel">
           <table id="items-table" class="items-table" data-testid="si-items-table">
             <thead><tr><th style="width:15%">Material Code</th><th style="width:30%">Description</th><th style="width:15%">Qty</th><th style="width:18%">Price</th><th style="width:15%">Line Total</th></tr></thead>
             <tbody id="items-table-body">${raw(rows)}</tbody>
@@ -489,7 +505,7 @@ export function newSupplierInvoicePage(po: PurchaseOrderWithItems, materialsById
           </div>
         </div>
         <div class="actions-row">
-          <button type="submit" class="btn" id="save-si-btn" data-testid="save-si-btn">Create Supplier Invoice</button>
+          <button type="submit" class="btn" id="save-si-btn" data-testid="save-si-btn">Register Supplier Invoice</button>
           <a class="btn transparent" href="/purchase-orders/${po.po_number}" id="cancel-btn" data-testid="cancel-btn">Cancel</a>
         </div>
       </form>

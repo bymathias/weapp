@@ -168,15 +168,19 @@ export async function createSupplierInvoice(
   db: D1Database,
   poId: number,
   vendorId: number,
-  items: CreateSiItemInput[]
+  items: CreateSiItemInput[],
+  supplierRef: string | null = null
 ): Promise<SupplierInvoiceWithItems> {
   const invNumber = await nextDocNumber(db, "supplier_invoices", "inv_number", 5100000001);
   const computedItems = items.map((item) => ({ ...item, line_total: computeLineTotal(item.qty, item.price) }));
   const amount = sumLineTotals(computedItems);
 
   const result = await db
-    .prepare(`INSERT INTO supplier_invoices (inv_number, po_id, vendor_id, amount, status) VALUES (?1, ?2, ?3, ?4, 'Invoiced')`)
-    .bind(invNumber, poId, vendorId, amount)
+    .prepare(
+      `INSERT INTO supplier_invoices (inv_number, po_id, vendor_id, amount, status, supplier_ref)
+       VALUES (?1, ?2, ?3, ?4, 'Invoiced', ?5)`
+    )
+    .bind(invNumber, poId, vendorId, amount, supplierRef)
     .run();
   const siId = result.meta.last_row_id as number;
 
