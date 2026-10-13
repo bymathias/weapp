@@ -146,12 +146,12 @@ security scheme.
 1. Automation Cloud → **Integration Service** → **Connectors** → **Create
    Custom Connector**, and import the OpenAPI spec — either upload the file
    or point it at `https://<your-deployment>/openapi.json` (e.g.
-   `https://wecpq.bymathias.workers.dev/openapi.json`). Integration Service
+   `https://wecpq.wtld.me/openapi.json`). Integration Service
    parses the paths/schemas and generates connector actions automatically.
 2. **Override the base URL**: the spec declares `servers: [{ url: "/" }]`
    (relative, since it's meant to resolve against whatever host serves it).
    UiPath needs an absolute URL, so set it explicitly to your deployment's
-   origin, e.g. `https://wecpq.bymathias.workers.dev`.
+   origin, e.g. `https://wecpq.wtld.me`.
 3. **Auth** — choose connection type **OAuth 2.0 – Client Credentials**
    (built into UiPath):
    - Token URL: `https://<your-deployment>/oauth/token`

@@ -4,10 +4,10 @@ Two demo apps built to be automated by UiPath (UI and API), used together to
 demo Quotation, Order-to-Cash and Purchase-to-Pay with a Robot / Agent /
 People handler model.
 
-| App | What it is | README |
-|---|---|---|
-| `wecpq/` | Configure-Price-Quote: customers, quotes, quote PDFs | [wecpq/README.md](wecpq/README.md) |
-| `wesap/` | SAP-lookalike ERP: P2P and O2C document chains | [wesap/README.md](wesap/README.md) |
+| App | What it is | Live | README |
+|---|---|---|---|
+| `wecpq/` | Configure-Price-Quote: customers, quotes, quote PDFs | https://wecpq.wtld.me | [wecpq/README.md](wecpq/README.md) |
+| `wesap/` | SAP-lookalike ERP: P2P and O2C document chains | https://wesap.wtld.me | [wesap/README.md](wesap/README.md) |
 
 Both are Cloudflare Workers (Hono + D1), deployed independently, each with its
 own D1 database and demo credentials.
