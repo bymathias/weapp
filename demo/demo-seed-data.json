@@ -1590,8 +1590,19 @@
     "customer_pos": [
       {
         "file": "PO_Meridian_Q-2026-0005.pdf",
+        "po_number": "MIG-PO-2026-0457",
+        "date": "2026-10-06",
         "customer": "CUST-0003",
         "quote_ref": "Q-2026-0005",
+        "buyer": "Lena Hoffmann",
+        "email": "procurement@meridian-it.example",
+        "address": [
+          "Meridian IT Group GmbH",
+          "Hansaallee 210",
+          "40549 D\u00fcsseldorf",
+          "Germany"
+        ],
+        "payment_terms": "Net 30",
         "note": "CLEAN MATCH \u2014 prices & quantities equal the quote; all product lines map to WeSAP materials, services stay as text. Bot creates the Sales Order straight through.",
         "lines": [
           {
@@ -1613,8 +1624,19 @@
       },
       {
         "file": "PO_Vertex_Q-2026-0009.pdf",
+        "po_number": "VSL-PO-71208",
+        "date": "2026-10-07",
         "customer": "CUST-0005",
         "quote_ref": "Q-2026-0009",
+        "buyer": "Ciar\u00e1n Byrne",
+        "email": "purchasing@vertexlabs.example",
+        "address": [
+          "Vertex Software Labs Ltd.",
+          "14 Grand Canal Quay",
+          "Dublin D02 X576",
+          "Ireland"
+        ],
+        "payment_terms": "Net 45",
         "note": "PRICE + UNMATCHED-LINE MISMATCH \u2014 Falcon Complete priced at 110 on the PO vs 85 on the quote (agent flags price mismatch vs quote); the 'FortiCare 24x7 Support' line has no WeSAP material equivalent (agent flags unmatched line). Agent -> People.",
         "lines": [
           {
@@ -1631,8 +1653,19 @@
       },
       {
         "file": "PO_Ironclad_Q-2026-0015.pdf",
+        "po_number": "ICP-2026-PO-0311",
+        "date": "2026-10-08",
         "customer": "CUST-0009",
         "quote_ref": "Q-2026-0015",
+        "buyer": "Julien Moreau",
+        "email": "achats@ironclad-sp.example",
+        "address": [
+          "Ironclad Security Partners SAS",
+          "27 rue de la Villette",
+          "69003 Lyon",
+          "France"
+        ],
+        "payment_terms": "Net 30",
         "note": "QUANTITY MISMATCH + CREDIT BLOCK \u2014 PO orders 30 firewalls vs 28 quoted (agent flags qty mismatch); once corrected and the order is created it exceeds Ironclad's 40,000 credit limit -> WeSAP blocks it (Blocked (Credit)).",
         "lines": [
           {

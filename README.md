@@ -24,6 +24,12 @@ The apps never call each other. They are linked by:
   references a WeCPQ quote. Each app's `scripts/gen-seed.mjs` generates its
   own `seed.sql` / `reset.sql` slice from it.
 
+`demo/customer-pos/` holds the three customer Purchase Orders (Meridian,
+Vertex, Ironclad) the bot ingests in the Order-to-Cash scenarios: one clean
+match and two with mismatches. They are generated from
+`demo_inputs.customer_pos` in the dataset and are meant to be dropped into
+the bot's mailbox during a demo.
+
 ## Docs
 
 - `docs/WeCPQ-WeSAP-Demo-Scenarios-Guide.pdf` — every seeded scenario and how
@@ -41,6 +47,7 @@ npm run dev:sap          # WeSAP on :8788
 npm run typecheck        # both apps
 npm run seed:gen         # regenerate both apps' seed.sql/reset.sql from demo/
 npm run reset            # reset both remote D1 databases to the demo state
+npm run po:gen           # regenerate the customer PO PDFs in demo/customer-pos/
 npm run deploy           # deploy both
 ```
 

@@ -11,10 +11,14 @@
     "typecheck": "npm run typecheck --workspaces",
     "seed:gen": "npm run seed:gen --workspaces",
     "reset": "npm run reset --workspaces",
-    "deploy": "npm run deploy --workspaces"
+    "deploy": "npm run deploy --workspaces",
+    "po:gen": "node demo/gen-customer-pos.mjs"
   },
   "allowScripts": {
     "esbuild@0.28.2": true,
     "workerd@1.20261006.1": true
+  },
+  "devDependencies": {
+    "pdf-lib": "^1.17.1"
   }
 }
