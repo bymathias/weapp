@@ -1,0 +1,20 @@
+{
+  "name": "weapp",
+  "private": true,
+  "workspaces": [
+    "wecpq",
+    "wesap"
+  ],
+  "scripts": {
+    "dev:cpq": "npm run dev -w wecpq --",
+    "dev:sap": "npm run dev -w wesap -- --port 8788",
+    "typecheck": "npm run typecheck --workspaces",
+    "seed:gen": "npm run seed:gen --workspaces",
+    "reset": "npm run reset --workspaces",
+    "deploy": "npm run deploy --workspaces"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261006.1": true
+  }
+}

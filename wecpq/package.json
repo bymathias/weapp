@@ -24,10 +24,5 @@
     "wrangler": "^4.120.0",
     "typescript": "^5.7.2",
     "@cloudflare/workers-types": "^5.20260801.1"
-  },
-  "allowScripts": {
-    "sharp@0.33.5": true,
-    "esbuild@0.28.1": true,
-    "workerd@1.20260801.1": true
   }
 }
