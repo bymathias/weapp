@@ -12,6 +12,9 @@ Monorepo (npm workspaces) for two UiPath demo apps: `wecpq/` (CPQ) and
   `npm run seed:gen`. Customer `ref_id`s must stay identical across both apps.
 - `docs/` holds the scenario guide and process manuals — the seeded data must
   keep matching the scenarios described there.
+- The repo is public: secrets (`SESSION_SECRET`, `UI_PASSWORD`,
+  `OAUTH_CLIENT_SECRET`) live in `.dev.vars` locally and `wrangler secret put`
+  when deployed, never in `wrangler.toml` or anywhere committed.
 - Each app deploys independently (own `wrangler.toml`, D1 database,
   credentials). Run app scripts with `npm run <script> -w <app>`.
 - No test suite; `npm run typecheck` checks both apps.

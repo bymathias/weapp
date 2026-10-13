@@ -29,7 +29,7 @@ Local dev requires running migrate + seed once before `npm run dev` — the
 local D1 database is empty otherwise. Re-running migrate drops and recreates
 all tables (seed data is deterministic, so this is always safe to re-run).
 
-Demo credentials (hardcoded in `wrangler.toml` `[vars]`): UI login
+Local credentials (`.dev.vars`, copied from `.dev.vars.example`): UI login
 `admin`/`demo123`; OAuth client-credentials `wecpq-demo-client`/
 `wecpq-demo-secret`.
 
@@ -89,7 +89,7 @@ browser, since Workers can't run one).
 
 ## Environment / secrets
 
-`wrangler.toml` `[vars]` holds `UI_USERNAME`, `UI_PASSWORD`,
-`OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`, `SESSION_SECRET` as plaintext
-demo defaults. For anything beyond local demo use, override with
-`wrangler secret put <NAME>` rather than editing `[vars]`.
+The repo is public. `wrangler.toml` `[vars]` holds only non-secret values
+(`UI_USERNAME`, `OAUTH_CLIENT_ID`). `SESSION_SECRET`, `UI_PASSWORD` and
+`OAUTH_CLIENT_SECRET` come from `.dev.vars` locally and from
+`wrangler secret put` when deployed — never add them to `[vars]`.

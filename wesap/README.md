@@ -26,15 +26,19 @@ bridge always resolves the same customer on both sides.
 - `@hono/zod-openapi` + Swagger UI for API docs
 - Hand-rolled Fiori-style CSS (no UI5 Web Components dependency)
 
-## Demo credentials
+## Credentials
+
+Local defaults (from `.dev.vars.example`):
 
 | Surface | Values |
 |---|---|
 | UI login (`/login`) | `admin` / `demo123` |
 | API OAuth2 client credentials (`POST /oauth/token`) | `client_id=wesap-demo-client`, `client_secret=wesap-demo-secret` |
 
-These are hardcoded in `wrangler.toml` under `[vars]`. Change them there (and
-redeploy) before using this anywhere non-demo.
+`UI_USERNAME` and `OAUTH_CLIENT_ID` are plain `[vars]` in `wrangler.toml`.
+`SESSION_SECRET`, `UI_PASSWORD` and `OAUTH_CLIENT_SECRET` are secrets: read
+from `.dev.vars` locally (gitignored) and set with `wrangler secret put` on the
+deployed Worker, so the deployed values never appear in this repo.
 
 ## Project layout
 
@@ -57,10 +61,11 @@ src/
 
 ## Local development
 
-Install dependencies:
+Install dependencies and create your local secrets file:
 
 ```sh
 npm install
+cp .dev.vars.example .dev.vars
 ```
 
 Create the local D1 database and load schema + seed data:
@@ -100,11 +105,11 @@ This starts `wrangler dev` (Miniflare) on `http://localhost:8787`. Log in at
    npm run db:seed:remote
    ```
 
-3. (Recommended) Set stronger secrets instead of the demo `[vars]` defaults —
-   either edit `wrangler.toml` directly, or override with Wrangler secrets:
+3. Set the secrets (use strong random values, not the local defaults):
 
    ```sh
    npx wrangler secret put SESSION_SECRET
+   npx wrangler secret put UI_PASSWORD
    npx wrangler secret put OAUTH_CLIENT_SECRET
    ```
 

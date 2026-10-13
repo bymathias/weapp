@@ -10,6 +10,4 @@ database_id = "75f60483-be72-4236-9227-fc2515d96922"
 
 [vars]
 UI_USERNAME = "admin"
-UI_PASSWORD = "demo123"
 OAUTH_CLIENT_ID = "wecpq-demo-client"
-OAUTH_CLIENT_SECRET = "wecpq-demo-secret"
