@@ -6,7 +6,7 @@ stable `id`/`name`/`data-testid` attributes for UI automation (e.g. UiPath),
 and a bearer-protected REST API documented with OpenAPI/Swagger for
 API-based automation.
 
-WeSAP is the twin of [WeCPQ](https://github.com/) (a Configure-Price-Quote
+WeSAP is the twin of [WeCPQ](../wecpq/README.md) (a Configure-Price-Quote
 demo app) — same stack, same conventions — and the two are meant to be used
 together in a single demo, PO-driven: WeCPQ produces a Won quote, the
 customer sends back their own Purchase Order referencing it, and a UiPath
