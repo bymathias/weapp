@@ -1,0 +1,15 @@
+name = "wecpq"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wecpq"
+database_id = "75f60483-be72-4236-9227-fc2515d96922"
+
+[vars]
+UI_USERNAME = "admin"
+UI_PASSWORD = "demo123"
+OAUTH_CLIENT_ID = "wecpq-demo-client"
+OAUTH_CLIENT_SECRET = "wecpq-demo-secret"
