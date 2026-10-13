@@ -12,7 +12,7 @@ export function customersListPage(customers: Customer[]) {
         <td>${cust.industry}</td>
         <td>${cust.country}</td>
         <td>${cust.account_owner}</td>
-        <td>$${cust.credit_limit.toFixed(2)}</td>
+        <td>€${cust.credit_limit.toFixed(2)}</td>
       </tr>`
     )
     .join("");

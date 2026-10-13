@@ -145,7 +145,7 @@ export function newPurchaseOrderPage(vendors: Vendor[], materials: Material[], o
           </table>
           <button type="button" class="btn secondary" id="add-row-btn" data-testid="add-row-btn">+ Add line item</button>
           <div class="totals">
-            <div class="box"><div class="label">Subtotal</div><div class="value" id="subtotal-display" data-testid="po-subtotal-display">$0.00</div></div>
+            <div class="box"><div class="label">Subtotal</div><div class="value" id="subtotal-display" data-testid="po-subtotal-display">€0.00</div></div>
           </div>
         </div>
 
@@ -169,7 +169,7 @@ function poFormScript(materialsByVendor: Record<string, { code: string; descript
       var vendorSelect = document.getElementById('vendor_ref');
       var tbody = document.getElementById('items-table-body');
       var subtotalEl = document.getElementById('subtotal-display');
-      function fmt(n) { return '$' + n.toFixed(2); }
+      function fmt(n) { return '€' + n.toFixed(2); }
       function currentMaterials() { return materialsByVendor[vendorSelect.value] || []; }
       function recalc() {
         var subtotal = 0;
@@ -191,7 +191,7 @@ function poFormScript(materialsByVendor: Record<string, { code: string; descript
           '<td><select name="material_code[]" class="item-material" data-testid="po-item-material" required>' + options + '</select></td>' +
           '<td><input type="number" name="qty[]" class="item-qty" data-testid="po-item-qty" min="1" step="1" value="1" required /></td>' +
           '<td><input type="number" name="price[]" class="item-price" data-testid="po-item-price" min="0" step="0.01" value="' + price + '" required /></td>' +
-          '<td class="item-line-total" data-testid="po-item-line-total">$0.00</td>' +
+          '<td class="item-line-total" data-testid="po-item-line-total">€0.00</td>' +
           '<td><button type="button" class="btn secondary remove-row-btn" data-testid="remove-row-btn">Remove</button></td>' +
         '</tr>';
       }
@@ -519,7 +519,7 @@ function siFormScript(): string {
     (function () {
       var tbody = document.getElementById('items-table-body');
       var amountEl = document.getElementById('amount-display');
-      function fmt(n) { return '$' + n.toFixed(2); }
+      function fmt(n) { return '€' + n.toFixed(2); }
       function recalc() {
         var amount = 0;
         tbody.querySelectorAll('.item-row').forEach(function (row) {

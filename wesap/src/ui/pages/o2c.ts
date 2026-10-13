@@ -132,7 +132,7 @@ function soItemRowHtml(materials: Material[]) {
     <td><input type="text" name="description[]" class="item-description" data-testid="so-item-description" required /></td>
     <td><input type="number" name="qty[]" class="item-qty" data-testid="so-item-qty" min="1" step="1" value="1" required /></td>
     <td><input type="number" name="unit_price[]" class="item-unit-price" data-testid="so-item-unit-price" min="0" step="0.01" value="0" required /></td>
-    <td class="item-line-total" data-testid="so-item-line-total">$0.00</td>
+    <td class="item-line-total" data-testid="so-item-line-total">€0.00</td>
     <td><button type="button" class="btn secondary remove-row-btn" data-testid="remove-row-btn">Remove</button></td>
   </tr>`;
 }
@@ -181,7 +181,7 @@ export function newSalesOrderPage(customers: Customer[], materials: Material[], 
           </table>
           <button type="button" class="btn secondary" id="add-row-btn" data-testid="add-row-btn">+ Add line item</button>
           <div class="totals">
-            <div class="box"><div class="label">Total</div><div class="value" id="total-display" data-testid="so-total-display">$0.00</div></div>
+            <div class="box"><div class="label">Total</div><div class="value" id="total-display" data-testid="so-total-display">€0.00</div></div>
           </div>
         </div>
 
@@ -203,7 +203,7 @@ function soFormScript(): string {
       var tbody = document.getElementById('items-table-body');
       var template = document.getElementById('row-template');
       var totalEl = document.getElementById('total-display');
-      function fmt(n) { return '$' + n.toFixed(2); }
+      function fmt(n) { return '€' + n.toFixed(2); }
       function recalc() {
         var total = 0;
         tbody.querySelectorAll('.item-row').forEach(function (row) {

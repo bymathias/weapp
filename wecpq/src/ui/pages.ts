@@ -122,7 +122,7 @@ export function quotesResultsPanel(quoteList: QuoteListResult, search: string) {
         <td data-testid="quote-customer-ref-id">${q.customer_ref_id}</td>
         <td>${q.vendor}</td>
         <td><span class="badge ${q.status}">${q.status}</span></td>
-        <td>$${q.total_amount.toFixed(2)}</td>
+        <td>€${q.total_amount.toFixed(2)}</td>
         <td>${q.created_at.slice(0, 10)}</td>
       </tr>`
     )
@@ -334,7 +334,7 @@ export function customerPage(customer: Customer, quotes: Quote[]) {
       (q) => html`<tr id="quote-row-${q.id}" data-testid="quote-row" data-quote-ref="${q.ref}">
         <td><a class="link" id="quote-link-${q.id}" data-testid="quote-link" href="/quotes/${q.ref}">${q.ref}</a></td>
         <td>${q.vendor}</td>
-        <td>$${q.total_amount.toFixed(2)}</td>
+        <td>€${q.total_amount.toFixed(2)}</td>
         <td><span class="badge ${q.status}">${q.status}</span></td>
       </tr>`
     )
@@ -479,11 +479,11 @@ function quoteFormPage(opts: QuoteFormPageOptions) {
           <div class="totals">
             <div class="box">
               <div class="label">Subtotal</div>
-              <div class="value" id="subtotal-display" data-testid="subtotal-display">$0.00</div>
+              <div class="value" id="subtotal-display" data-testid="subtotal-display">€0.00</div>
             </div>
             <div class="box">
               <div class="label">Total</div>
-              <div class="value" id="total-display" data-testid="total-display">$0.00</div>
+              <div class="value" id="total-display" data-testid="total-display">€0.00</div>
             </div>
           </div>
         </div>
@@ -512,7 +512,7 @@ function itemRowHtml(item?: QuoteFormItem) {
         <td><input type="text" name="description[]" class="item-description" data-testid="item-description" value="${description}" required /></td>
         <td><input type="number" name="quantity[]" class="item-quantity" data-testid="item-quantity" min="1" step="1" value="${quantity}" required /></td>
         <td><input type="number" name="unit_price[]" class="item-unit-price" data-testid="item-unit-price" min="0" step="0.01" value="${unitPrice}" required /></td>
-        <td class="item-line-total" data-testid="item-line-total">$${lineTotal.toFixed(2)}</td>
+        <td class="item-line-total" data-testid="item-line-total">€${lineTotal.toFixed(2)}</td>
         <td><button type="button" class="btn secondary remove-row-btn" data-testid="remove-row-btn">Remove</button></td>
       </tr>`;
 }
@@ -560,7 +560,7 @@ function quoteFormScript(): string {
       var totalEl = document.getElementById('total-display');
       var marginEl = document.getElementById('margin_pct');
 
-      function fmt(n) { return '$' + n.toFixed(2); }
+      function fmt(n) { return '€' + n.toFixed(2); }
 
       function recalc() {
         var subtotal = 0;
@@ -622,8 +622,8 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
         <td data-testid="quote-item-sku">${item.sku}</td>
         <td>${item.description}</td>
         <td>${item.quantity}</td>
-        <td>$${item.unit_price.toFixed(2)}</td>
-        <td>$${item.line_total.toFixed(2)}</td>
+        <td>€${item.unit_price.toFixed(2)}</td>
+        <td>€${item.line_total.toFixed(2)}</td>
       </tr>`
     )
     .join("");
@@ -668,7 +668,7 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
         <div class="totals">
           <div class="box">
             <div class="label">Subtotal</div>
-            <div class="value" id="quote-subtotal" data-testid="quote-subtotal">$${quote.subtotal.toFixed(2)}</div>
+            <div class="value" id="quote-subtotal" data-testid="quote-subtotal">€${quote.subtotal.toFixed(2)}</div>
           </div>
           <div class="box">
             <div class="label">Margin</div>
@@ -676,7 +676,7 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
           </div>
           <div class="box">
             <div class="label">Total</div>
-            <div class="value" id="quote-total" data-testid="quote-total">$${quote.total_amount.toFixed(2)}</div>
+            <div class="value" id="quote-total" data-testid="quote-total">€${quote.total_amount.toFixed(2)}</div>
           </div>
         </div>
       </div>`,

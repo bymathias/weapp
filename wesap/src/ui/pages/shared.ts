@@ -4,7 +4,7 @@ import { layout, ICONS } from "../layout";
 import type { DocType, FlowEntry } from "../../types";
 
 export function money(n: number): string {
-  return "$" + n.toFixed(2);
+  return "€" + n.toFixed(2);
 }
 
 export function statusBadgeClass(status: string): "ok" | "warn" | "danger" | "neutral" {

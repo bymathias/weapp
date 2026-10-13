@@ -6,7 +6,7 @@ const PAGE_HEIGHT = 792;
 const MARGIN = 50;
 
 function money(n: number): string {
-  return `$${n.toFixed(2)}`;
+  return `€${n.toFixed(2)}`;
 }
 
 export async function generatePurchaseOrderPdf(
