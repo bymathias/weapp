@@ -1,0 +1,15 @@
+name = "wesap"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wesap"
+database_id = "8af4d5f9-b642-4ebe-b06e-4e84664a2a44"
+
+[vars]
+UI_USERNAME = "admin"
+UI_PASSWORD = "demo123"
+OAUTH_CLIENT_ID = "wesap-demo-client"
+OAUTH_CLIENT_SECRET = "wesap-demo-secret"

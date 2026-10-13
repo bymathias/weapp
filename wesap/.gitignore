@@ -1,0 +1,11 @@
+node_modules/
+.wrangler/
+.dev.vars
+dist/
+*.log
+
+# Override a global `*.sql` ignore — schema.sql/seed.sql are core to this app.
+!*.sql
+
+# Override a global `package-lock.json` ignore — keep installs reproducible.
+!package-lock.json
