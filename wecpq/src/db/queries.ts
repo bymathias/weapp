@@ -1,5 +1,14 @@
 import type { Customer, Quote, QuoteCurrency, QuoteItem, QuoteStatus, QuoteWithItems } from "../types";
-import { computeItems, computeSubtotal, computeTotalAmount, nextCustomerRefId, nextQuoteRef, type LineItemInput } from "../lib/totals";
+import {
+  computeItems,
+  computeSellLineTotal,
+  computeSellUnitPrice,
+  computeSubtotal,
+  computeTotalAmount,
+  nextCustomerRefId,
+  nextQuoteRef,
+  type LineItemInput,
+} from "../lib/totals";
 
 // Matches name, ref_id, industry, country, or account owner — the columns
 // shown in the customers table.
@@ -142,8 +151,13 @@ export async function getQuoteByRef(db: D1Database, ref: string): Promise<QuoteW
   const { results } = await db
     .prepare(`SELECT * FROM quote_items WHERE quote_id = ?1 ORDER BY id`)
     .bind(quote.id)
-    .all<QuoteItem>();
-  return { ...quote, items: results ?? [] };
+    .all<Omit<QuoteItem, "sell_unit_price" | "sell_line_total">>();
+  const items = (results ?? []).map((item) => ({
+    ...item,
+    sell_unit_price: computeSellUnitPrice(item.unit_price, quote.margin_pct),
+    sell_line_total: computeSellLineTotal(item.quantity, item.unit_price, quote.margin_pct),
+  }));
+  return { ...quote, items };
 }
 
 export interface CreateQuoteInput {
@@ -171,7 +185,7 @@ export async function createQuote(
 ): Promise<QuoteWithItems> {
   const computedItems = computeItems(input.items);
   const subtotal = computeSubtotal(computedItems);
-  const totalAmount = computeTotalAmount(subtotal, input.margin_pct);
+  const totalAmount = computeTotalAmount(computedItems, input.margin_pct);
   const ref = await nextQuoteRef(db);
 
   const result = await db
@@ -219,7 +233,7 @@ export async function updateQuote(
 
   const computedItems = computeItems(input.items);
   const subtotal = computeSubtotal(computedItems);
-  const totalAmount = computeTotalAmount(subtotal, input.margin_pct);
+  const totalAmount = computeTotalAmount(computedItems, input.margin_pct);
 
   await db
     .prepare(

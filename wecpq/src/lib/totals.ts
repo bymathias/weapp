@@ -25,8 +25,19 @@ export function computeSubtotal(items: ComputedLineItem[]): number {
   return round2(items.reduce((sum, item) => sum + item.line_total, 0));
 }
 
-export function computeTotalAmount(subtotal: number, marginPct: number): number {
-  return round2(subtotal * (1 + marginPct / 100));
+// Customer-facing prices: the margin is applied per line, and the quote
+// total is the sum of those rounded customer line totals, so the lines a
+// customer sees (and copies onto their PO) always add up to the total.
+export function computeSellUnitPrice(unitPrice: number, marginPct: number): number {
+  return round2(unitPrice * (1 + marginPct / 100));
+}
+
+export function computeSellLineTotal(quantity: number, unitPrice: number, marginPct: number): number {
+  return round2(quantity * computeSellUnitPrice(unitPrice, marginPct));
+}
+
+export function computeTotalAmount(items: { quantity: number; unit_price: number }[], marginPct: number): number {
+  return round2(items.reduce((sum, item) => sum + computeSellLineTotal(item.quantity, item.unit_price, marginPct), 0));
 }
 
 export function round2(n: number): number {

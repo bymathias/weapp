@@ -33,6 +33,9 @@ export interface QuoteItem {
   quantity: number;
   unit_price: number;
   line_total: number;
+  // Computed on read (not stored): customer price incl. margin.
+  sell_unit_price: number;
+  sell_line_total: number;
 }
 
 export interface Quote {

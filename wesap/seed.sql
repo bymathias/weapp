@@ -128,26 +128,26 @@ INSERT INTO si_items (id, si_id, po_item_id, qty, price, line_total) VALUES
 
 -- Order-to-Cash: sales orders — status must satisfy the CHECK enum in schema.sql
 INSERT INTO sales_orders (id, so_number, customer_id, status, source_quote_ref, total_amount, customer_po_number) VALUES
-  (1, '1000000001', 1, 'Paid', 'Q-2026-0001', 4600, 'PO-NORTHBRIDGE-2026-0142'),
-  (2, '1000000002', 2, 'Delivered', 'Q-2026-0003', 3450, 'DPS-PO-88231'),
-  (3, '1000000003', 4, 'Billed', 'Q-2026-0007', 16000, 'CCS2026-0219'),
-  (4, '1000000004', 6, 'Open', 'Q-2026-0011', 13000, 'HN-2026-PO-0088'),
-  (5, '1000000005', 7, 'Blocked (Credit)', 'Q-2026-0013', 51000, 'SDG-PO-30187'),
-  (6, '1000000006', 12, 'Delivered', 'Q-2026-0017', 10750, 'SLV-2026-PO-114');
+  (1, '1000000001', 1, 'Paid', 'Q-2026-0001', 5290, 'PO-NORTHBRIDGE-2026-0142'),
+  (2, '1000000002', 2, 'Delivered', 'Q-2026-0003', 3864, 'DPS-PO-88231'),
+  (3, '1000000003', 4, 'Billed', 'Q-2026-0007', 18400, 'CCS2026-0219'),
+  (4, '1000000004', 6, 'Open', 'Q-2026-0011', 14950, 'HN-2026-PO-0088'),
+  (5, '1000000005', 7, 'Blocked (Credit)', 'Q-2026-0013', 58140, 'SDG-PO-30187'),
+  (6, '1000000006', 12, 'Delivered', 'Q-2026-0017', 12040, 'SLV-2026-PO-114');
 
 -- Order-to-Cash: SO line items — material_code NULL for non-catalog (services) lines; quote_sku = source quote line SKU
 INSERT INTO so_items (id, so_id, description, qty, unit_price, line_total, material_code, quote_sku) VALUES
-  (1, 1, 'FortiGate 100F Firewall Appliance', 2, 1850, 3700, 'MAT-0001', 'FG-100F'),
-  (2, 1, 'FortiCare 24x7 Support (1yr)', 2, 450, 900, NULL, 'FC-247-1Y'),
-  (3, 2, 'Microsoft 365 E5 License (annual)', 50, 57, 2850, 'MAT-0006', 'M365-E5-ANN'),
-  (4, 2, 'Microsoft Defender for Endpoint P2', 50, 12, 600, 'MAT-0014', 'MDE-P2'),
-  (5, 3, 'Zscaler Internet Access Business (per user, annual)', 200, 42, 8400, 'MAT-0008', 'ZIA-BIZ-ANN'),
-  (6, 3, 'Deployment & Migration Services', 40, 190, 7600, NULL, 'PS-MIGRATE'),
-  (7, 4, 'CrowdStrike Falcon Insight XDR (annual, per endpoint)', 200, 65, 13000, 'MAT-0005', 'CS-FAL-XDR'),
-  (8, 5, 'Veeam Backup & Replication Enterprise Plus (per socket)', 40, 1150, 46000, 'MAT-0007', 'VBR-ENT-PLUS'),
-  (9, 5, 'Onboarding & Training Services', 25, 200, 5000, NULL, 'PS-ONBOARD'),
-  (10, 6, 'FortiGate 100F Firewall Appliance', 3, 1850, 5550, 'MAT-0001', 'FG-100F'),
-  (11, 6, 'FortiAnalyzer 200G', 1, 5200, 5200, 'MAT-0010', 'FAZ-200G');
+  (1, 1, 'FortiGate 100F Firewall Appliance', 2, 2127.5, 4255, 'MAT-0001', 'FG-100F'),
+  (2, 1, 'FortiCare 24x7 Support (1yr)', 2, 517.5, 1035, NULL, 'FC-247-1Y'),
+  (3, 2, 'Microsoft 365 E5 License (annual)', 50, 63.84, 3192, 'MAT-0006', 'M365-E5-ANN'),
+  (4, 2, 'Microsoft Defender for Endpoint P2', 50, 13.44, 672, 'MAT-0014', 'MDE-P2'),
+  (5, 3, 'Zscaler Internet Access Business (per user, annual)', 200, 48.3, 9660, 'MAT-0008', 'ZIA-BIZ-ANN'),
+  (6, 3, 'Deployment & Migration Services', 40, 218.5, 8740, NULL, 'PS-MIGRATE'),
+  (7, 4, 'CrowdStrike Falcon Insight XDR (annual, per endpoint)', 200, 74.75, 14950, 'MAT-0005', 'CS-FAL-XDR'),
+  (8, 5, 'Veeam Backup & Replication Enterprise Plus (per socket)', 40, 1311, 52440, 'MAT-0007', 'VBR-ENT-PLUS'),
+  (9, 5, 'Onboarding & Training Services', 25, 228, 5700, NULL, 'PS-ONBOARD'),
+  (10, 6, 'FortiGate 100F Firewall Appliance', 3, 2072, 6216, 'MAT-0001', 'FG-100F'),
+  (11, 6, 'FortiAnalyzer 200G', 1, 5824, 5824, 'MAT-0010', 'FAZ-200G');
 
 -- Order-to-Cash: deliveries
 INSERT INTO deliveries (id, dlv_number, so_id, status) VALUES
@@ -158,13 +158,13 @@ INSERT INTO deliveries (id, dlv_number, so_id, status) VALUES
 
 -- Order-to-Cash: billing documents
 INSERT INTO billing_documents (id, bill_number, so_id, customer_id, amount, status, customer_po_number, source_quote_ref) VALUES
-  (1, '9000000001', 1, 1, 4600, 'Paid', 'PO-NORTHBRIDGE-2026-0142', 'Q-2026-0001'),
-  (2, '9000000002', 3, 4, 16000, 'Open', 'CCS2026-0219', 'Q-2026-0007');
+  (1, '9000000001', 1, 1, 5290, 'Paid', 'PO-NORTHBRIDGE-2026-0142', 'Q-2026-0001'),
+  (2, '9000000002', 3, 4, 18400, 'Open', 'CCS2026-0219', 'Q-2026-0007');
 
 -- Cross-process: payments
 INSERT INTO payments (id, pay_number, ref_type, ref_id, direction, amount, status) VALUES
   (1, '7000000001', 'supplier_invoice', 1, 'out', 18500, 'Cleared'),
-  (2, '7000000002', 'billing_document', 1, 'in', 4600, 'Cleared');
+  (2, '7000000002', 'billing_document', 1, 'in', 5290, 'Cleared');
 
 -- Cross-process: document flow links
 INSERT INTO doc_flow (id, from_type, from_id, to_type, to_id) VALUES

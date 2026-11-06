@@ -603,17 +603,21 @@ function quoteFormScript(): string {
       var symbols = { EUR: '€', USD: '$', GBP: '£' };
       function fmt(n) { return (symbols[currencyEl.value] || '€') + n.toFixed(2); }
 
+      function round2(n) { return Math.round((n + Number.EPSILON) * 100) / 100; }
+
+      // Mirrors lib/totals.ts: margin applied per line, total = sum of customer lines.
       function recalc() {
         var subtotal = 0;
+        var total = 0;
+        var margin = parseFloat(marginEl.value) || 0;
         tbody.querySelectorAll('.item-row').forEach(function (row) {
           var qty = parseFloat(row.querySelector('.item-quantity').value) || 0;
           var price = parseFloat(row.querySelector('.item-unit-price').value) || 0;
           var lineTotal = qty * price;
           row.querySelector('.item-line-total').textContent = fmt(lineTotal);
           subtotal += lineTotal;
+          total += round2(qty * round2(price * (1 + margin / 100)));
         });
-        var margin = parseFloat(marginEl.value) || 0;
-        var total = subtotal * (1 + margin / 100);
         subtotalEl.textContent = fmt(subtotal);
         totalEl.textContent = fmt(total);
       }
@@ -667,6 +671,8 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
         <td>${item.quantity}</td>
         <td>${money(item.unit_price, quote.currency)}</td>
         <td>${money(item.line_total, quote.currency)}</td>
+        <td data-testid="quote-item-sell-unit-price">${money(item.sell_unit_price, quote.currency)}</td>
+        <td data-testid="quote-item-sell-line-total">${money(item.sell_line_total, quote.currency)}</td>
       </tr>`
     )
     .join("");
@@ -709,6 +715,8 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
               <th>Qty</th>
               <th>Unit Price</th>
               <th>Line Total</th>
+              <th>Customer Unit Price</th>
+              <th>Customer Line Total</th>
             </tr>
           </thead>
           <tbody>${raw(rows)}</tbody>

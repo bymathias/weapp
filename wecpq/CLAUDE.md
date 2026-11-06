@@ -61,9 +61,14 @@ then no-ops if `apiClientId` is already set.
 **Business rules are computed server-side only**, in `src/lib/totals.ts`,
 and called from both the UI form handler and the API handler so the two
 surfaces can't drift:
-- `line_total = quantity * unit_price`
-- `subtotal = sum(line_total)`
-- `total_amount = subtotal * (1 + margin_pct / 100)`
+- `line_total = quantity * unit_price` (cost)
+- `subtotal = sum(line_total)` (cost subtotal, internal only)
+- `sell_unit_price = round2(unit_price * (1 + margin_pct / 100))` and
+  `sell_line_total = round2(quantity * sell_unit_price)` — customer prices,
+  computed on read (not stored)
+- `total_amount = sum(sell_line_total)` — so customer lines always add up
+  to the total. The quote PDF (customer-facing) shows only customer prices
+  and the total, never cost or margin.
 - Client-sent totals are always ignored/recomputed.
 - A quote with `status = "Won"` is locked: `updateQuote` in
   `src/db/queries.ts` throws `Error("won_locked")`, which the UI router

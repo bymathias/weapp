@@ -110,8 +110,8 @@ export async function generateQuotePdf(quote: QuoteWithItems, customer: Customer
     draw(sku, col.sku + 4, { size: 9 });
     draw(desc, col.desc, { size: 9 });
     draw(String(item.quantity), col.qty, { size: 9 });
-    draw(money(item.unit_price), col.unit, { size: 9 });
-    draw(money(item.line_total), col.total, { size: 9 });
+    draw(money(item.sell_unit_price), col.unit, { size: 9 });
+    draw(money(item.sell_line_total), col.total, { size: 9 });
     y -= 16;
     page.drawLine({
       start: { x: MARGIN, y: y + 6 },
@@ -131,13 +131,7 @@ export async function generateQuotePdf(quote: QuoteWithItems, customer: Customer
   y -= 20;
 
   const totalsX = PAGE_WIDTH / 2 + 40;
-  draw("Subtotal", totalsX, { size: 10 });
-  draw(money(quote.subtotal), col.total, { size: 10 });
-  y -= 16;
-  draw(`Margin (${quote.margin_pct}%)`, totalsX, { size: 10 });
-  draw(money(quote.total_amount - quote.subtotal), col.total, { size: 10 });
-  y -= 18;
-  draw("Total", totalsX, { size: 13, f: bold });
+  draw(`Total (${quote.currency})`, totalsX, { size: 13, f: bold });
   draw(money(quote.total_amount), col.total, { size: 13, f: bold, color: rgb(0.12, 0.28, 0.55) });
 
   y = 60;

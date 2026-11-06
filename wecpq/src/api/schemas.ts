@@ -33,6 +33,8 @@ export const QuoteItemSchema = z
     quantity: z.number().int(),
     unit_price: z.number(),
     line_total: z.number(),
+    sell_unit_price: z.number().openapi({ description: "Customer unit price: round2(unit_price × (1 + margin_pct/100))" }),
+    sell_line_total: z.number().openapi({ description: "Customer line total: round2(quantity × sell_unit_price)" }),
   })
   .openapi("QuoteItem");
 
