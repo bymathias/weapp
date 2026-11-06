@@ -1059,7 +1059,8 @@
         "qty": 2,
         "unit_price": 1850,
         "line_total": 3700,
-        "material_code": "MAT-0001"
+        "material_code": "MAT-0001",
+        "quote_sku": "FG-100F"
       },
       {
         "id": 2,
@@ -1068,7 +1069,8 @@
         "qty": 2,
         "unit_price": 450,
         "line_total": 900,
-        "material_code": null
+        "material_code": null,
+        "quote_sku": "FC-247-1Y"
       },
       {
         "id": 3,
@@ -1077,7 +1079,8 @@
         "qty": 50,
         "unit_price": 57,
         "line_total": 2850,
-        "material_code": "MAT-0006"
+        "material_code": "MAT-0006",
+        "quote_sku": "M365-E5-ANN"
       },
       {
         "id": 4,
@@ -1086,7 +1089,8 @@
         "qty": 50,
         "unit_price": 12,
         "line_total": 600,
-        "material_code": "MAT-0014"
+        "material_code": "MAT-0014",
+        "quote_sku": "MDE-P2"
       },
       {
         "id": 5,
@@ -1095,7 +1099,8 @@
         "qty": 200,
         "unit_price": 42,
         "line_total": 8400,
-        "material_code": "MAT-0008"
+        "material_code": "MAT-0008",
+        "quote_sku": "ZIA-BIZ-ANN"
       },
       {
         "id": 6,
@@ -1104,7 +1109,8 @@
         "qty": 40,
         "unit_price": 190,
         "line_total": 7600,
-        "material_code": null
+        "material_code": null,
+        "quote_sku": "PS-MIGRATE"
       },
       {
         "id": 7,
@@ -1113,7 +1119,8 @@
         "qty": 200,
         "unit_price": 65,
         "line_total": 13000,
-        "material_code": "MAT-0005"
+        "material_code": "MAT-0005",
+        "quote_sku": "CS-FAL-XDR"
       },
       {
         "id": 8,
@@ -1122,7 +1129,8 @@
         "qty": 40,
         "unit_price": 1150,
         "line_total": 46000,
-        "material_code": "MAT-0007"
+        "material_code": "MAT-0007",
+        "quote_sku": "VBR-ENT-PLUS"
       },
       {
         "id": 9,
@@ -1131,7 +1139,8 @@
         "qty": 25,
         "unit_price": 200,
         "line_total": 5000,
-        "material_code": null
+        "material_code": null,
+        "quote_sku": "PS-ONBOARD"
       },
       {
         "id": 10,
@@ -1140,7 +1149,8 @@
         "qty": 3,
         "unit_price": 1850,
         "line_total": 5550,
-        "material_code": "MAT-0001"
+        "material_code": "MAT-0001",
+        "quote_sku": "FG-100F"
       },
       {
         "id": 11,
@@ -1149,7 +1159,8 @@
         "qty": 1,
         "unit_price": 5200,
         "line_total": 5200,
-        "material_code": "MAT-0010"
+        "material_code": "MAT-0010",
+        "quote_sku": "FAZ-200G"
       }
     ],
     "deliveries": [

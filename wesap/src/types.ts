@@ -143,6 +143,7 @@ export interface SoItem {
   unit_price: number;
   line_total: number;
   material_code: string | null;
+  quote_sku: string | null;
 }
 
 export interface SalesOrderWithItems extends SalesOrder {

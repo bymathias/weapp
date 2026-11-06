@@ -57,6 +57,7 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
         <td>${item.qty}</td>
         <td>${money(item.unit_price)}</td>
         <td>${money(item.line_total)}</td>
+        <td data-testid="so-item-quote-sku">${item.quote_sku ?? "—"}</td>
       </tr>`
     )
     .join("");
@@ -96,7 +97,7 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
       <h2 id="items-section">Line Items</h2>
       <div class="panel">
         <table id="so-items-table" data-testid="so-items-table">
-          <thead><tr><th>Material Code</th><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
+          <thead><tr><th>Material Code</th><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th><th>Quote SKU</th></tr></thead>
           <tbody>${raw(rows)}</tbody>
         </table>
         <div class="totals">

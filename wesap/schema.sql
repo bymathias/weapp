@@ -125,7 +125,8 @@ CREATE TABLE so_items (
   qty INTEGER NOT NULL,
   unit_price REAL NOT NULL,
   line_total REAL NOT NULL,
-  material_code TEXT
+  material_code TEXT,
+  quote_sku TEXT
 );
 
 CREATE TABLE deliveries (

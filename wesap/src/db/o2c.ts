@@ -90,6 +90,7 @@ export interface CreateSoItemInput {
   qty: number;
   unit_price: number;
   material_code?: string | null;
+  quote_sku?: string | null;
 }
 
 export async function createSalesOrder(
@@ -135,14 +136,49 @@ export async function createSalesOrder(
   for (const item of computedItems) {
     await db
       .prepare(
-        `INSERT INTO so_items (so_id, description, qty, unit_price, line_total, material_code)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
+        `INSERT INTO so_items (so_id, description, qty, unit_price, line_total, material_code, quote_sku)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
       )
-      .bind(soId, item.description, item.qty, item.unit_price, item.line_total, item.material_code ?? null)
+      .bind(soId, item.description, item.qty, item.unit_price, item.line_total, item.material_code ?? null, item.quote_sku ?? null)
       .run();
   }
 
   return (await getSalesOrderByNumber(db, soNumber))!;
+}
+
+export interface OrderedQuantities {
+  source_quote_ref: string;
+  lines: { quote_sku: string; ordered_qty: number }[];
+  unlinked_qty: number;
+  sales_orders: { so_number: string; customer_po_number: string | null; status: SalesOrder["status"] }[];
+}
+
+// Quantity already ordered per quote line across the quote's non-Rejected
+// sales orders — lets the intake process spot split orders that over-order.
+export async function getOrderedQuantities(db: D1Database, sourceQuoteRef: string): Promise<OrderedQuantities> {
+  const { results: orders } = await db
+    .prepare(
+      `SELECT so_number, customer_po_number, status FROM sales_orders
+       WHERE source_quote_ref = ?1 AND status != 'Rejected' ORDER BY id`
+    )
+    .bind(sourceQuoteRef)
+    .all<OrderedQuantities["sales_orders"][number]>();
+  const { results: sums } = await db
+    .prepare(
+      `SELECT i.quote_sku as quote_sku, SUM(i.qty) as qty
+       FROM so_items i JOIN sales_orders so ON so.id = i.so_id
+       WHERE so.source_quote_ref = ?1 AND so.status != 'Rejected'
+       GROUP BY i.quote_sku ORDER BY MIN(i.id)`
+    )
+    .bind(sourceQuoteRef)
+    .all<{ quote_sku: string | null; qty: number }>();
+  const rows = sums ?? [];
+  return {
+    source_quote_ref: sourceQuoteRef,
+    lines: rows.filter((r) => r.quote_sku !== null).map((r) => ({ quote_sku: r.quote_sku!, ordered_qty: r.qty })),
+    unlinked_qty: rows.find((r) => r.quote_sku === null)?.qty ?? 0,
+    sales_orders: orders ?? [],
+  };
 }
 
 export async function releaseCreditBlock(db: D1Database, soNumber: string): Promise<SalesOrderWithItems> {

@@ -8,6 +8,7 @@ import {
   DuplicateSalesOrderError,
   getBillingByNumber,
   getDeliveryByNumber,
+  getOrderedQuantities,
   getSalesOrderByNumber,
   listBillingDocuments,
   listDeliveries,
@@ -27,6 +28,8 @@ import {
   DuplicateErrorSchema,
   ErrorSchema,
   FlowEntrySchema,
+  OrderedQuantitiesQuerySchema,
+  OrderedQuantitiesSchema,
   SalesOrderInputSchema,
   SalesOrderListQuerySchema,
   SalesOrderSchema,
@@ -92,6 +95,22 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
         throw err;
       }
     }
+  );
+
+  // Registered before /sales-orders/{so_number} so the path param doesn't capture it.
+  api.openapi(
+    createRoute({
+      method: "get",
+      path: "/sales-orders/ordered-quantities",
+      tags: ["Sales Orders"],
+      summary: "Quantities already ordered per quote line (quote_sku) across a quote's non-Rejected sales orders",
+      security: [{ Bearer: [] }],
+      request: { query: OrderedQuantitiesQuerySchema },
+      responses: {
+        200: { description: "Ordered quantities for the quote", content: { "application/json": { schema: OrderedQuantitiesSchema } } },
+      },
+    }),
+    async (c) => c.json(await getOrderedQuantities(c.env.DB, c.req.valid("query").source_quote_ref), 200)
   );
 
   api.openapi(

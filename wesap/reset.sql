@@ -166,19 +166,19 @@ INSERT INTO sales_orders (id, so_number, customer_id, status, source_quote_ref, 
   (5, '1000000005', 7, 'Blocked (Credit)', 'Q-2026-0013', 51000, 'SDG-PO-30187'),
   (6, '1000000006', 12, 'Delivered', 'Q-2026-0017', 10750, 'SLV-2026-PO-114');
 
--- Order-to-Cash: SO line items — material_code NULL for non-catalog (services) lines
-INSERT INTO so_items (id, so_id, description, qty, unit_price, line_total, material_code) VALUES
-  (1, 1, 'FortiGate 100F Firewall Appliance', 2, 1850, 3700, 'MAT-0001'),
-  (2, 1, 'FortiCare 24x7 Support (1yr)', 2, 450, 900, NULL),
-  (3, 2, 'Microsoft 365 E5 License (annual)', 50, 57, 2850, 'MAT-0006'),
-  (4, 2, 'Microsoft Defender for Endpoint P2', 50, 12, 600, 'MAT-0014'),
-  (5, 3, 'Zscaler Internet Access Business (per user, annual)', 200, 42, 8400, 'MAT-0008'),
-  (6, 3, 'Deployment & Migration Services', 40, 190, 7600, NULL),
-  (7, 4, 'CrowdStrike Falcon Insight XDR (annual, per endpoint)', 200, 65, 13000, 'MAT-0005'),
-  (8, 5, 'Veeam Backup & Replication Enterprise Plus (per socket)', 40, 1150, 46000, 'MAT-0007'),
-  (9, 5, 'Onboarding & Training Services', 25, 200, 5000, NULL),
-  (10, 6, 'FortiGate 100F Firewall Appliance', 3, 1850, 5550, 'MAT-0001'),
-  (11, 6, 'FortiAnalyzer 200G', 1, 5200, 5200, 'MAT-0010');
+-- Order-to-Cash: SO line items — material_code NULL for non-catalog (services) lines; quote_sku = source quote line SKU
+INSERT INTO so_items (id, so_id, description, qty, unit_price, line_total, material_code, quote_sku) VALUES
+  (1, 1, 'FortiGate 100F Firewall Appliance', 2, 1850, 3700, 'MAT-0001', 'FG-100F'),
+  (2, 1, 'FortiCare 24x7 Support (1yr)', 2, 450, 900, NULL, 'FC-247-1Y'),
+  (3, 2, 'Microsoft 365 E5 License (annual)', 50, 57, 2850, 'MAT-0006', 'M365-E5-ANN'),
+  (4, 2, 'Microsoft Defender for Endpoint P2', 50, 12, 600, 'MAT-0014', 'MDE-P2'),
+  (5, 3, 'Zscaler Internet Access Business (per user, annual)', 200, 42, 8400, 'MAT-0008', 'ZIA-BIZ-ANN'),
+  (6, 3, 'Deployment & Migration Services', 40, 190, 7600, NULL, 'PS-MIGRATE'),
+  (7, 4, 'CrowdStrike Falcon Insight XDR (annual, per endpoint)', 200, 65, 13000, 'MAT-0005', 'CS-FAL-XDR'),
+  (8, 5, 'Veeam Backup & Replication Enterprise Plus (per socket)', 40, 1150, 46000, 'MAT-0007', 'VBR-ENT-PLUS'),
+  (9, 5, 'Onboarding & Training Services', 25, 200, 5000, NULL, 'PS-ONBOARD'),
+  (10, 6, 'FortiGate 100F Firewall Appliance', 3, 1850, 5550, 'MAT-0001', 'FG-100F'),
+  (11, 6, 'FortiAnalyzer 200G', 1, 5200, 5200, 'MAT-0010', 'FAZ-200G');
 
 -- Order-to-Cash: deliveries
 INSERT INTO deliveries (id, dlv_number, so_id, status) VALUES

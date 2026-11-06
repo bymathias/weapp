@@ -223,6 +223,7 @@ export const SoItemSchema = z
     unit_price: z.number(),
     line_total: z.number(),
     material_code: z.string().nullable(),
+    quote_sku: z.string().nullable(),
   })
   .openapi("SoItem");
 
@@ -249,6 +250,8 @@ export const SoItemInputSchema = z
     qty: z.number().int().positive(),
     unit_price: z.number().nonnegative(),
     material_code: z.string().optional(),
+    // SKU of the WeCPQ quote line this order line comes from, e.g. PA-440.
+    quote_sku: z.string().optional(),
   })
   .openapi("SoItemInput");
 
@@ -278,6 +281,21 @@ export const DuplicateErrorSchema = z
     so_number: z.string(),
   })
   .openapi("DuplicateError");
+
+export const OrderedQuantitiesQuerySchema = z.object({
+  source_quote_ref: z.string().min(1).openapi({ param: { name: "source_quote_ref", in: "query" }, example: "Q-2026-0005" }),
+});
+
+export const OrderedQuantitiesSchema = z
+  .object({
+    source_quote_ref: z.string(),
+    lines: z.array(z.object({ quote_sku: z.string(), ordered_qty: z.number().int() })),
+    unlinked_qty: z.number().int(),
+    sales_orders: z.array(
+      z.object({ so_number: z.string(), customer_po_number: z.string().nullable(), status: SoStatusSchema })
+    ),
+  })
+  .openapi("OrderedQuantities");
 
 export const SoNumberParamSchema = z.object({
   so_number: z.string().openapi({ param: { name: "so_number", in: "path" }, example: "1000000001" }),
