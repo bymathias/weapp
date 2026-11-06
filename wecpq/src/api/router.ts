@@ -17,6 +17,7 @@ import {
   CustomerSchema,
   CustomerInputSchema,
   CustomerRefIdParamSchema,
+  PdfDownloadQuerySchema,
   QuoteRefParamSchema,
   QuoteSchema,
   QuoteWithItemsSchema,
@@ -222,9 +223,9 @@ apiRouter.openapi(
     method: "get",
     path: "/quotes/{ref}/pdf",
     tags: ["Quotes"],
-    summary: "Download the quote as a PDF",
+    summary: "Download the quote as a PDF (?download=1 for an attachment)",
     security: [{ Bearer: [] }],
-    request: { params: QuoteRefParamSchema },
+    request: { params: QuoteRefParamSchema, query: PdfDownloadQuerySchema },
     responses: {
       200: { description: "PDF document", content: { "application/pdf": { schema: { type: "string", format: "binary" } } } },
       404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
@@ -241,7 +242,7 @@ apiRouter.openapi(
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${quote.ref}.pdf"`,
+        "Content-Disposition": `${c.req.valid("query").download === "1" ? "attachment" : "inline"}; filename="${quote.ref}.pdf"`,
       },
     });
   }

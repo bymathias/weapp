@@ -5,6 +5,7 @@ import {
   createBilling,
   createDelivery,
   createSalesOrder,
+  DuplicateSalesOrderError,
   getBillingByNumber,
   getDeliveryByNumber,
   getSalesOrder,
@@ -12,6 +13,7 @@ import {
   listBillingDocuments,
   listDeliveries,
   listSalesOrders,
+  rejectSalesOrder,
   releaseCreditBlock,
 } from "../../db/o2c";
 import { createPayment } from "../../db/payments";
@@ -79,8 +81,20 @@ export function registerO2CUiRoutes(ui: Hono<Env>) {
       return c.html(newSalesOrderPage(customers, materials, { error: "Add at least one line item." }), 400);
     }
 
-    const so = await createSalesOrder(c.env.DB, customer.id, items, sourceQuoteRef, customerPoNumber);
-    return c.redirect(`/sales-orders/${so.so_number}`);
+    try {
+      const so = await createSalesOrder(c.env.DB, customer.id, items, sourceQuoteRef, customerPoNumber);
+      return c.redirect(`/sales-orders/${so.so_number}`);
+    } catch (err) {
+      if (err instanceof DuplicateSalesOrderError) {
+        return c.html(
+          newSalesOrderPage(customers, materials, {
+            error: `Sales order ${err.soNumber} already exists for customer PO ${customerPoNumber} and quote ${sourceQuoteRef}.`,
+          }),
+          409
+        );
+      }
+      throw err;
+    }
   });
 
   ui.get("/sales-orders/:so_number", async (c) => {
@@ -99,6 +113,18 @@ export function registerO2CUiRoutes(ui: Hono<Env>) {
       await releaseCreditBlock(c.env.DB, soNumber);
     } catch {
       // Button is only shown when the action is valid; swallow and re-render current state.
+    }
+    return c.redirect(`/sales-orders/${soNumber}`);
+  });
+
+  ui.post("/sales-orders/:so_number/reject", async (c) => {
+    const soNumber = c.req.param("so_number");
+    const body = await c.req.parseBody();
+    const reason = typeof body.reject_reason === "string" ? body.reject_reason.trim() : "";
+    try {
+      await rejectSalesOrder(c.env.DB, soNumber, reason || null);
+    } catch {
+      // ditto
     }
     return c.redirect(`/sales-orders/${soNumber}`);
   });

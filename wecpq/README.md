@@ -30,8 +30,10 @@ deployed Worker, so the deployed values never appear in this repo.
 ## Project layout
 
 ```
-schema.sql          D1 table definitions
-seed.sql             deterministic demo data (8 customers, 16 quotes)
+schema.sql          D1 table definitions (full schema, fresh installs)
+seed.sql             deterministic demo data (15 customers, 24 quotes)
+migrations/          additive migrations for an existing DB (schema.sql
+                       already has the result for fresh installs)
 src/
   index.ts           app entrypoint — mounts oauth, api, ui routers
   types.ts            shared Env/domain types
@@ -136,6 +138,27 @@ This starts `wrangler dev` (Miniflare) on `http://localhost:8787`. Log in at
 
 Tokens expire after 1 hour.
 
+### Quote fields
+
+- Quotes carry `currency` (`EUR` | `USD` | `GBP`, default `EUR`),
+  `valid_until` (ISO date; new quotes default to created date + 30 days)
+  and `payment_terms` (default `Net 30`). All three are optional on
+  `POST /api/customers/{refId}/quotes` and `PUT /api/quotes/{ref}` (on
+  `PUT`, omitted fields keep their current value) and always returned.
+- Quote items additionally return the computed customer prices
+  `sell_unit_price` and `sell_line_total` (see Business rules).
+
+### Quote PDF
+
+`GET /api/quotes/{ref}/pdf` returns the customer-facing quote: header
+with currency, valid until and payment terms; one row per line with the
+**customer** unit price and line total; only the **Total**. Long SKUs and
+descriptions wrap inside the row and long quotes paginate (table header
+repeated, totals after the last line, "Quote <ref> · Page n of N" on every
+page) — nothing is truncated or omitted. Add `?download=1` to get
+`Content-Disposition: attachment` (default is `inline`); the UI's
+**Download PDF** button uses it.
+
 ## Adding WeCPQ as a UiPath connector
 
 UiPath Automation Cloud's **Integration Service** can build a custom
@@ -169,9 +192,13 @@ security scheme.
 
 ## Business rules
 
-- `line_total = quantity * unit_price`
-- `subtotal = sum(line_total)`
-- `total_amount = subtotal * (1 + margin_pct / 100)`
+- `line_total = quantity * unit_price` (cost)
+- `subtotal = sum(line_total)` (cost subtotal, internal only)
+- `sell_unit_price = round2(unit_price * (1 + margin_pct / 100))`,
+  `sell_line_total = round2(quantity * sell_unit_price)` (customer prices,
+  computed on read)
+- `total_amount = sum(sell_line_total)`, so customer lines always add up to
+  the total
 - All totals are computed server-side on create/update — client-sent totals
   are ignored.
 - A quote with `status = "Won"` is locked: the UI shows it read-only with a
@@ -179,8 +206,10 @@ security scheme.
 
 ## Seed data
 
-`seed.sql` creates 8 fictional IT-sector customers (`CUST-0001`…`CUST-0008`)
-and 16 quotes (`Q-2026-0001`…`Q-2026-0016`) spanning all four statuses,
-including several Won quotes (to demo the lock) and quotes with multiple
-line items. Re-running `db:migrate:local`/`remote` drops and recreates the
+`seed.sql` creates 15 fictional IT-sector customers (`CUST-0001`…`CUST-0015`)
+and 24 quotes (`Q-2026-0001`…`Q-2026-0024`) spanning all four statuses,
+including several Won quotes (to demo the lock), quotes with multiple
+line items, and the multi-PO demo quotes (Q-2026-0021…0024, including the
+expired Q-2026-0024). It is generated from `demo/demo-seed-data.json`
+(`npm run seed:gen`). Re-running `db:migrate:local`/`remote` drops and recreates the
 schema, so re-seeding always yields the same data.

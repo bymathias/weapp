@@ -45,7 +45,7 @@ deployed Worker, so the deployed values never appear in this repo.
 ```
 schema.sql          D1 table definitions (master data, P2P docs, O2C docs, doc_flow)
 seed.sql             deterministic demo data spanning both processes
-migrations/          incremental ALTER TABLE migrations for an existing DB
+migrations/          incremental migrations for an existing DB
                        (schema.sql already has the full current schema for
                        fresh installs — these are for applying the same
                        change to a live DB without dropping/reseeding it)
@@ -174,6 +174,54 @@ curl -X POST http://localhost:8787/api/sales-orders \
   }'
 ```
 
+Optional on the same call: `intake_case_id` (the UiPath Case ID, e.g.
+`PIO-20261106-7F3A9C`) and, per item, `quote_sku` (the WeCPQ quote line
+SKU, e.g. `PA-440`). Both are returned and shown in the UI.
+
+**Duplicate rule:** when `source_quote_ref` is given and a non-`Rejected`
+sales order already exists with the same `customer_po_number` +
+`source_quote_ref`, the call returns **409** and creates nothing:
+
+```json
+{ "error": "duplicate", "message": "Sales order 1000000007 already exists for ...", "so_number": "1000000007" }
+```
+
+A partial unique index (`idx_so_po_quote`) enforces the same rule in the
+database. Rejecting the existing order frees the pair.
+
+### Multi-PO helpers
+
+- `GET /api/sales-orders` accepts optional exact-match filters, combined
+  with AND: `customer_po_number`, `source_quote_ref`, `customer_ref`
+  (customer `ref_id`), `status`, `intake_case_id`. No params = all orders.
+- `GET /api/sales-orders/ordered-quantities?source_quote_ref=Q-2026-0005`
+  returns the quantity already ordered per `quote_sku` across the quote's
+  non-`Rejected` orders, plus `unlinked_qty` (lines without `quote_sku`)
+  and the orders it came from:
+
+  ```json
+  {
+    "source_quote_ref": "Q-2026-0005",
+    "lines": [{ "quote_sku": "PA-440", "ordered_qty": 4 }],
+    "unlinked_qty": 0,
+    "sales_orders": [{ "so_number": "1000000007", "customer_po_number": "MIG-PO-2026-0457", "status": "Open" }]
+  }
+  ```
+- `POST /api/sales-orders/{so_number}/reject` with optional
+  `{ "reason": "..." }` sets `Rejected` (stored in `reject_reason`). Only from
+  `Open` or `Blocked (Credit)`; otherwise `400 invalid_state`, or `409 locked`
+  if Paid. Also available as **Reject** on the Sales Order page.
+- Billing documents carry `source_quote_ref` (copied from the sales order
+  on billing, like `customer_po_number`).
+
+### PDFs
+
+`GET /api/sales-orders/{so_number}/pdf` and
+`GET /api/purchase-orders/{po_number}/pdf` accept `?download=1` for
+`Content-Disposition: attachment` (default `inline`); the UI's **Download
+PDF** buttons use it. Long codes/descriptions wrap and long documents
+paginate ("Page n of N" on every page) — no truncation, no omitted lines.
+
 Because WeSAP's customers use the same `ref_id`s as WeCPQ's, a UiPath bot
 reading a Won quote from WeCPQ can pass its `customer.ref_id` straight
 through as `customer_ref` here. The PO-vs-quote match itself is out of scope
@@ -190,10 +238,11 @@ already-matched `customer_po_number` and `source_quote_ref`.
   it sets the invoice to `Blocked` with a `block_reason`. `Release` clears the
   block (→ `Released`); a Matched or Released invoice can then be Paid.
 - **Credit check** (on `POST /api/sales-orders`): if a customer's open O2C
-  exposure (sum of their non-`Paid` sales orders) plus the new order's total
-  would exceed their `credit_limit`, the order is created as
-  `Blocked (Credit)`. `POST /api/sales-orders/:number/release-credit` clears
-  the block.
+  exposure (sum of their sales orders that are neither `Paid` nor
+  `Rejected`) plus the new order's total would exceed their `credit_limit`,
+  the order is created as `Blocked (Credit)`. Blocked orders still count
+  toward exposure (they can be released at any time).
+  `POST /api/sales-orders/:number/release-credit` clears the block.
 - **Locking**: once a supplier invoice or billing document is `Paid`
   (cascading to `Paid` on the linked sales order too), it is read-only — the
   UI disables its actions and the API's action routes return `409`.
@@ -205,23 +254,23 @@ already-matched `customer_po_number` and `source_quote_ref`.
 
 - Purchase Order: `Open → Received → Invoiced`
 - Supplier Invoice: `Invoiced → Matched | Blocked → Released → Paid`
-- Sales Order: `Open → Blocked (Credit) | Released → Delivered → Billed → Paid`
+- Sales Order: `Open → Blocked (Credit) | Released → Delivered → Billed → Paid`;
+  `Open` or `Blocked (Credit)` → `Rejected`
 - Goods Receipt / Delivery: `Posted` (single-status once posted)
 - Billing Document: `Open → Paid`
 
 ## Seed data
 
-`seed.sql` creates the 8 WeCPQ-matching customers (`CUST-0001`…`CUST-0008`,
-each with a `credit_limit`), 8 vendors (`VEND-0001`…), 10 materials
+`seed.sql` creates the 15 WeCPQ-matching customers (`CUST-0001`…`CUST-0015`,
+each with a `credit_limit`), 8 vendors (`VEND-0001`…), 40 materials
 (`MAT-0001`…), and a spread of documents across both processes, including:
 
 - A **pre-blocked supplier invoice** (`5100000002`, price >5% over its PO)
   ready to demo Release → Pay.
-- A customer (Apex Managed IT, `CUST-0008`) sitting near their credit limit
-  (27,500 of a 30,000 limit) — any new sales order over 2,500 trips
-  `Blocked (Credit)`, ideal for the WeCPQ bridge demo.
-- A second **pre-blocked sales order** (`1000000006`, already over its
-  customer's limit) ready to demo Release Credit directly.
+- A **pre-blocked sales order** (`1000000005`, Solstice, €58,140 vs a
+  €45,000 limit) ready to demo Release Credit or Reject directly.
+- Won WeCPQ quotes with no sales order yet, for the PO-driven bridge
+  scenarios (see the customer PO table in the root README).
 - Clean happy-path documents through to `Paid` in both P2P and O2C, plus a
   couple of open documents (`4500000004`, `4500000006`) left untouched for
   walking the full cycle live.

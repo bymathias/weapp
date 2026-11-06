@@ -86,16 +86,16 @@ const blocks = [
     salesOrders
   ),
   insertBlock(
-    "Order-to-Cash: SO line items — material_code NULL for non-catalog (services) lines",
+    "Order-to-Cash: SO line items — material_code NULL for non-catalog (services) lines; quote_sku = source quote line SKU",
     "so_items",
-    ["id", "so_id", "description", "qty", "unit_price", "line_total", "material_code"],
+    ["id", "so_id", "description", "qty", "unit_price", "line_total", "material_code", "quote_sku"],
     soItems
   ),
   insertBlock("Order-to-Cash: deliveries", "deliveries", ["id", "dlv_number", "so_id", "status"], deliveries),
   insertBlock(
     "Order-to-Cash: billing documents",
     "billing_documents",
-    ["id", "bill_number", "so_id", "customer_id", "amount", "status", "customer_po_number"],
+    ["id", "bill_number", "so_id", "customer_id", "amount", "status", "customer_po_number", "source_quote_ref"],
     billingDocuments
   ),
   insertBlock(

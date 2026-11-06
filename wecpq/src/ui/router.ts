@@ -26,7 +26,7 @@ import {
   quoteDetailPage,
   notFoundPage,
 } from "./pages";
-import type { QuoteStatus } from "../types";
+import type { QuoteCurrency, QuoteStatus } from "../types";
 
 export const uiRouter = new Hono<Env>();
 
@@ -145,13 +145,13 @@ uiRouter.post("/quotes/new", async (c) => {
   const customer = await getCustomer(c.env.DB, customerId);
   if (!customer) return notFound(c, "Customer", String(body.customer_id ?? ""));
 
-  const { vendor, status, marginPct, items } = parseQuoteForm(body);
+  const { vendor, status, marginPct, items, terms } = parseQuoteForm(body);
 
   if (items.length === 0) {
     return c.html(newQuotePage(customer, [], { error: "Add at least one line item with a SKU, description, and quantity." }), 400);
   }
 
-  const quote = await createQuote(c.env.DB, customerId, { vendor, status, margin_pct: marginPct, items });
+  const quote = await createQuote(c.env.DB, customerId, { vendor, status, margin_pct: marginPct, items, ...terms });
   return c.redirect(`/quotes/${quote.ref}`);
 });
 
@@ -184,14 +184,14 @@ uiRouter.post("/quotes/:ref/edit", async (c) => {
   if (existing.status === "Won") return c.redirect(`/quotes/${ref}`);
 
   const body = await c.req.parseBody({ all: true });
-  const { vendor, status, marginPct, items } = parseQuoteForm(body);
+  const { vendor, status, marginPct, items, terms } = parseQuoteForm(body);
 
   if (items.length === 0) {
     return c.html(editQuotePage(customer, existing, { error: "Add at least one line item with a SKU, description, and quantity." }), 400);
   }
 
   try {
-    const quote = await updateQuote(c.env.DB, ref, { vendor, status, margin_pct: marginPct, items });
+    const quote = await updateQuote(c.env.DB, ref, { vendor, status, margin_pct: marginPct, items, ...terms });
     return c.redirect(`/quotes/${quote.ref}`);
   } catch (err) {
     if (err instanceof Error && err.message === "won_locked") {
@@ -220,7 +220,16 @@ function parseQuoteForm(body: Record<string, string | File | (string | File)[]>)
     }))
     .filter((item) => item.sku.trim() !== "" && item.description.trim() !== "" && item.quantity > 0);
 
-  return { vendor, status, marginPct, items };
+  const currency = (["EUR", "USD", "GBP"] as const).find((cur) => cur === body.currency);
+  const validUntil = typeof body.valid_until === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.valid_until) ? body.valid_until : undefined;
+  const paymentTerms = typeof body.payment_terms === "string" && body.payment_terms.trim() ? body.payment_terms.trim() : undefined;
+  const terms: { currency?: QuoteCurrency; valid_until?: string; payment_terms?: string } = {
+    currency,
+    valid_until: validUntil,
+    payment_terms: paymentTerms,
+  };
+
+  return { vendor, status, marginPct, items, terms };
 }
 
 function toArray(value: string | File | (string | File)[] | undefined): string[] {

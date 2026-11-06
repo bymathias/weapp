@@ -19,6 +19,7 @@ import { mapActionError } from "../errors";
 import { generatePurchaseOrderPdf } from "../../pdf";
 import {
   ErrorSchema,
+  PdfDownloadQuerySchema,
   FlowEntrySchema,
   GoodsReceiptInputSchema,
   GoodsReceiptSchema,
@@ -111,7 +112,7 @@ export function registerP2PRoutes(api: OpenAPIHono<Env>) {
       tags: ["Purchase Orders"],
       summary: "Download the purchase order as a PDF",
       security: [{ Bearer: [] }],
-      request: { params: PoNumberParamSchema },
+      request: { params: PoNumberParamSchema, query: PdfDownloadQuerySchema },
       responses: {
         200: { description: "PDF document", content: { "application/pdf": { schema: { type: "string", format: "binary" } } } },
         404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
@@ -130,7 +131,7 @@ export function registerP2PRoutes(api: OpenAPIHono<Env>) {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `inline; filename="${po.po_number}.pdf"`,
+          "Content-Disposition": `${c.req.valid("query").download === "1" ? "attachment" : "inline"}; filename="${po.po_number}.pdf"`,
         },
       });
     }

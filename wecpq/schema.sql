@@ -21,7 +21,10 @@ CREATE TABLE quotes (
   margin_pct REAL NOT NULL DEFAULT 0,
   subtotal REAL NOT NULL DEFAULT 0,
   total_amount REAL NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  currency TEXT NOT NULL DEFAULT 'EUR' CHECK (currency IN ('EUR', 'USD', 'GBP')),
+  valid_until TEXT,
+  payment_terms TEXT NOT NULL DEFAULT 'Net 30'
 );
 
 CREATE TABLE quote_items (

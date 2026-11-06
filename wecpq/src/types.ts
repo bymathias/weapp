@@ -13,6 +13,7 @@ export type Env = {
 };
 
 export type QuoteStatus = "Draft" | "Sent" | "Won" | "Lost";
+export type QuoteCurrency = "EUR" | "USD" | "GBP";
 
 export interface Customer {
   id: number;
@@ -32,6 +33,9 @@ export interface QuoteItem {
   quantity: number;
   unit_price: number;
   line_total: number;
+  // Computed on read (not stored): customer price incl. margin.
+  sell_unit_price: number;
+  sell_line_total: number;
 }
 
 export interface Quote {
@@ -44,6 +48,9 @@ export interface Quote {
   subtotal: number;
   total_amount: number;
   created_at: string;
+  currency: QuoteCurrency;
+  valid_until: string | null;
+  payment_terms: string;
 }
 
 export interface QuoteWithItems extends Quote {

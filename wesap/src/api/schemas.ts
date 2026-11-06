@@ -211,7 +211,7 @@ export const InvNumberParamSchema = z.object({
 // Order-to-Cash --------------------------------------------------------------------
 
 export const SoStatusSchema = z
-  .enum(["Open", "Blocked (Credit)", "Released", "Delivered", "Billed", "Paid"])
+  .enum(["Open", "Blocked (Credit)", "Released", "Delivered", "Billed", "Paid", "Rejected"])
   .openapi("SoStatus");
 
 export const SoItemSchema = z
@@ -223,6 +223,7 @@ export const SoItemSchema = z
     unit_price: z.number(),
     line_total: z.number(),
     material_code: z.string().nullable(),
+    quote_sku: z.string().nullable(),
   })
   .openapi("SoItem");
 
@@ -236,6 +237,8 @@ export const SalesOrderSchema = z
     customer_po_number: z.string().nullable(),
     total_amount: z.number(),
     created_at: z.string(),
+    reject_reason: z.string().nullable(),
+    intake_case_id: z.string().nullable(),
   })
   .openapi("SalesOrder");
 
@@ -249,6 +252,8 @@ export const SoItemInputSchema = z
     qty: z.number().int().positive(),
     unit_price: z.number().nonnegative(),
     material_code: z.string().optional(),
+    // SKU of the WeCPQ quote line this order line comes from, e.g. PA-440.
+    quote_sku: z.string().optional(),
   })
   .openapi("SoItemInput");
 
@@ -261,8 +266,52 @@ export const SalesOrderInputSchema = z
     // number is required. source_quote_ref stays optional for flexibility.
     customer_po_number: z.string().min(1),
     source_quote_ref: z.string().optional(),
+    // UiPath intake Case ID, e.g. PIO-20261106-7F3A9C.
+    intake_case_id: z.string().optional(),
   })
   .openapi("SalesOrderInput");
+
+export const RejectSalesOrderInputSchema = z
+  .object({ reason: z.string().optional() })
+  .openapi("RejectSalesOrderInput");
+
+export const SalesOrderListQuerySchema = z.object({
+  customer_po_number: z.string().optional().openapi({ param: { name: "customer_po_number", in: "query" }, example: "MIG-PO-2026-0457" }),
+  source_quote_ref: z.string().optional().openapi({ param: { name: "source_quote_ref", in: "query" }, example: "Q-2026-0005" }),
+  customer_ref: z.string().optional().openapi({ param: { name: "customer_ref", in: "query" }, example: "CUST-0003" }),
+  status: SoStatusSchema.optional().openapi({ param: { name: "status", in: "query" } }),
+  intake_case_id: z.string().optional().openapi({ param: { name: "intake_case_id", in: "query" }, example: "PIO-20261106-7F3A9C" }),
+});
+
+export const DuplicateErrorSchema = z
+  .object({
+    error: z.literal("duplicate"),
+    message: z.string(),
+    so_number: z.string(),
+  })
+  .openapi("DuplicateError");
+
+export const OrderedQuantitiesQuerySchema = z.object({
+  source_quote_ref: z.string().min(1).openapi({ param: { name: "source_quote_ref", in: "query" }, example: "Q-2026-0005" }),
+});
+
+export const OrderedQuantitiesSchema = z
+  .object({
+    source_quote_ref: z.string(),
+    lines: z.array(z.object({ quote_sku: z.string(), ordered_qty: z.number().int() })),
+    unlinked_qty: z.number().int(),
+    sales_orders: z.array(
+      z.object({ so_number: z.string(), customer_po_number: z.string().nullable(), status: SoStatusSchema })
+    ),
+  })
+  .openapi("OrderedQuantities");
+
+export const PdfDownloadQuerySchema = z.object({
+  download: z
+    .string()
+    .optional()
+    .openapi({ param: { name: "download", in: "query" }, example: "1", description: "1 = Content-Disposition: attachment (default inline)" }),
+});
 
 export const SoNumberParamSchema = z.object({
   so_number: z.string().openapi({ param: { name: "so_number", in: "path" }, example: "1000000001" }),
@@ -298,6 +347,7 @@ export const BillingDocumentSchema = z
     status: BillingStatusSchema,
     customer_po_number: z.string().nullable(),
     created_at: z.string(),
+    source_quote_ref: z.string().nullable(),
   })
   .openapi("BillingDocument");
 

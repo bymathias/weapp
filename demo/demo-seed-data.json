@@ -2,7 +2,7 @@
   "meta": {
     "description": "Canonical shared demo dataset for WeCPQ + WeSAP, rebuilt from the REAL exported schemas & catalogs. Single source of truth; each app seeds its slice. Fixed IDs/numbers => identical, repeatable, mutually-consistent demo state on every reset. Engineered for match / mismatch / blocked demos.",
     "customers": 15,
-    "quotes": 20,
+    "quotes": 24,
     "sales_orders": 6,
     "purchase_orders": 6,
     "supplier_invoices": 4,
@@ -519,7 +519,11 @@
         "status": "Won",
         "margin_pct": 15,
         "subtotal": 4600,
-        "total_amount": 5290.0
+        "total_amount": 5290.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-01 09:00:00"
       },
       {
         "id": 2,
@@ -529,7 +533,11 @@
         "status": "Draft",
         "margin_pct": 20,
         "subtotal": 12600,
-        "total_amount": 15120.0
+        "total_amount": 15120.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-03 09:00:00"
       },
       {
         "id": 3,
@@ -539,7 +547,11 @@
         "status": "Won",
         "margin_pct": 12,
         "subtotal": 3450,
-        "total_amount": 3864.0
+        "total_amount": 3864.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-04 09:00:00"
       },
       {
         "id": 4,
@@ -549,7 +561,11 @@
         "status": "Sent",
         "margin_pct": 15,
         "subtotal": 12000,
-        "total_amount": 13800.0
+        "total_amount": 13800.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-05 09:00:00"
       },
       {
         "id": 5,
@@ -559,7 +575,11 @@
         "status": "Won",
         "margin_pct": 10,
         "subtotal": 14500,
-        "total_amount": 15950.0
+        "total_amount": 15950.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-07 09:00:00"
       },
       {
         "id": 6,
@@ -569,7 +589,11 @@
         "status": "Draft",
         "margin_pct": 25,
         "subtotal": 6900,
-        "total_amount": 8625.0
+        "total_amount": 8625.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-09 09:00:00"
       },
       {
         "id": 7,
@@ -579,7 +603,11 @@
         "status": "Won",
         "margin_pct": 15,
         "subtotal": 16000,
-        "total_amount": 18400.0
+        "total_amount": 18400.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-10 09:00:00"
       },
       {
         "id": 8,
@@ -589,7 +617,11 @@
         "status": "Lost",
         "margin_pct": 20,
         "subtotal": 4900,
-        "total_amount": 5880.0
+        "total_amount": 5880.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-11 09:00:00"
       },
       {
         "id": 9,
@@ -599,7 +631,11 @@
         "status": "Won",
         "margin_pct": 18,
         "subtotal": 8950,
-        "total_amount": 10561.0
+        "total_amount": 10561.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-13 09:00:00"
       },
       {
         "id": 10,
@@ -609,7 +645,11 @@
         "status": "Draft",
         "margin_pct": 30,
         "subtotal": 1710,
-        "total_amount": 2223.0
+        "total_amount": 2223.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-15 09:00:00"
       },
       {
         "id": 11,
@@ -619,7 +659,11 @@
         "status": "Won",
         "margin_pct": 15,
         "subtotal": 13000,
-        "total_amount": 14950.0
+        "total_amount": 14950.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 60",
+        "created_at": "2026-09-16 09:00:00"
       },
       {
         "id": 12,
@@ -629,7 +673,11 @@
         "status": "Sent",
         "margin_pct": 18,
         "subtotal": 6600,
-        "total_amount": 7788.0
+        "total_amount": 7788.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 60",
+        "created_at": "2026-09-17 09:00:00"
       },
       {
         "id": 13,
@@ -639,7 +687,11 @@
         "status": "Won",
         "margin_pct": 14,
         "subtotal": 51000,
-        "total_amount": 58140.0
+        "total_amount": 58140.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-19 09:00:00"
       },
       {
         "id": 14,
@@ -649,7 +701,11 @@
         "status": "Sent",
         "margin_pct": 20,
         "subtotal": 5880,
-        "total_amount": 7056.0
+        "total_amount": 7056.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-21 09:00:00"
       },
       {
         "id": 15,
@@ -659,7 +715,11 @@
         "status": "Won",
         "margin_pct": 16,
         "subtotal": 62700,
-        "total_amount": 72732.0
+        "total_amount": 72732.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-22 09:00:00"
       },
       {
         "id": 16,
@@ -669,7 +729,11 @@
         "status": "Sent",
         "margin_pct": 15,
         "subtotal": 12600,
-        "total_amount": 14490.0
+        "total_amount": 14490.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 60",
+        "created_at": "2026-09-23 09:00:00"
       },
       {
         "id": 17,
@@ -679,7 +743,11 @@
         "status": "Won",
         "margin_pct": 12,
         "subtotal": 10750,
-        "total_amount": 12040.0
+        "total_amount": 12040.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-25 09:00:00"
       },
       {
         "id": 18,
@@ -689,7 +757,11 @@
         "status": "Draft",
         "margin_pct": 18,
         "subtotal": 20100,
-        "total_amount": 23718.0
+        "total_amount": 23718.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-27 09:00:00"
       },
       {
         "id": 19,
@@ -699,7 +771,11 @@
         "status": "Lost",
         "margin_pct": 16,
         "subtotal": 5130,
-        "total_amount": 5950.8
+        "total_amount": 5950.8,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-28 09:00:00"
       },
       {
         "id": 20,
@@ -709,7 +785,67 @@
         "status": "Sent",
         "margin_pct": 17,
         "subtotal": 6600,
-        "total_amount": 7722.0
+        "total_amount": 7722.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-29 09:00:00"
+      },
+      {
+        "id": 21,
+        "ref": "Q-2026-0021",
+        "customer_id": 14,
+        "vendor": "Fortinet",
+        "status": "Won",
+        "margin_pct": 14,
+        "subtotal": 23500.0,
+        "total_amount": 26790.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 45",
+        "created_at": "2026-10-19 09:00:00"
+      },
+      {
+        "id": 22,
+        "ref": "Q-2026-0022",
+        "customer_id": 14,
+        "vendor": "Microsoft",
+        "status": "Won",
+        "margin_pct": 12,
+        "subtotal": 7920.0,
+        "total_amount": 8870.4,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 45",
+        "created_at": "2026-10-20 09:00:00"
+      },
+      {
+        "id": 23,
+        "ref": "Q-2026-0023",
+        "customer_id": 15,
+        "vendor": "CrowdStrike",
+        "status": "Won",
+        "margin_pct": 15,
+        "subtotal": 14800.0,
+        "total_amount": 17020.0,
+        "currency": "EUR",
+        "valid_until": "2027-06-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-10-22 09:00:00"
+      },
+      {
+        "id": 24,
+        "ref": "Q-2026-0024",
+        "customer_id": 13,
+        "vendor": "Veeam",
+        "status": "Won",
+        "margin_pct": 18,
+        "subtotal": 3720.0,
+        "total_amount": 4389.6,
+        "currency": "EUR",
+        "valid_until": "2026-07-15",
+        "payment_terms": "Net 30",
+        "created_at": "2026-06-15 09:00:00"
       }
     ],
     "quote_items": [
@@ -991,6 +1127,78 @@
         "quantity": 120,
         "unit_price": 55,
         "line_total": 6600
+      },
+      {
+        "id": 32,
+        "quote_id": 21,
+        "sku": "FG-100F",
+        "description": "FortiGate 100F Firewall Appliance",
+        "quantity": 6,
+        "unit_price": 1850,
+        "line_total": 11100.0
+      },
+      {
+        "id": 33,
+        "quote_id": 21,
+        "sku": "FS-448E-FPOE",
+        "description": "FortiSwitch 448E-FPOE",
+        "quantity": 4,
+        "unit_price": 3100,
+        "line_total": 12400.0
+      },
+      {
+        "id": 34,
+        "quote_id": 22,
+        "sku": "M365-E5-ANN",
+        "description": "Microsoft 365 E5 License (annual)",
+        "quantity": 120,
+        "unit_price": 57,
+        "line_total": 6840.0
+      },
+      {
+        "id": 35,
+        "quote_id": 22,
+        "sku": "ENTRA-P2",
+        "description": "Microsoft Entra ID P2 License (per user)",
+        "quantity": 120,
+        "unit_price": 9,
+        "line_total": 1080.0
+      },
+      {
+        "id": 36,
+        "quote_id": 23,
+        "sku": "CS-FAL-PREV",
+        "description": "CrowdStrike Falcon Prevent (per endpoint)",
+        "quantity": 200,
+        "unit_price": 45,
+        "line_total": 9000.0
+      },
+      {
+        "id": 37,
+        "quote_id": 23,
+        "sku": "CS-FAL-ITP",
+        "description": "CrowdStrike Falcon Identity Threat Protection (per user)",
+        "quantity": 100,
+        "unit_price": 58,
+        "line_total": 5800.0
+      },
+      {
+        "id": 38,
+        "quote_id": 24,
+        "sku": "VBO-M365",
+        "description": "Veeam Backup for Microsoft 365 (per user)",
+        "quantity": 250,
+        "unit_price": 4,
+        "line_total": 1000.0
+      },
+      {
+        "id": 39,
+        "quote_id": 24,
+        "sku": "VONE-SKT",
+        "description": "Veeam ONE Monitoring & Analytics (per socket)",
+        "quantity": 8,
+        "unit_price": 340,
+        "line_total": 2720.0
       }
     ]
   },
@@ -1002,7 +1210,7 @@
         "customer_id": 1,
         "status": "Paid",
         "source_quote_ref": "Q-2026-0001",
-        "total_amount": 4600,
+        "total_amount": 5290.0,
         "customer_po_number": "PO-NORTHBRIDGE-2026-0142"
       },
       {
@@ -1011,7 +1219,7 @@
         "customer_id": 2,
         "status": "Delivered",
         "source_quote_ref": "Q-2026-0003",
-        "total_amount": 3450,
+        "total_amount": 3864.0,
         "customer_po_number": "DPS-PO-88231"
       },
       {
@@ -1020,7 +1228,7 @@
         "customer_id": 4,
         "status": "Billed",
         "source_quote_ref": "Q-2026-0007",
-        "total_amount": 16000,
+        "total_amount": 18400.0,
         "customer_po_number": "CCS2026-0219"
       },
       {
@@ -1029,7 +1237,7 @@
         "customer_id": 6,
         "status": "Open",
         "source_quote_ref": "Q-2026-0011",
-        "total_amount": 13000,
+        "total_amount": 14950.0,
         "customer_po_number": "HN-2026-PO-0088"
       },
       {
@@ -1038,7 +1246,7 @@
         "customer_id": 7,
         "status": "Blocked (Credit)",
         "source_quote_ref": "Q-2026-0013",
-        "total_amount": 51000,
+        "total_amount": 58140.0,
         "customer_po_number": "SDG-PO-30187"
       },
       {
@@ -1047,7 +1255,7 @@
         "customer_id": 12,
         "status": "Delivered",
         "source_quote_ref": "Q-2026-0017",
-        "total_amount": 10750,
+        "total_amount": 12040.0,
         "customer_po_number": "SLV-2026-PO-114"
       }
     ],
@@ -1057,99 +1265,110 @@
         "so_id": 1,
         "description": "FortiGate 100F Firewall Appliance",
         "qty": 2,
-        "unit_price": 1850,
-        "line_total": 3700,
-        "material_code": "MAT-0001"
+        "unit_price": 2127.5,
+        "line_total": 4255.0,
+        "material_code": "MAT-0001",
+        "quote_sku": "FG-100F"
       },
       {
         "id": 2,
         "so_id": 1,
         "description": "FortiCare 24x7 Support (1yr)",
         "qty": 2,
-        "unit_price": 450,
-        "line_total": 900,
-        "material_code": null
+        "unit_price": 517.5,
+        "line_total": 1035.0,
+        "material_code": null,
+        "quote_sku": "FC-247-1Y"
       },
       {
         "id": 3,
         "so_id": 2,
         "description": "Microsoft 365 E5 License (annual)",
         "qty": 50,
-        "unit_price": 57,
-        "line_total": 2850,
-        "material_code": "MAT-0006"
+        "unit_price": 63.84,
+        "line_total": 3192.0,
+        "material_code": "MAT-0006",
+        "quote_sku": "M365-E5-ANN"
       },
       {
         "id": 4,
         "so_id": 2,
         "description": "Microsoft Defender for Endpoint P2",
         "qty": 50,
-        "unit_price": 12,
-        "line_total": 600,
-        "material_code": "MAT-0014"
+        "unit_price": 13.44,
+        "line_total": 672.0,
+        "material_code": "MAT-0014",
+        "quote_sku": "MDE-P2"
       },
       {
         "id": 5,
         "so_id": 3,
         "description": "Zscaler Internet Access Business (per user, annual)",
         "qty": 200,
-        "unit_price": 42,
-        "line_total": 8400,
-        "material_code": "MAT-0008"
+        "unit_price": 48.3,
+        "line_total": 9660.0,
+        "material_code": "MAT-0008",
+        "quote_sku": "ZIA-BIZ-ANN"
       },
       {
         "id": 6,
         "so_id": 3,
         "description": "Deployment & Migration Services",
         "qty": 40,
-        "unit_price": 190,
-        "line_total": 7600,
-        "material_code": null
+        "unit_price": 218.5,
+        "line_total": 8740.0,
+        "material_code": null,
+        "quote_sku": "PS-MIGRATE"
       },
       {
         "id": 7,
         "so_id": 4,
         "description": "CrowdStrike Falcon Insight XDR (annual, per endpoint)",
         "qty": 200,
-        "unit_price": 65,
-        "line_total": 13000,
-        "material_code": "MAT-0005"
+        "unit_price": 74.75,
+        "line_total": 14950.0,
+        "material_code": "MAT-0005",
+        "quote_sku": "CS-FAL-XDR"
       },
       {
         "id": 8,
         "so_id": 5,
         "description": "Veeam Backup & Replication Enterprise Plus (per socket)",
         "qty": 40,
-        "unit_price": 1150,
-        "line_total": 46000,
-        "material_code": "MAT-0007"
+        "unit_price": 1311.0,
+        "line_total": 52440.0,
+        "material_code": "MAT-0007",
+        "quote_sku": "VBR-ENT-PLUS"
       },
       {
         "id": 9,
         "so_id": 5,
         "description": "Onboarding & Training Services",
         "qty": 25,
-        "unit_price": 200,
-        "line_total": 5000,
-        "material_code": null
+        "unit_price": 228.0,
+        "line_total": 5700.0,
+        "material_code": null,
+        "quote_sku": "PS-ONBOARD"
       },
       {
         "id": 10,
         "so_id": 6,
         "description": "FortiGate 100F Firewall Appliance",
         "qty": 3,
-        "unit_price": 1850,
-        "line_total": 5550,
-        "material_code": "MAT-0001"
+        "unit_price": 2072.0,
+        "line_total": 6216.0,
+        "material_code": "MAT-0001",
+        "quote_sku": "FG-100F"
       },
       {
         "id": 11,
         "so_id": 6,
         "description": "FortiAnalyzer 200G",
         "qty": 1,
-        "unit_price": 5200,
-        "line_total": 5200,
-        "material_code": "MAT-0010"
+        "unit_price": 5824.0,
+        "line_total": 5824.0,
+        "material_code": "MAT-0010",
+        "quote_sku": "FAZ-200G"
       }
     ],
     "deliveries": [
@@ -1184,18 +1403,20 @@
         "bill_number": "9000000001",
         "so_id": 1,
         "customer_id": 1,
-        "amount": 4600,
+        "amount": 5290.0,
         "status": "Paid",
-        "customer_po_number": "PO-NORTHBRIDGE-2026-0142"
+        "customer_po_number": "PO-NORTHBRIDGE-2026-0142",
+        "source_quote_ref": "Q-2026-0001"
       },
       {
         "id": 2,
         "bill_number": "9000000002",
         "so_id": 3,
         "customer_id": 4,
-        "amount": 16000,
+        "amount": 18400.0,
         "status": "Open",
-        "customer_po_number": "CCS2026-0219"
+        "customer_po_number": "CCS2026-0219",
+        "source_quote_ref": "Q-2026-0007"
       }
     ],
     "purchase_orders": [
@@ -1460,7 +1681,7 @@
         "ref_type": "billing_document",
         "ref_id": 1,
         "direction": "in",
-        "amount": 4600,
+        "amount": 5290.0,
         "status": "Cleared"
       }
     ],
@@ -1603,22 +1824,22 @@
           "Germany"
         ],
         "payment_terms": "Net 30",
-        "note": "CLEAN MATCH \u2014 prices & quantities equal the quote; all product lines map to WeSAP materials, services stay as text. Bot creates the Sales Order straight through.",
+        "note": "CLEAN MATCH \u2014 prices (the quote's customer prices) & quantities equal the quote, total 15,950; all product lines map to WeSAP materials, services stay as text. Bot creates the Sales Order straight through.",
         "lines": [
           {
             "desc": "PA-440 Next-Gen Firewall",
             "qty": 4,
-            "unit_price": 2100
+            "unit_price": 2310.0
           },
           {
             "desc": "Threat Prevention Subscription (1yr)",
             "qty": 4,
-            "unit_price": 650
+            "unit_price": 715.0
           },
           {
             "desc": "Professional Services - Deployment",
             "qty": 20,
-            "unit_price": 175
+            "unit_price": 192.5
           }
         ]
       },
@@ -1637,7 +1858,7 @@
           "Ireland"
         ],
         "payment_terms": "Net 45",
-        "note": "PRICE + UNMATCHED-LINE MISMATCH \u2014 Falcon Complete priced at 110 on the PO vs 85 on the quote (agent flags price mismatch vs quote); the 'FortiCare 24x7 Support' line has no WeSAP material equivalent (agent flags unmatched line). Agent -> People.",
+        "note": "PRICE + UNMATCHED-LINE MISMATCH \u2014 Falcon Complete priced at 110 on the PO vs 100.30 customer price on the quote (agent flags price mismatch vs quote); the 'FortiCare 24x7 Support' line (531, matching the quote) has no WeSAP material equivalent (agent flags unmatched line). Agent -> People.",
         "lines": [
           {
             "desc": "CrowdStrike Falcon Complete (per endpoint, annual)",
@@ -1647,7 +1868,7 @@
           {
             "desc": "FortiCare 24x7 Support (1yr)",
             "qty": 1,
-            "unit_price": 450
+            "unit_price": 531.0
           }
         ]
       },
@@ -1666,30 +1887,219 @@
           "France"
         ],
         "payment_terms": "Net 30",
-        "note": "QUANTITY MISMATCH + CREDIT BLOCK \u2014 PO orders 30 firewalls vs 28 quoted (agent flags qty mismatch); once corrected and the order is created it exceeds Ironclad's 40,000 credit limit -> WeSAP blocks it (Blocked (Credit)).",
+        "note": "QUANTITY MISMATCH + CREDIT BLOCK \u2014 PO orders 30 firewalls vs 28 quoted (agent flags qty mismatch); prices equal the quote's customer prices. Once corrected the order (72,732) exceeds Ironclad's 40,000 credit limit -> WeSAP blocks it (Blocked (Credit)).",
         "lines": [
           {
             "desc": "PA-440 Next-Gen Firewall",
             "qty": 30,
-            "unit_price": 2100
+            "unit_price": 2436.0
           },
           {
             "desc": "Threat Prevention Subscription (1yr)",
             "qty": 6,
-            "unit_price": 650
+            "unit_price": 754.0
           }
         ]
+      },
+      {
+        "file": "PO_Beacon_Q-2026-0023_A.pdf",
+        "po_number": "BSG-PO-2026-1041",
+        "date": "2026-10-26",
+        "customer": "CUST-0015",
+        "quote_ref": "Q-2026-0023",
+        "buyer": "Sanne de Vries",
+        "email": "procurement@beacon-sg.example",
+        "address": [
+          "Beacon Systems Group B.V.",
+          "Stationsplein 45",
+          "3013 AK Rotterdam",
+          "Netherlands"
+        ],
+        "payment_terms": "Net 30",
+        "note": "SPLIT ORDER 1/2, CLEAN \u2014 first of two POs against Q-2026-0023 (120 of 200 Falcon Prevent, 60 of 100 Identity Threat Protection, customer prices). Bot creates SO for BSG-PO-2026-1041 + Q-2026-0023; ordered-quantities then shows 120/60 already ordered. Robot.",
+        "lines": [
+          {
+            "desc": "CrowdStrike Falcon Prevent (per endpoint)",
+            "sku": "CS-FAL-PREV",
+            "qty": 120,
+            "unit_price": 51.75
+          },
+          {
+            "desc": "CrowdStrike Falcon Identity Threat Protection (per user)",
+            "sku": "CS-FAL-ITP",
+            "qty": 60,
+            "unit_price": 66.7
+          }
+        ]
+      },
+      {
+        "file": "PO_Beacon_Q-2026-0023_B.pdf",
+        "po_number": "BSG-PO-2026-1042",
+        "date": "2026-10-27",
+        "customer": "CUST-0015",
+        "quote_ref": "Q-2026-0023",
+        "buyer": "Sanne de Vries",
+        "email": "procurement@beacon-sg.example",
+        "address": [
+          "Beacon Systems Group B.V.",
+          "Stationsplein 45",
+          "3013 AK Rotterdam",
+          "Netherlands"
+        ],
+        "payment_terms": "Net 30",
+        "note": "SPLIT ORDER 2/2, CLEAN \u2014 remaining 80 + 40 on Q-2026-0023; with PO A the quantities sum exactly to the quote (200 / 100, 17,020 in total, within Beacon's 50,000 limit). Bot creates a second SO; ordered-quantities = quoted quantities. Robot.",
+        "lines": [
+          {
+            "desc": "CrowdStrike Falcon Prevent (per endpoint)",
+            "sku": "CS-FAL-PREV",
+            "qty": 80,
+            "unit_price": 51.75
+          },
+          {
+            "desc": "CrowdStrike Falcon Identity Threat Protection (per user)",
+            "sku": "CS-FAL-ITP",
+            "qty": 40,
+            "unit_price": 66.7
+          }
+        ]
+      },
+      {
+        "file": "PO_Beacon_Q-2026-0023_C.pdf",
+        "po_number": "BSG-PO-2026-1057",
+        "date": "2026-10-30",
+        "customer": "CUST-0015",
+        "quote_ref": "Q-2026-0023",
+        "buyer": "Sanne de Vries",
+        "email": "procurement@beacon-sg.example",
+        "address": [
+          "Beacon Systems Group B.V.",
+          "Stationsplein 45",
+          "3013 AK Rotterdam",
+          "Netherlands"
+        ],
+        "payment_terms": "Net 30",
+        "note": "SPLIT ORDER, OVER-ORDERED \u2014 100 + 50 more on Q-2026-0023. After PO A alone, A + C = 220 / 110 vs 200 / 100 quoted (after A + B even more). Agent checks GET /api/sales-orders/ordered-quantities, flags the excess over the quote -> People (no SO, or only the remaining quantity). Credit is not the blocker.",
+        "lines": [
+          {
+            "desc": "CrowdStrike Falcon Prevent (per endpoint)",
+            "sku": "CS-FAL-PREV",
+            "qty": 100,
+            "unit_price": 51.75
+          },
+          {
+            "desc": "CrowdStrike Falcon Identity Threat Protection (per user)",
+            "sku": "CS-FAL-ITP",
+            "qty": 50,
+            "unit_price": 66.7
+          }
+        ]
+      },
+      {
+        "file": "PO_Onyx_Q-2026-0021+0022.pdf",
+        "po_number": "ONX-PO-2026-0193",
+        "date": "2026-10-28",
+        "customer": "CUST-0014",
+        "quote_refs": [
+          "Q-2026-0021",
+          "Q-2026-0022"
+        ],
+        "buyer": "Tobias Kr\u00fcger",
+        "email": "einkauf@onyx-infra.example",
+        "address": [
+          "Onyx Infrastructure GmbH",
+          "Mainzer Landstra\u00dfe 50",
+          "60325 Frankfurt am Main",
+          "Germany"
+        ],
+        "payment_terms": "Net 45",
+        "note": "1 PO -> 2 QUOTES, CLEAN \u2014 one PO covering Q-2026-0021 (Fortinet, 26,790) and Q-2026-0022 (Microsoft, 8,870.40); every line carries its quote ref. Bot splits it into two SOs (ONX-PO-2026-0193 + Q-2026-0021, ONX-PO-2026-0193 + Q-2026-0022); 35,660.40 total is within Onyx's 85,000 limit. Robot.",
+        "lines": [
+          {
+            "desc": "FortiGate 100F Firewall Appliance",
+            "sku": "FG-100F",
+            "qty": 6,
+            "unit_price": 2109.0,
+            "quote_ref": "Q-2026-0021"
+          },
+          {
+            "desc": "FortiSwitch 448E-FPOE",
+            "sku": "FS-448E-FPOE",
+            "qty": 4,
+            "unit_price": 3534.0,
+            "quote_ref": "Q-2026-0021"
+          },
+          {
+            "desc": "Microsoft 365 E5 License (annual)",
+            "sku": "M365-E5-ANN",
+            "qty": 120,
+            "unit_price": 63.84,
+            "quote_ref": "Q-2026-0022"
+          },
+          {
+            "desc": "Microsoft Entra ID P2 License (per user)",
+            "sku": "ENTRA-P2",
+            "qty": 120,
+            "unit_price": 10.08,
+            "quote_ref": "Q-2026-0022"
+          }
+        ]
+      },
+      {
+        "file": "PO_Kestrel_Q-2026-0024.pdf",
+        "po_number": "KD-PO-5523",
+        "date": "2026-10-28",
+        "customer": "CUST-0013",
+        "quote_ref": "Q-2026-0024",
+        "buyer": "Olivia Hart",
+        "email": "purchasing@kestrel-digital.example",
+        "address": [
+          "Kestrel Digital Ltd",
+          "21 Bridge Street",
+          "Manchester M3 3BW",
+          "United Kingdom"
+        ],
+        "payment_terms": "Net 30",
+        "note": "EXPIRED QUOTE \u2014 prices & quantities match Q-2026-0024, but the quote was valid until 2026-07-15 and the PO is dated 2026-10-28. Agent flags the expired quote -> People (re-quote or approve the old prices). No SO until then.",
+        "lines": [
+          {
+            "desc": "Veeam Backup for Microsoft 365 (per user)",
+            "sku": "VBO-M365",
+            "qty": 250,
+            "unit_price": 4.72
+          },
+          {
+            "desc": "Veeam ONE Monitoring & Analytics (per socket)",
+            "sku": "VONE-SKT",
+            "qty": 8,
+            "unit_price": 401.2
+          }
+        ]
+      }
+    ],
+    "customer_po_bundles": [
+      {
+        "file": "PO_Beacon_Q-2026-0023_A+B.pdf",
+        "po_numbers": [
+          "BSG-PO-2026-1041",
+          "BSG-PO-2026-1042"
+        ],
+        "note": "TWO POs IN ONE PDF \u2014 PO A and PO B in a single attachment (each starts on its own page with its own header). Bot must extract both and create two SOs. If the single-PO files were already processed, both calls return 409 duplicate with the existing so_number (safe retry)."
       }
     ]
   },
   "demo_scenarios": [
     "MATCH (completed): Q-2026-0001 -> SO 1000000001 Paid, full O2C chain (delivery/billing/payment).",
-    "MATCH (live bridge, clean): Q-2026-0005 Meridian is Won with NO sales order -> bot creates it live; customer PO PO_Meridian matches the quote exactly.",
-    "MISMATCH (agent): Q-2026-0009 Vertex is Won, no order; customer PO has a price mismatch (Falcon Complete 110 vs 85) and an unmatched line (FortiCare) -> agent flags, human confirms.",
-    "MISMATCH + CREDIT BLOCK: Q-2026-0015 Ironclad Won, no order; customer PO qty mismatch (30 vs 28), and the order value (58,800) exceeds the 40,000 credit limit -> Blocked (Credit).",
-    "BLOCKED (credit, pre-seeded): SO 1000000005 Solstice = Blocked (Credit), 46,000 vs 45,000 limit.",
+    "MATCH (live bridge, clean): Q-2026-0005 Meridian is Won with NO sales order -> bot creates it live; customer PO PO_Meridian matches the quote's customer prices exactly (15,950).",
+    "MISMATCH (agent): Q-2026-0009 Vertex is Won, no order; customer PO has a price mismatch (Falcon Complete 110 vs 100.30 customer price) and an unmatched line (FortiCare) -> agent flags, human confirms.",
+    "MISMATCH + CREDIT BLOCK: Q-2026-0015 Ironclad Won, no order; customer PO qty mismatch (30 vs 28), and the order value (72,732 as quoted, 77,604 as ordered) exceeds the 40,000 credit limit -> Blocked (Credit).",
+    "BLOCKED (credit, pre-seeded): SO 1000000005 Solstice = Blocked (Credit), 58,140 vs 45,000 limit.",
     "BLOCKED (P2P price): supplier invoice 5100000002 = Blocked, price 2300 vs PO 2100 (>5%).",
     "BLOCKED (P2P quantity): supplier invoice 5100000004 = Blocked, invoiced 40 vs 30 received.",
-    "P2P happy path: PO 4500000001 -> GR -> invoice 5100000001 Paid; invoice 5100000003 Matched (ready to pay)."
+    "P2P happy path: PO 4500000001 -> GR -> invoice 5100000001 Paid; invoice 5100000003 Matched (ready to pay).",
+    "SPLIT ORDER (clean, Robot): Q-2026-0023 Beacon Won, no order; PO_Beacon_Q-2026-0023_A (BSG-PO-2026-1041) + _B (BSG-PO-2026-1042) sum exactly to the quote (200 / 100) -> one SO per PO-quote pair, ordered-quantities = quoted.",
+    "SPLIT ORDER (over-ordered, Agent -> People): PO_Beacon_Q-2026-0023_C (BSG-PO-2026-1057) on Q-2026-0023 -> A + C = 220 / 110 vs 200 / 100 quoted; agent flags from GET /api/sales-orders/ordered-quantities.",
+    "MULTI-PO PDF (Robot, idempotent): PO_Beacon_Q-2026-0023_A+B bundles BSG-PO-2026-1041 and BSG-PO-2026-1042 in one file -> two SOs; re-processing returns 409 duplicate with the existing so_number.",
+    "1 PO -> 2 QUOTES (clean, Robot): Q-2026-0021 (Fortinet) + Q-2026-0022 (Microsoft) Onyx Won, no orders; PO_Onyx_Q-2026-0021+0022 (ONX-PO-2026-0193) carries a quote ref per line -> two SOs, 35,660.40 within the 85,000 limit.",
+    "EXPIRED QUOTE (Agent -> People): Q-2026-0024 Kestrel Won, valid until 2026-07-15, no order; PO_Kestrel_Q-2026-0024 (KD-PO-5523, 2026-10-28) matches prices/qty but the quote has expired."
   ]
 }

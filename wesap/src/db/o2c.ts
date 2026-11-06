@@ -12,15 +12,65 @@ export interface SalesOrderListRow extends SalesOrder {
   customer_ref_id: string;
 }
 
-export async function listSalesOrders(db: D1Database): Promise<SalesOrderListRow[]> {
+export interface SalesOrderFilters {
+  customer_po_number?: string;
+  source_quote_ref?: string;
+  customer_ref?: string;
+  status?: string;
+  intake_case_id?: string;
+}
+
+export async function listSalesOrders(db: D1Database, filters: SalesOrderFilters = {}): Promise<SalesOrderListRow[]> {
+  const columns: Record<keyof SalesOrderFilters, string> = {
+    customer_po_number: "so.customer_po_number",
+    source_quote_ref: "so.source_quote_ref",
+    customer_ref: "c.ref_id",
+    status: "so.status",
+    intake_case_id: "so.intake_case_id",
+  };
+  const conditions: string[] = [];
+  const params: string[] = [];
+  for (const [key, column] of Object.entries(columns) as [keyof SalesOrderFilters, string][]) {
+    const value = filters[key];
+    if (value === undefined || value === "") continue;
+    params.push(value);
+    conditions.push(`${column} = ?${params.length}`);
+  }
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const { results } = await db
     .prepare(
       `SELECT so.*, c.name as customer_name, c.ref_id as customer_ref_id
        FROM sales_orders so JOIN customers c ON c.id = so.customer_id
+       ${where}
        ORDER BY so.created_at DESC, so.id DESC`
     )
+    .bind(...params)
     .all<SalesOrderListRow>();
   return results ?? [];
+}
+
+export class DuplicateSalesOrderError extends Error {
+  constructor(public soNumber: string) {
+    super("duplicate");
+  }
+}
+
+// One non-Rejected sales order per (customer PO, source quote) pair, so a
+// retried bot call can't create the same order twice.
+export async function findActiveSalesOrderByPoAndQuote(
+  db: D1Database,
+  customerPoNumber: string,
+  sourceQuoteRef: string
+): Promise<string | null> {
+  const row = await db
+    .prepare(
+      `SELECT so_number FROM sales_orders
+       WHERE customer_po_number = ?1 AND source_quote_ref = ?2 AND status != 'Rejected'
+       ORDER BY id LIMIT 1`
+    )
+    .bind(customerPoNumber, sourceQuoteRef)
+    .first<{ so_number: string }>();
+  return row?.so_number ?? null;
 }
 
 export async function getSalesOrderByNumber(db: D1Database, soNumber: string): Promise<SalesOrderWithItems | null> {
@@ -42,6 +92,7 @@ export interface CreateSoItemInput {
   qty: number;
   unit_price: number;
   material_code?: string | null;
+  quote_sku?: string | null;
 }
 
 export async function createSalesOrder(
@@ -49,10 +100,16 @@ export async function createSalesOrder(
   customerId: number,
   items: CreateSoItemInput[],
   sourceQuoteRef: string | null,
-  customerPoNumber: string
+  customerPoNumber: string,
+  intakeCaseId: string | null = null
 ): Promise<SalesOrderWithItems> {
   const customer = await getCustomer(db, customerId);
   if (!customer) throw new Error("not_found");
+
+  if (sourceQuoteRef) {
+    const existing = await findActiveSalesOrderByPoAndQuote(db, customerPoNumber, sourceQuoteRef);
+    if (existing) throw new DuplicateSalesOrderError(existing);
+  }
 
   const computedItems = items.map((item) => ({ ...item, line_total: computeLineTotal(item.qty, item.unit_price) }));
   const totalAmount = sumLineTotals(computedItems);
@@ -62,26 +119,69 @@ export async function createSalesOrder(
 
   const soNumber = await nextDocNumber(db, "sales_orders", "so_number", 1000000001);
 
-  const result = await db
-    .prepare(
-      `INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, customer_po_number, total_amount)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
-    )
-    .bind(soNumber, customerId, status, sourceQuoteRef, customerPoNumber, totalAmount)
-    .run();
+  let result: D1Result;
+  try {
+    result = await db
+      .prepare(
+        `INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, customer_po_number, total_amount, intake_case_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
+      )
+      .bind(soNumber, customerId, status, sourceQuoteRef, customerPoNumber, totalAmount, intakeCaseId)
+      .run();
+  } catch (err) {
+    // A concurrent request for the same pair won the race past the check above.
+    const existing = sourceQuoteRef ? await findActiveSalesOrderByPoAndQuote(db, customerPoNumber, sourceQuoteRef) : null;
+    if (existing) throw new DuplicateSalesOrderError(existing);
+    throw err;
+  }
   const soId = result.meta.last_row_id as number;
 
   for (const item of computedItems) {
     await db
       .prepare(
-        `INSERT INTO so_items (so_id, description, qty, unit_price, line_total, material_code)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
+        `INSERT INTO so_items (so_id, description, qty, unit_price, line_total, material_code, quote_sku)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
       )
-      .bind(soId, item.description, item.qty, item.unit_price, item.line_total, item.material_code ?? null)
+      .bind(soId, item.description, item.qty, item.unit_price, item.line_total, item.material_code ?? null, item.quote_sku ?? null)
       .run();
   }
 
   return (await getSalesOrderByNumber(db, soNumber))!;
+}
+
+export interface OrderedQuantities {
+  source_quote_ref: string;
+  lines: { quote_sku: string; ordered_qty: number }[];
+  unlinked_qty: number;
+  sales_orders: { so_number: string; customer_po_number: string | null; status: SalesOrder["status"] }[];
+}
+
+// Quantity already ordered per quote line across the quote's non-Rejected
+// sales orders — lets the intake process spot split orders that over-order.
+export async function getOrderedQuantities(db: D1Database, sourceQuoteRef: string): Promise<OrderedQuantities> {
+  const { results: orders } = await db
+    .prepare(
+      `SELECT so_number, customer_po_number, status FROM sales_orders
+       WHERE source_quote_ref = ?1 AND status != 'Rejected' ORDER BY id`
+    )
+    .bind(sourceQuoteRef)
+    .all<OrderedQuantities["sales_orders"][number]>();
+  const { results: sums } = await db
+    .prepare(
+      `SELECT i.quote_sku as quote_sku, SUM(i.qty) as qty
+       FROM so_items i JOIN sales_orders so ON so.id = i.so_id
+       WHERE so.source_quote_ref = ?1 AND so.status != 'Rejected'
+       GROUP BY i.quote_sku ORDER BY MIN(i.id)`
+    )
+    .bind(sourceQuoteRef)
+    .all<{ quote_sku: string | null; qty: number }>();
+  const rows = sums ?? [];
+  return {
+    source_quote_ref: sourceQuoteRef,
+    lines: rows.filter((r) => r.quote_sku !== null).map((r) => ({ quote_sku: r.quote_sku!, ordered_qty: r.qty })),
+    unlinked_qty: rows.find((r) => r.quote_sku === null)?.qty ?? 0,
+    sales_orders: orders ?? [],
+  };
 }
 
 export async function releaseCreditBlock(db: D1Database, soNumber: string): Promise<SalesOrderWithItems> {
@@ -91,6 +191,20 @@ export async function releaseCreditBlock(db: D1Database, soNumber: string): Prom
   if (existing.status !== "Blocked (Credit)") throw new Error("invalid_state");
 
   await db.prepare(`UPDATE sales_orders SET status = 'Released' WHERE id = ?1`).bind(existing.id).run();
+
+  return (await getSalesOrderByNumber(db, soNumber))!;
+}
+
+export async function rejectSalesOrder(db: D1Database, soNumber: string, reason: string | null): Promise<SalesOrderWithItems> {
+  const existing = await getSalesOrderByNumber(db, soNumber);
+  if (!existing) throw new Error("not_found");
+  if (existing.status === "Paid") throw new Error("locked");
+  if (existing.status !== "Blocked (Credit)" && existing.status !== "Open") throw new Error("invalid_state");
+
+  await db
+    .prepare(`UPDATE sales_orders SET status = 'Rejected', reject_reason = ?1 WHERE id = ?2`)
+    .bind(reason, existing.id)
+    .run();
 
   return (await getSalesOrderByNumber(db, soNumber))!;
 }
@@ -181,10 +295,10 @@ export async function createBilling(db: D1Database, soNumber: string): Promise<B
 
   const result = await db
     .prepare(
-      `INSERT INTO billing_documents (bill_number, so_id, customer_id, amount, status, customer_po_number)
-       VALUES (?1, ?2, ?3, ?4, 'Open', ?5)`
+      `INSERT INTO billing_documents (bill_number, so_id, customer_id, amount, status, customer_po_number, source_quote_ref)
+       VALUES (?1, ?2, ?3, ?4, 'Open', ?5, ?6)`
     )
-    .bind(billNumber, so.id, so.customer_id, so.total_amount, so.customer_po_number)
+    .bind(billNumber, so.id, so.customer_id, so.total_amount, so.customer_po_number, so.source_quote_ref)
     .run();
   const billId = result.meta.last_row_id as number;
 

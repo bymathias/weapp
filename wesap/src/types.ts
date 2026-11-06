@@ -122,7 +122,7 @@ export interface SupplierInvoiceWithItems extends SupplierInvoice {
 
 // Order-to-Cash ------------------------------------------------------------------
 
-export type SoStatus = "Open" | "Blocked (Credit)" | "Released" | "Delivered" | "Billed" | "Paid";
+export type SoStatus = "Open" | "Blocked (Credit)" | "Released" | "Delivered" | "Billed" | "Paid" | "Rejected";
 
 export interface SalesOrder {
   id: number;
@@ -133,6 +133,8 @@ export interface SalesOrder {
   customer_po_number: string | null;
   total_amount: number;
   created_at: string;
+  reject_reason: string | null;
+  intake_case_id: string | null;
 }
 
 export interface SoItem {
@@ -143,6 +145,7 @@ export interface SoItem {
   unit_price: number;
   line_total: number;
   material_code: string | null;
+  quote_sku: string | null;
 }
 
 export interface SalesOrderWithItems extends SalesOrder {
@@ -170,6 +173,7 @@ export interface BillingDocument {
   status: BillingStatus;
   customer_po_number: string | null;
   created_at: string;
+  source_quote_ref: string | null;
 }
 
 // Shared -----------------------------------------------------------------------

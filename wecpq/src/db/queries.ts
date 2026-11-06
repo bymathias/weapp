@@ -1,5 +1,14 @@
-import type { Customer, Quote, QuoteItem, QuoteStatus, QuoteWithItems } from "../types";
-import { computeItems, computeSubtotal, computeTotalAmount, nextCustomerRefId, nextQuoteRef, type LineItemInput } from "../lib/totals";
+import type { Customer, Quote, QuoteCurrency, QuoteItem, QuoteStatus, QuoteWithItems } from "../types";
+import {
+  computeItems,
+  computeSellLineTotal,
+  computeSellUnitPrice,
+  computeSubtotal,
+  computeTotalAmount,
+  nextCustomerRefId,
+  nextQuoteRef,
+  type LineItemInput,
+} from "../lib/totals";
 
 // Matches name, ref_id, industry, country, or account owner — the columns
 // shown in the customers table.
@@ -82,6 +91,7 @@ export interface QuoteListRow {
   status: QuoteStatus;
   total_amount: number;
   created_at: string;
+  currency: QuoteCurrency;
 }
 
 export interface ListQuotesOptions {
@@ -116,7 +126,7 @@ export async function listQuotes(db: D1Database, opts: ListQuotesOptions): Promi
 
   const { results } = await db
     .prepare(
-      `SELECT q.ref, q.customer_id, c.name as customer_name, c.ref_id as customer_ref_id, q.vendor, q.status, q.total_amount, q.created_at
+      `SELECT q.ref, q.customer_id, c.name as customer_name, c.ref_id as customer_ref_id, q.vendor, q.status, q.total_amount, q.created_at, q.currency
        FROM quotes q JOIN customers c ON c.id = q.customer_id
        ${whereClause}
        ORDER BY q.created_at DESC, q.id DESC LIMIT ?3 OFFSET ?4`
@@ -141,8 +151,13 @@ export async function getQuoteByRef(db: D1Database, ref: string): Promise<QuoteW
   const { results } = await db
     .prepare(`SELECT * FROM quote_items WHERE quote_id = ?1 ORDER BY id`)
     .bind(quote.id)
-    .all<QuoteItem>();
-  return { ...quote, items: results ?? [] };
+    .all<Omit<QuoteItem, "sell_unit_price" | "sell_line_total">>();
+  const items = (results ?? []).map((item) => ({
+    ...item,
+    sell_unit_price: computeSellUnitPrice(item.unit_price, quote.margin_pct),
+    sell_line_total: computeSellLineTotal(item.quantity, item.unit_price, quote.margin_pct),
+  }));
+  return { ...quote, items };
 }
 
 export interface CreateQuoteInput {
@@ -150,6 +165,17 @@ export interface CreateQuoteInput {
   status: QuoteStatus;
   margin_pct: number;
   items: LineItemInput[];
+  currency?: QuoteCurrency;
+  valid_until?: string;
+  payment_terms?: string;
+}
+
+const DEFAULT_VALIDITY_DAYS = 30;
+
+function defaultValidUntil(): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + DEFAULT_VALIDITY_DAYS);
+  return d.toISOString().slice(0, 10);
 }
 
 export async function createQuote(
@@ -159,15 +185,26 @@ export async function createQuote(
 ): Promise<QuoteWithItems> {
   const computedItems = computeItems(input.items);
   const subtotal = computeSubtotal(computedItems);
-  const totalAmount = computeTotalAmount(subtotal, input.margin_pct);
+  const totalAmount = computeTotalAmount(computedItems, input.margin_pct);
   const ref = await nextQuoteRef(db);
 
   const result = await db
     .prepare(
-      `INSERT INTO quotes (ref, customer_id, vendor, status, margin_pct, subtotal, total_amount)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
+      `INSERT INTO quotes (ref, customer_id, vendor, status, margin_pct, subtotal, total_amount, currency, valid_until, payment_terms)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`
     )
-    .bind(ref, customerId, input.vendor, input.status, input.margin_pct, subtotal, totalAmount)
+    .bind(
+      ref,
+      customerId,
+      input.vendor,
+      input.status,
+      input.margin_pct,
+      subtotal,
+      totalAmount,
+      input.currency ?? "EUR",
+      input.valid_until || defaultValidUntil(),
+      input.payment_terms || "Net 30"
+    )
     .run();
 
   const quoteId = result.meta.last_row_id as number;
@@ -196,13 +233,24 @@ export async function updateQuote(
 
   const computedItems = computeItems(input.items);
   const subtotal = computeSubtotal(computedItems);
-  const totalAmount = computeTotalAmount(subtotal, input.margin_pct);
+  const totalAmount = computeTotalAmount(computedItems, input.margin_pct);
 
   await db
     .prepare(
-      `UPDATE quotes SET vendor = ?1, status = ?2, margin_pct = ?3, subtotal = ?4, total_amount = ?5 WHERE id = ?6`
+      `UPDATE quotes SET vendor = ?1, status = ?2, margin_pct = ?3, subtotal = ?4, total_amount = ?5,
+         currency = ?6, valid_until = ?7, payment_terms = ?8 WHERE id = ?9`
     )
-    .bind(input.vendor, input.status, input.margin_pct, subtotal, totalAmount, existing.id)
+    .bind(
+      input.vendor,
+      input.status,
+      input.margin_pct,
+      subtotal,
+      totalAmount,
+      input.currency ?? existing.currency,
+      input.valid_until || existing.valid_until,
+      input.payment_terms || existing.payment_terms,
+      existing.id
+    )
     .run();
 
   await db.prepare(`DELETE FROM quote_items WHERE quote_id = ?1`).bind(existing.id).run();

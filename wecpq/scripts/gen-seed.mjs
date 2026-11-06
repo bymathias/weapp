@@ -45,9 +45,22 @@ const customersBlock = insertBlock(
   (c) => c
 );
 
-const quoteColumns = ["id", "ref", "customer_id", "vendor", "status", "margin_pct", "subtotal", "total_amount"];
+const quoteColumns = [
+  "id",
+  "ref",
+  "customer_id",
+  "vendor",
+  "status",
+  "margin_pct",
+  "subtotal",
+  "total_amount",
+  "currency",
+  "valid_until",
+  "payment_terms",
+  "created_at",
+];
 const quotesBlock = insertBlock(
-  "Quotes (demo-seed-data.json .wecpq.quotes) — status must satisfy the CHECK enum in schema.sql",
+  "Quotes (demo-seed-data.json .wecpq.quotes) — status and currency must satisfy the CHECK enums in schema.sql",
   "quotes",
   quoteColumns,
   quotes,

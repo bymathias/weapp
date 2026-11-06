@@ -111,11 +111,13 @@ CREATE TABLE sales_orders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   so_number TEXT NOT NULL UNIQUE,
   customer_id INTEGER NOT NULL REFERENCES customers(id),
-  status TEXT NOT NULL CHECK (status IN ('Open', 'Blocked (Credit)', 'Released', 'Delivered', 'Billed', 'Paid')) DEFAULT 'Open',
+  status TEXT NOT NULL CHECK (status IN ('Open', 'Blocked (Credit)', 'Released', 'Delivered', 'Billed', 'Paid', 'Rejected')) DEFAULT 'Open',
   source_quote_ref TEXT,
   customer_po_number TEXT,
   total_amount REAL NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  reject_reason TEXT,
+  intake_case_id TEXT
 );
 
 CREATE TABLE so_items (
@@ -125,7 +127,8 @@ CREATE TABLE so_items (
   qty INTEGER NOT NULL,
   unit_price REAL NOT NULL,
   line_total REAL NOT NULL,
-  material_code TEXT
+  material_code TEXT,
+  quote_sku TEXT
 );
 
 CREATE TABLE deliveries (
@@ -144,7 +147,8 @@ CREATE TABLE billing_documents (
   amount REAL NOT NULL DEFAULT 0,
   status TEXT NOT NULL CHECK (status IN ('Open', 'Paid')) DEFAULT 'Open',
   customer_po_number TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  source_quote_ref TEXT
 );
 
 -- Shared ----------------------------------------------------------------------
@@ -180,6 +184,7 @@ CREATE INDEX idx_supplier_invoices_po_id ON supplier_invoices(po_id);
 CREATE INDEX idx_si_items_si_id ON si_items(si_id);
 CREATE INDEX idx_si_items_po_item_id ON si_items(po_item_id);
 CREATE INDEX idx_sales_orders_customer_id ON sales_orders(customer_id);
+CREATE UNIQUE INDEX idx_so_po_quote ON sales_orders(customer_po_number, source_quote_ref) WHERE status != 'Rejected' AND customer_po_number IS NOT NULL AND source_quote_ref IS NOT NULL;
 CREATE INDEX idx_so_items_so_id ON so_items(so_id);
 CREATE INDEX idx_deliveries_so_id ON deliveries(so_id);
 CREATE INDEX idx_billing_documents_so_id ON billing_documents(so_id);

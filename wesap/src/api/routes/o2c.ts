@@ -5,12 +5,15 @@ import {
   createBilling,
   createDelivery,
   createSalesOrder,
+  DuplicateSalesOrderError,
   getBillingByNumber,
   getDeliveryByNumber,
+  getOrderedQuantities,
   getSalesOrderByNumber,
   listBillingDocuments,
   listDeliveries,
   listSalesOrders,
+  rejectSalesOrder,
   releaseCreditBlock,
 } from "../../db/o2c";
 import { getFlow } from "../../lib/flow";
@@ -23,9 +26,15 @@ import {
   DeliveryInputSchema,
   DeliverySchema,
   DlvNumberParamSchema,
+  DuplicateErrorSchema,
   ErrorSchema,
+  PdfDownloadQuerySchema,
   FlowEntrySchema,
+  RejectSalesOrderInputSchema,
+  OrderedQuantitiesQuerySchema,
+  OrderedQuantitiesSchema,
   SalesOrderInputSchema,
+  SalesOrderListQuerySchema,
   SalesOrderSchema,
   SalesOrderWithItemsSchema,
   SoNumberParamSchema,
@@ -39,11 +48,12 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       method: "get",
       path: "/sales-orders",
       tags: ["Sales Orders"],
-      summary: "List sales orders",
+      summary: "List sales orders (optional exact-match filters, combined with AND)",
       security: [{ Bearer: [] }],
+      request: { query: SalesOrderListQuerySchema },
       responses: { 200: { description: "List of sales orders", content: { "application/json": { schema: z.array(SalesOrderSchema) } } } },
     }),
-    async (c) => c.json(await listSalesOrders(c.env.DB), 200)
+    async (c) => c.json(await listSalesOrders(c.env.DB, c.req.valid("query")), 200)
   );
 
   // The UiPath bridge target: WeCPQ hands over a Won quote's customer_ref +
@@ -60,15 +70,50 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       responses: {
         201: { description: "Created sales order", content: { "application/json": { schema: SalesOrderWithItemsSchema } } },
         404: { description: "Customer not found", content: { "application/json": { schema: ErrorSchema } } },
+        409: {
+          description:
+            "Duplicate: a non-Rejected sales order already exists for this customer_po_number + source_quote_ref. Nothing is created; so_number is the existing order.",
+          content: { "application/json": { schema: DuplicateErrorSchema } },
+        },
       },
     }),
     async (c) => {
       const body = c.req.valid("json");
       const customer = await getCustomerByRefId(c.env.DB, body.customer_ref);
       if (!customer) return c.json({ error: "not_found", message: "Customer not found" }, 404);
-      const so = await createSalesOrder(c.env.DB, customer.id, body.items, body.source_quote_ref ?? null, body.customer_po_number);
-      return c.json(so, 201);
+      try {
+        const so = await createSalesOrder(c.env.DB, customer.id, body.items, body.source_quote_ref ?? null, body.customer_po_number, body.intake_case_id ?? null);
+        return c.json(so, 201);
+      } catch (err) {
+        if (err instanceof DuplicateSalesOrderError) {
+          return c.json(
+            {
+              error: "duplicate" as const,
+              message: `Sales order ${err.soNumber} already exists for customer PO ${body.customer_po_number} and quote ${body.source_quote_ref}`,
+              so_number: err.soNumber,
+            },
+            409
+          );
+        }
+        throw err;
+      }
     }
+  );
+
+  // Registered before /sales-orders/{so_number} so the path param doesn't capture it.
+  api.openapi(
+    createRoute({
+      method: "get",
+      path: "/sales-orders/ordered-quantities",
+      tags: ["Sales Orders"],
+      summary: "Quantities already ordered per quote line (quote_sku) across a quote's non-Rejected sales orders",
+      security: [{ Bearer: [] }],
+      request: { query: OrderedQuantitiesQuerySchema },
+      responses: {
+        200: { description: "Ordered quantities for the quote", content: { "application/json": { schema: OrderedQuantitiesSchema } } },
+      },
+    }),
+    async (c) => c.json(await getOrderedQuantities(c.env.DB, c.req.valid("query").source_quote_ref), 200)
   );
 
   api.openapi(
@@ -99,7 +144,7 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       tags: ["Sales Orders"],
       summary: "Download the sales order as a PDF",
       security: [{ Bearer: [] }],
-      request: { params: SoNumberParamSchema },
+      request: { params: SoNumberParamSchema, query: PdfDownloadQuerySchema },
       responses: {
         200: { description: "PDF document", content: { "application/pdf": { schema: { type: "string", format: "binary" } } } },
         404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
@@ -116,7 +161,7 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `inline; filename="${so.so_number}.pdf"`,
+          "Content-Disposition": `${c.req.valid("query").download === "1" ? "attachment" : "inline"}; filename="${so.so_number}.pdf"`,
         },
       });
     }
@@ -141,6 +186,37 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       const { so_number } = c.req.valid("param");
       try {
         return c.json(await releaseCreditBlock(c.env.DB, so_number), 200);
+      } catch (err) {
+        const mapped = mapActionError(err);
+        if (mapped) return c.json(mapped.body, mapped.status);
+        throw err;
+      }
+    }
+  );
+
+  api.openapi(
+    createRoute({
+      method: "post",
+      path: "/sales-orders/{so_number}/reject",
+      tags: ["Sales Orders"],
+      summary: "Reject a sales order (only from Open or Blocked (Credit))",
+      security: [{ Bearer: [] }],
+      request: {
+        params: SoNumberParamSchema,
+        body: { content: { "application/json": { schema: RejectSalesOrderInputSchema } }, required: false },
+      },
+      responses: {
+        200: { description: "Rejected sales order", content: { "application/json": { schema: SalesOrderWithItemsSchema } } },
+        400: { description: "Sales order is not Open or Blocked (Credit)", content: { "application/json": { schema: ErrorSchema } } },
+        404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
+        409: { description: "Sales order is Paid and locked", content: { "application/json": { schema: ErrorSchema } } },
+      },
+    }),
+    async (c) => {
+      const { so_number } = c.req.valid("param");
+      const reason = (await c.req.json().catch(() => ({})))?.reason;
+      try {
+        return c.json(await rejectSalesOrder(c.env.DB, so_number, typeof reason === "string" && reason.trim() ? reason.trim() : null), 200);
       } catch (err) {
         const mapped = mapActionError(err);
         if (mapped) return c.json(mapped.body, mapped.status);
