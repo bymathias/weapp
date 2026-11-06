@@ -5,6 +5,7 @@ import {
   createBilling,
   createDelivery,
   createSalesOrder,
+  DuplicateSalesOrderError,
   getBillingByNumber,
   getDeliveryByNumber,
   getSalesOrder,
@@ -79,8 +80,20 @@ export function registerO2CUiRoutes(ui: Hono<Env>) {
       return c.html(newSalesOrderPage(customers, materials, { error: "Add at least one line item." }), 400);
     }
 
-    const so = await createSalesOrder(c.env.DB, customer.id, items, sourceQuoteRef, customerPoNumber);
-    return c.redirect(`/sales-orders/${so.so_number}`);
+    try {
+      const so = await createSalesOrder(c.env.DB, customer.id, items, sourceQuoteRef, customerPoNumber);
+      return c.redirect(`/sales-orders/${so.so_number}`);
+    } catch (err) {
+      if (err instanceof DuplicateSalesOrderError) {
+        return c.html(
+          newSalesOrderPage(customers, materials, {
+            error: `Sales order ${err.soNumber} already exists for customer PO ${customerPoNumber} and quote ${sourceQuoteRef}.`,
+          }),
+          409
+        );
+      }
+      throw err;
+    }
   });
 
   ui.get("/sales-orders/:so_number", async (c) => {

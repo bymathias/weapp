@@ -13,6 +13,8 @@
     "db:migrate-incremental:remote": "wrangler d1 execute wesap --remote --file=./migrations/0001_add_customer_po_number.sql",
     "db:migrate-supplier-ref:local": "wrangler d1 execute wesap --local --file=./migrations/0002_add_supplier_ref.sql",
     "db:migrate-supplier-ref:remote": "wrangler d1 execute wesap --remote --file=./migrations/0002_add_supplier_ref.sql",
+    "db:migrate-so-po-quote-unique:local": "wrangler d1 execute wesap --local --file=./migrations/0003_so_po_quote_unique.sql",
+    "db:migrate-so-po-quote-unique:remote": "wrangler d1 execute wesap --remote --file=./migrations/0003_so_po_quote_unique.sql",
     "seed:gen": "node scripts/gen-seed.mjs",
     "reset": "wrangler d1 execute wesap --remote --file reset.sql",
     "typecheck": "tsc --noEmit"

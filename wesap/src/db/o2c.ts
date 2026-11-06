@@ -12,15 +12,63 @@ export interface SalesOrderListRow extends SalesOrder {
   customer_ref_id: string;
 }
 
-export async function listSalesOrders(db: D1Database): Promise<SalesOrderListRow[]> {
+export interface SalesOrderFilters {
+  customer_po_number?: string;
+  source_quote_ref?: string;
+  customer_ref?: string;
+  status?: string;
+}
+
+export async function listSalesOrders(db: D1Database, filters: SalesOrderFilters = {}): Promise<SalesOrderListRow[]> {
+  const columns: Record<keyof SalesOrderFilters, string> = {
+    customer_po_number: "so.customer_po_number",
+    source_quote_ref: "so.source_quote_ref",
+    customer_ref: "c.ref_id",
+    status: "so.status",
+  };
+  const conditions: string[] = [];
+  const params: string[] = [];
+  for (const [key, column] of Object.entries(columns) as [keyof SalesOrderFilters, string][]) {
+    const value = filters[key];
+    if (value === undefined || value === "") continue;
+    params.push(value);
+    conditions.push(`${column} = ?${params.length}`);
+  }
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const { results } = await db
     .prepare(
       `SELECT so.*, c.name as customer_name, c.ref_id as customer_ref_id
        FROM sales_orders so JOIN customers c ON c.id = so.customer_id
+       ${where}
        ORDER BY so.created_at DESC, so.id DESC`
     )
+    .bind(...params)
     .all<SalesOrderListRow>();
   return results ?? [];
+}
+
+export class DuplicateSalesOrderError extends Error {
+  constructor(public soNumber: string) {
+    super("duplicate");
+  }
+}
+
+// One non-Rejected sales order per (customer PO, source quote) pair, so a
+// retried bot call can't create the same order twice.
+export async function findActiveSalesOrderByPoAndQuote(
+  db: D1Database,
+  customerPoNumber: string,
+  sourceQuoteRef: string
+): Promise<string | null> {
+  const row = await db
+    .prepare(
+      `SELECT so_number FROM sales_orders
+       WHERE customer_po_number = ?1 AND source_quote_ref = ?2 AND status != 'Rejected'
+       ORDER BY id LIMIT 1`
+    )
+    .bind(customerPoNumber, sourceQuoteRef)
+    .first<{ so_number: string }>();
+  return row?.so_number ?? null;
 }
 
 export async function getSalesOrderByNumber(db: D1Database, soNumber: string): Promise<SalesOrderWithItems | null> {
@@ -54,6 +102,11 @@ export async function createSalesOrder(
   const customer = await getCustomer(db, customerId);
   if (!customer) throw new Error("not_found");
 
+  if (sourceQuoteRef) {
+    const existing = await findActiveSalesOrderByPoAndQuote(db, customerPoNumber, sourceQuoteRef);
+    if (existing) throw new DuplicateSalesOrderError(existing);
+  }
+
   const computedItems = items.map((item) => ({ ...item, line_total: computeLineTotal(item.qty, item.unit_price) }));
   const totalAmount = sumLineTotals(computedItems);
 
@@ -62,13 +115,21 @@ export async function createSalesOrder(
 
   const soNumber = await nextDocNumber(db, "sales_orders", "so_number", 1000000001);
 
-  const result = await db
-    .prepare(
-      `INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, customer_po_number, total_amount)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
-    )
-    .bind(soNumber, customerId, status, sourceQuoteRef, customerPoNumber, totalAmount)
-    .run();
+  let result: D1Result;
+  try {
+    result = await db
+      .prepare(
+        `INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, customer_po_number, total_amount)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
+      )
+      .bind(soNumber, customerId, status, sourceQuoteRef, customerPoNumber, totalAmount)
+      .run();
+  } catch (err) {
+    // A concurrent request for the same pair won the race past the check above.
+    const existing = sourceQuoteRef ? await findActiveSalesOrderByPoAndQuote(db, customerPoNumber, sourceQuoteRef) : null;
+    if (existing) throw new DuplicateSalesOrderError(existing);
+    throw err;
+  }
   const soId = result.meta.last_row_id as number;
 
   for (const item of computedItems) {

@@ -264,6 +264,21 @@ export const SalesOrderInputSchema = z
   })
   .openapi("SalesOrderInput");
 
+export const SalesOrderListQuerySchema = z.object({
+  customer_po_number: z.string().optional().openapi({ param: { name: "customer_po_number", in: "query" }, example: "MIG-PO-2026-0457" }),
+  source_quote_ref: z.string().optional().openapi({ param: { name: "source_quote_ref", in: "query" }, example: "Q-2026-0005" }),
+  customer_ref: z.string().optional().openapi({ param: { name: "customer_ref", in: "query" }, example: "CUST-0003" }),
+  status: SoStatusSchema.optional().openapi({ param: { name: "status", in: "query" } }),
+});
+
+export const DuplicateErrorSchema = z
+  .object({
+    error: z.literal("duplicate"),
+    message: z.string(),
+    so_number: z.string(),
+  })
+  .openapi("DuplicateError");
+
 export const SoNumberParamSchema = z.object({
   so_number: z.string().openapi({ param: { name: "so_number", in: "path" }, example: "1000000001" }),
 });

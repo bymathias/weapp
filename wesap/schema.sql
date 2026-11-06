@@ -180,6 +180,7 @@ CREATE INDEX idx_supplier_invoices_po_id ON supplier_invoices(po_id);
 CREATE INDEX idx_si_items_si_id ON si_items(si_id);
 CREATE INDEX idx_si_items_po_item_id ON si_items(po_item_id);
 CREATE INDEX idx_sales_orders_customer_id ON sales_orders(customer_id);
+CREATE UNIQUE INDEX idx_so_po_quote ON sales_orders(customer_po_number, source_quote_ref) WHERE status != 'Rejected' AND customer_po_number IS NOT NULL AND source_quote_ref IS NOT NULL;
 CREATE INDEX idx_so_items_so_id ON so_items(so_id);
 CREATE INDEX idx_deliveries_so_id ON deliveries(so_id);
 CREATE INDEX idx_billing_documents_so_id ON billing_documents(so_id);

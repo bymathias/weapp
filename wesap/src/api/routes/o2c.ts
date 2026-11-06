@@ -5,6 +5,7 @@ import {
   createBilling,
   createDelivery,
   createSalesOrder,
+  DuplicateSalesOrderError,
   getBillingByNumber,
   getDeliveryByNumber,
   getSalesOrderByNumber,
@@ -23,9 +24,11 @@ import {
   DeliveryInputSchema,
   DeliverySchema,
   DlvNumberParamSchema,
+  DuplicateErrorSchema,
   ErrorSchema,
   FlowEntrySchema,
   SalesOrderInputSchema,
+  SalesOrderListQuerySchema,
   SalesOrderSchema,
   SalesOrderWithItemsSchema,
   SoNumberParamSchema,
@@ -39,11 +42,12 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       method: "get",
       path: "/sales-orders",
       tags: ["Sales Orders"],
-      summary: "List sales orders",
+      summary: "List sales orders (optional exact-match filters, combined with AND)",
       security: [{ Bearer: [] }],
+      request: { query: SalesOrderListQuerySchema },
       responses: { 200: { description: "List of sales orders", content: { "application/json": { schema: z.array(SalesOrderSchema) } } } },
     }),
-    async (c) => c.json(await listSalesOrders(c.env.DB), 200)
+    async (c) => c.json(await listSalesOrders(c.env.DB, c.req.valid("query")), 200)
   );
 
   // The UiPath bridge target: WeCPQ hands over a Won quote's customer_ref +
@@ -60,14 +64,33 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       responses: {
         201: { description: "Created sales order", content: { "application/json": { schema: SalesOrderWithItemsSchema } } },
         404: { description: "Customer not found", content: { "application/json": { schema: ErrorSchema } } },
+        409: {
+          description:
+            "Duplicate: a non-Rejected sales order already exists for this customer_po_number + source_quote_ref. Nothing is created; so_number is the existing order.",
+          content: { "application/json": { schema: DuplicateErrorSchema } },
+        },
       },
     }),
     async (c) => {
       const body = c.req.valid("json");
       const customer = await getCustomerByRefId(c.env.DB, body.customer_ref);
       if (!customer) return c.json({ error: "not_found", message: "Customer not found" }, 404);
-      const so = await createSalesOrder(c.env.DB, customer.id, body.items, body.source_quote_ref ?? null, body.customer_po_number);
-      return c.json(so, 201);
+      try {
+        const so = await createSalesOrder(c.env.DB, customer.id, body.items, body.source_quote_ref ?? null, body.customer_po_number);
+        return c.json(so, 201);
+      } catch (err) {
+        if (err instanceof DuplicateSalesOrderError) {
+          return c.json(
+            {
+              error: "duplicate" as const,
+              message: `Sales order ${err.soNumber} already exists for customer PO ${body.customer_po_number} and quote ${body.source_quote_ref}`,
+              so_number: err.soNumber,
+            },
+            409
+          );
+        }
+        throw err;
+      }
     }
   );
 
