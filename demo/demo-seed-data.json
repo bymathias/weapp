@@ -519,7 +519,11 @@
         "status": "Won",
         "margin_pct": 15,
         "subtotal": 4600,
-        "total_amount": 5290.0
+        "total_amount": 5290.0,
+        "currency": "EUR",
+        "valid_until": "2026-11-30",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-01 09:00:00"
       },
       {
         "id": 2,
@@ -529,7 +533,11 @@
         "status": "Draft",
         "margin_pct": 20,
         "subtotal": 12600,
-        "total_amount": 15120.0
+        "total_amount": 15120.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-02",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-03 09:00:00"
       },
       {
         "id": 3,
@@ -539,7 +547,11 @@
         "status": "Won",
         "margin_pct": 12,
         "subtotal": 3450,
-        "total_amount": 3864.0
+        "total_amount": 3864.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-03",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-04 09:00:00"
       },
       {
         "id": 4,
@@ -549,7 +561,11 @@
         "status": "Sent",
         "margin_pct": 15,
         "subtotal": 12000,
-        "total_amount": 13800.0
+        "total_amount": 13800.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-04",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-05 09:00:00"
       },
       {
         "id": 5,
@@ -559,7 +575,11 @@
         "status": "Won",
         "margin_pct": 10,
         "subtotal": 14500,
-        "total_amount": 15950.0
+        "total_amount": 15950.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-06",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-07 09:00:00"
       },
       {
         "id": 6,
@@ -569,7 +589,11 @@
         "status": "Draft",
         "margin_pct": 25,
         "subtotal": 6900,
-        "total_amount": 8625.0
+        "total_amount": 8625.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-08",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-09 09:00:00"
       },
       {
         "id": 7,
@@ -579,7 +603,11 @@
         "status": "Won",
         "margin_pct": 15,
         "subtotal": 16000,
-        "total_amount": 18400.0
+        "total_amount": 18400.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-09",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-10 09:00:00"
       },
       {
         "id": 8,
@@ -589,7 +617,11 @@
         "status": "Lost",
         "margin_pct": 20,
         "subtotal": 4900,
-        "total_amount": 5880.0
+        "total_amount": 5880.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-10",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-11 09:00:00"
       },
       {
         "id": 9,
@@ -599,7 +631,11 @@
         "status": "Won",
         "margin_pct": 18,
         "subtotal": 8950,
-        "total_amount": 10561.0
+        "total_amount": 10561.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-12",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-13 09:00:00"
       },
       {
         "id": 10,
@@ -609,7 +645,11 @@
         "status": "Draft",
         "margin_pct": 30,
         "subtotal": 1710,
-        "total_amount": 2223.0
+        "total_amount": 2223.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-14",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-15 09:00:00"
       },
       {
         "id": 11,
@@ -619,7 +659,11 @@
         "status": "Won",
         "margin_pct": 15,
         "subtotal": 13000,
-        "total_amount": 14950.0
+        "total_amount": 14950.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-15",
+        "payment_terms": "Net 60",
+        "created_at": "2026-09-16 09:00:00"
       },
       {
         "id": 12,
@@ -629,7 +673,11 @@
         "status": "Sent",
         "margin_pct": 18,
         "subtotal": 6600,
-        "total_amount": 7788.0
+        "total_amount": 7788.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-16",
+        "payment_terms": "Net 60",
+        "created_at": "2026-09-17 09:00:00"
       },
       {
         "id": 13,
@@ -639,7 +687,11 @@
         "status": "Won",
         "margin_pct": 14,
         "subtotal": 51000,
-        "total_amount": 58140.0
+        "total_amount": 58140.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-18",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-19 09:00:00"
       },
       {
         "id": 14,
@@ -649,7 +701,11 @@
         "status": "Sent",
         "margin_pct": 20,
         "subtotal": 5880,
-        "total_amount": 7056.0
+        "total_amount": 7056.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-20",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-21 09:00:00"
       },
       {
         "id": 15,
@@ -659,7 +715,11 @@
         "status": "Won",
         "margin_pct": 16,
         "subtotal": 62700,
-        "total_amount": 72732.0
+        "total_amount": 72732.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-21",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-22 09:00:00"
       },
       {
         "id": 16,
@@ -669,7 +729,11 @@
         "status": "Sent",
         "margin_pct": 15,
         "subtotal": 12600,
-        "total_amount": 14490.0
+        "total_amount": 14490.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-22",
+        "payment_terms": "Net 60",
+        "created_at": "2026-09-23 09:00:00"
       },
       {
         "id": 17,
@@ -679,7 +743,11 @@
         "status": "Won",
         "margin_pct": 12,
         "subtotal": 10750,
-        "total_amount": 12040.0
+        "total_amount": 12040.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-24",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-25 09:00:00"
       },
       {
         "id": 18,
@@ -689,7 +757,11 @@
         "status": "Draft",
         "margin_pct": 18,
         "subtotal": 20100,
-        "total_amount": 23718.0
+        "total_amount": 23718.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-26",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-27 09:00:00"
       },
       {
         "id": 19,
@@ -699,7 +771,11 @@
         "status": "Lost",
         "margin_pct": 16,
         "subtotal": 5130,
-        "total_amount": 5950.8
+        "total_amount": 5950.8,
+        "currency": "EUR",
+        "valid_until": "2026-12-27",
+        "payment_terms": "Net 30",
+        "created_at": "2026-09-28 09:00:00"
       },
       {
         "id": 20,
@@ -709,7 +785,11 @@
         "status": "Sent",
         "margin_pct": 17,
         "subtotal": 6600,
-        "total_amount": 7722.0
+        "total_amount": 7722.0,
+        "currency": "EUR",
+        "valid_until": "2026-12-28",
+        "payment_terms": "Net 45",
+        "created_at": "2026-09-29 09:00:00"
       }
     ],
     "quote_items": [

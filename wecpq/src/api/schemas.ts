@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 
 export const QuoteStatusSchema = z.enum(["Draft", "Sent", "Won", "Lost"]).openapi("QuoteStatus");
+export const QuoteCurrencySchema = z.enum(["EUR", "USD", "GBP"]).openapi("QuoteCurrency");
 
 export const CustomerSchema = z
   .object({
@@ -46,6 +47,9 @@ export const QuoteSchema = z
     subtotal: z.number(),
     total_amount: z.number(),
     created_at: z.string(),
+    currency: QuoteCurrencySchema,
+    valid_until: z.string().nullable().openapi({ example: "2026-12-06" }),
+    payment_terms: z.string().openapi({ example: "Net 30" }),
   })
   .openapi("Quote");
 
@@ -68,6 +72,15 @@ export const QuoteInputSchema = z
     status: QuoteStatusSchema,
     margin_pct: z.number().min(0),
     items: z.array(QuoteItemInputSchema).min(1),
+    // Optional terms. On create: EUR, created date + 30 days, Net 30. On
+    // update: omitted fields keep their current value.
+    currency: QuoteCurrencySchema.optional(),
+    valid_until: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "ISO date YYYY-MM-DD")
+      .optional()
+      .openapi({ example: "2026-12-06" }),
+    payment_terms: z.string().min(1).optional().openapi({ example: "Net 30" }),
   })
   .openapi("QuoteInput");
 

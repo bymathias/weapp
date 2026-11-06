@@ -20,28 +20,28 @@ INSERT INTO customers (id, name, ref_id, industry, country, account_owner) VALUE
   (14, 'Onyx Infrastructure', 'CUST-0014', 'Systems Integration', 'Germany', 'Frank Lopez'),
   (15, 'Beacon Systems Group', 'CUST-0015', 'Managed Security', 'Netherlands', 'Grace Patel');
 
--- Quotes (demo-seed-data.json .wecpq.quotes) — status must satisfy the CHECK enum in schema.sql
-INSERT INTO quotes (id, ref, customer_id, vendor, status, margin_pct, subtotal, total_amount) VALUES
-  (1, 'Q-2026-0001', 1, 'Fortinet', 'Won', 15, 4600, 5290),
-  (2, 'Q-2026-0002', 1, 'Cisco', 'Draft', 20, 12600, 15120),
-  (3, 'Q-2026-0003', 2, 'Microsoft', 'Won', 12, 3450, 3864),
-  (4, 'Q-2026-0004', 2, 'Zscaler', 'Sent', 15, 12000, 13800),
-  (5, 'Q-2026-0005', 3, 'Palo Alto Networks', 'Won', 10, 14500, 15950),
-  (6, 'Q-2026-0006', 3, 'Veeam', 'Draft', 25, 6900, 8625),
-  (7, 'Q-2026-0007', 4, 'Zscaler', 'Won', 15, 16000, 18400),
-  (8, 'Q-2026-0008', 4, 'Check Point', 'Lost', 20, 4900, 5880),
-  (9, 'Q-2026-0009', 5, 'CrowdStrike', 'Won', 18, 8950, 10561),
-  (10, 'Q-2026-0010', 5, 'Microsoft', 'Draft', 30, 1710, 2223),
-  (11, 'Q-2026-0011', 6, 'CrowdStrike', 'Won', 15, 13000, 14950),
-  (12, 'Q-2026-0012', 6, 'Cisco', 'Sent', 18, 6600, 7788),
-  (13, 'Q-2026-0013', 7, 'Veeam', 'Won', 14, 51000, 58140),
-  (14, 'Q-2026-0014', 8, 'Check Point', 'Sent', 20, 5880, 7056),
-  (15, 'Q-2026-0015', 9, 'Palo Alto Networks', 'Won', 16, 62700, 72732),
-  (16, 'Q-2026-0016', 10, 'Zscaler', 'Sent', 15, 12600, 14490),
-  (17, 'Q-2026-0017', 12, 'Fortinet', 'Won', 12, 10750, 12040),
-  (18, 'Q-2026-0018', 14, 'Cisco', 'Draft', 18, 20100, 23718),
-  (19, 'Q-2026-0019', 13, 'Microsoft', 'Lost', 16, 5130, 5950.8),
-  (20, 'Q-2026-0020', 11, 'Check Point', 'Sent', 17, 6600, 7722);
+-- Quotes (demo-seed-data.json .wecpq.quotes) — status and currency must satisfy the CHECK enums in schema.sql
+INSERT INTO quotes (id, ref, customer_id, vendor, status, margin_pct, subtotal, total_amount, currency, valid_until, payment_terms, created_at) VALUES
+  (1, 'Q-2026-0001', 1, 'Fortinet', 'Won', 15, 4600, 5290, 'EUR', '2026-11-30', 'Net 30', '2026-09-01 09:00:00'),
+  (2, 'Q-2026-0002', 1, 'Cisco', 'Draft', 20, 12600, 15120, 'EUR', '2026-12-02', 'Net 30', '2026-09-03 09:00:00'),
+  (3, 'Q-2026-0003', 2, 'Microsoft', 'Won', 12, 3450, 3864, 'EUR', '2026-12-03', 'Net 30', '2026-09-04 09:00:00'),
+  (4, 'Q-2026-0004', 2, 'Zscaler', 'Sent', 15, 12000, 13800, 'EUR', '2026-12-04', 'Net 30', '2026-09-05 09:00:00'),
+  (5, 'Q-2026-0005', 3, 'Palo Alto Networks', 'Won', 10, 14500, 15950, 'EUR', '2026-12-06', 'Net 30', '2026-09-07 09:00:00'),
+  (6, 'Q-2026-0006', 3, 'Veeam', 'Draft', 25, 6900, 8625, 'EUR', '2026-12-08', 'Net 30', '2026-09-09 09:00:00'),
+  (7, 'Q-2026-0007', 4, 'Zscaler', 'Won', 15, 16000, 18400, 'EUR', '2026-12-09', 'Net 45', '2026-09-10 09:00:00'),
+  (8, 'Q-2026-0008', 4, 'Check Point', 'Lost', 20, 4900, 5880, 'EUR', '2026-12-10', 'Net 45', '2026-09-11 09:00:00'),
+  (9, 'Q-2026-0009', 5, 'CrowdStrike', 'Won', 18, 8950, 10561, 'EUR', '2026-12-12', 'Net 45', '2026-09-13 09:00:00'),
+  (10, 'Q-2026-0010', 5, 'Microsoft', 'Draft', 30, 1710, 2223, 'EUR', '2026-12-14', 'Net 45', '2026-09-15 09:00:00'),
+  (11, 'Q-2026-0011', 6, 'CrowdStrike', 'Won', 15, 13000, 14950, 'EUR', '2026-12-15', 'Net 60', '2026-09-16 09:00:00'),
+  (12, 'Q-2026-0012', 6, 'Cisco', 'Sent', 18, 6600, 7788, 'EUR', '2026-12-16', 'Net 60', '2026-09-17 09:00:00'),
+  (13, 'Q-2026-0013', 7, 'Veeam', 'Won', 14, 51000, 58140, 'EUR', '2026-12-18', 'Net 30', '2026-09-19 09:00:00'),
+  (14, 'Q-2026-0014', 8, 'Check Point', 'Sent', 20, 5880, 7056, 'EUR', '2026-12-20', 'Net 30', '2026-09-21 09:00:00'),
+  (15, 'Q-2026-0015', 9, 'Palo Alto Networks', 'Won', 16, 62700, 72732, 'EUR', '2026-12-21', 'Net 30', '2026-09-22 09:00:00'),
+  (16, 'Q-2026-0016', 10, 'Zscaler', 'Sent', 15, 12600, 14490, 'EUR', '2026-12-22', 'Net 60', '2026-09-23 09:00:00'),
+  (17, 'Q-2026-0017', 12, 'Fortinet', 'Won', 12, 10750, 12040, 'EUR', '2026-12-24', 'Net 30', '2026-09-25 09:00:00'),
+  (18, 'Q-2026-0018', 14, 'Cisco', 'Draft', 18, 20100, 23718, 'EUR', '2026-12-26', 'Net 45', '2026-09-27 09:00:00'),
+  (19, 'Q-2026-0019', 13, 'Microsoft', 'Lost', 16, 5130, 5950.8, 'EUR', '2026-12-27', 'Net 30', '2026-09-28 09:00:00'),
+  (20, 'Q-2026-0020', 11, 'Check Point', 'Sent', 17, 6600, 7722, 'EUR', '2026-12-28', 'Net 45', '2026-09-29 09:00:00');
 
 -- Quote line items (demo-seed-data.json .wecpq.quote_items) — sku is required
 INSERT INTO quote_items (id, quote_id, sku, description, quantity, unit_price, line_total) VALUES

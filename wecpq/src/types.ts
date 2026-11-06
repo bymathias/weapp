@@ -13,6 +13,7 @@ export type Env = {
 };
 
 export type QuoteStatus = "Draft" | "Sent" | "Won" | "Lost";
+export type QuoteCurrency = "EUR" | "USD" | "GBP";
 
 export interface Customer {
   id: number;
@@ -44,6 +45,9 @@ export interface Quote {
   subtotal: number;
   total_amount: number;
   created_at: string;
+  currency: QuoteCurrency;
+  valid_until: string | null;
+  payment_terms: string;
 }
 
 export interface QuoteWithItems extends Quote {

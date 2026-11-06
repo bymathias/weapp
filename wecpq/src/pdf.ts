@@ -5,15 +5,14 @@ const PAGE_WIDTH = 612; // US Letter
 const PAGE_HEIGHT = 792;
 const MARGIN = 50;
 
-function money(n: number): string {
-  return `€${n.toFixed(2)}`;
-}
+const CURRENCY_SYMBOLS: Record<string, string> = { EUR: "€", USD: "$", GBP: "£" };
 
 export async function generateQuotePdf(quote: QuoteWithItems, customer: Customer): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const money = (n: number) => `${CURRENCY_SYMBOLS[quote.currency] ?? "€"}${n.toFixed(2)}`;
 
   let y = PAGE_HEIGHT - MARGIN;
 
@@ -56,6 +55,12 @@ export async function generateQuotePdf(quote: QuoteWithItems, customer: Customer
   draw(`Status: ${quote.status}`, leftX, { size: 10, f: bold });
   y -= 14;
   draw(`Vendor: ${quote.vendor}`, leftX, { size: 10 });
+  y -= 14;
+  draw(`Currency: ${quote.currency}`, leftX, { size: 10 });
+  y -= 14;
+  draw(`Valid Until: ${quote.valid_until ?? "-"}`, leftX, { size: 10 });
+  y -= 14;
+  draw(`Payment Terms: ${quote.payment_terms}`, leftX, { size: 10 });
 
   y = topY;
   draw("BILL TO", rightX, { size: 13, f: bold });

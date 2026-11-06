@@ -1,7 +1,13 @@
 import { html, raw } from "hono/html";
 import { layout, ICONS } from "./layout";
-import type { Customer, Quote, QuoteStatus, QuoteWithItems } from "../types";
+import type { Customer, Quote, QuoteCurrency, QuoteStatus, QuoteWithItems } from "../types";
 import type { DashboardStats, QuoteListResult } from "../db/queries";
+
+const CURRENCY_SYMBOLS: Record<QuoteCurrency, string> = { EUR: "€", USD: "$", GBP: "£" };
+
+function money(n: number, currency: QuoteCurrency = "EUR"): string {
+  return `${CURRENCY_SYMBOLS[currency] ?? "€"}${n.toFixed(2)}`;
+}
 
 // Debounced as-you-type search: on input, fetch the endpoint with the
 // current query and swap the response HTML straight into the results
@@ -122,7 +128,7 @@ export function quotesResultsPanel(quoteList: QuoteListResult, search: string) {
         <td data-testid="quote-customer-ref-id">${q.customer_ref_id}</td>
         <td>${q.vendor}</td>
         <td><span class="badge ${q.status}">${q.status}</span></td>
-        <td>€${q.total_amount.toFixed(2)}</td>
+        <td>${money(q.total_amount, q.currency)}</td>
         <td>${q.created_at.slice(0, 10)}</td>
       </tr>`
     )
@@ -334,7 +340,7 @@ export function customerPage(customer: Customer, quotes: Quote[]) {
       (q) => html`<tr id="quote-row-${q.id}" data-testid="quote-row" data-quote-ref="${q.ref}">
         <td><a class="link" id="quote-link-${q.id}" data-testid="quote-link" href="/quotes/${q.ref}">${q.ref}</a></td>
         <td>${q.vendor}</td>
-        <td>€${q.total_amount.toFixed(2)}</td>
+        <td>${money(q.total_amount, q.currency)}</td>
         <td><span class="badge ${q.status}">${q.status}</span></td>
       </tr>`
     )
@@ -371,6 +377,8 @@ export function customerPage(customer: Customer, quotes: Quote[]) {
 
 const VENDORS = ["Fortinet", "Cisco", "Palo Alto Networks", "Check Point", "CrowdStrike", "Microsoft", "Veeam", "Zscaler"];
 const STATUSES: QuoteStatus[] = ["Draft", "Sent", "Won", "Lost"];
+const CURRENCIES: QuoteCurrency[] = ["EUR", "USD", "GBP"];
+const PAYMENT_TERMS = ["Due on receipt", "Net 15", "Net 30", "Net 45", "Net 60"];
 
 interface QuoteFormItem {
   sku: string;
@@ -390,6 +398,9 @@ interface QuoteFormPageOptions {
   initialVendor: string;
   initialStatus: QuoteStatus;
   initialMarginPct: number;
+  initialCurrency: QuoteCurrency;
+  initialValidUntil: string;
+  initialPaymentTerms: string;
   initialItems: QuoteFormItem[];
   includeCustomerIdField?: boolean;
   error?: string;
@@ -407,6 +418,13 @@ function quoteFormPage(opts: QuoteFormPageOptions) {
   const statusOptions = STATUSES.map(
     (s) => `<option value="${s}"${s === opts.initialStatus ? " selected" : ""}>${s}</option>`
   ).join("");
+  const currencyOptions = CURRENCIES.map(
+    (cur) => `<option value="${cur}"${cur === opts.initialCurrency ? " selected" : ""}>${cur}</option>`
+  ).join("");
+  const termsList = PAYMENT_TERMS.includes(opts.initialPaymentTerms) ? PAYMENT_TERMS : [...PAYMENT_TERMS, opts.initialPaymentTerms];
+  const paymentTermsOptions = termsList
+    .map((t) => `<option value="${t}"${t === opts.initialPaymentTerms ? " selected" : ""}>${t}</option>`)
+    .join("");
   const initialRows = opts.initialItems.map((item) => itemRowHtml(item)).join("");
   const customerOptions = (opts.customers ?? [])
     .map((c) => `<option value="${c.id}">${c.name} (${c.ref_id})</option>`)
@@ -456,6 +474,21 @@ function quoteFormPage(opts: QuoteFormPageOptions) {
           <div class="field" style="max-width:200px">
             <label for="margin_pct">Margin %</label>
             <input type="number" id="margin_pct" name="margin_pct" data-testid="quote-margin" value="${opts.initialMarginPct}" min="0" step="0.1" required />
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label for="currency">Currency</label>
+              <select id="currency" name="currency" data-testid="quote-currency" required>${raw(currencyOptions)}</select>
+            </div>
+            <div class="field">
+              <label for="payment_terms">Payment Terms</label>
+              <select id="payment_terms" name="payment_terms" data-testid="quote-payment-terms" required>${raw(paymentTermsOptions)}</select>
+            </div>
+          </div>
+          <div class="field" style="max-width:200px">
+            <label for="valid_until">Valid Until</label>
+            <input type="date" id="valid_until" name="valid_until" data-testid="quote-valid-until" value="${opts.initialValidUntil}" />
+            <span class="muted" id="valid-until-hint" data-testid="valid-until-hint">Empty = 30 days from today</span>
           </div>
         </div>
 
@@ -529,6 +562,9 @@ export function newQuotePage(customer: Customer | null, customers: Customer[], o
     initialVendor: VENDORS[0],
     initialStatus: "Draft",
     initialMarginPct: 15,
+    initialCurrency: "EUR",
+    initialValidUntil: "",
+    initialPaymentTerms: "Net 30",
     initialItems: [],
     includeCustomerIdField: true,
     error: opts.error,
@@ -546,6 +582,9 @@ export function editQuotePage(customer: Customer, quote: QuoteWithItems, opts: {
     initialVendor: quote.vendor,
     initialStatus: quote.status,
     initialMarginPct: quote.margin_pct,
+    initialCurrency: quote.currency,
+    initialValidUntil: quote.valid_until ?? "",
+    initialPaymentTerms: quote.payment_terms,
     initialItems: quote.items.map((i) => ({ sku: i.sku, description: i.description, quantity: i.quantity, unit_price: i.unit_price })),
     error: opts.error,
   });
@@ -560,7 +599,9 @@ function quoteFormScript(): string {
       var totalEl = document.getElementById('total-display');
       var marginEl = document.getElementById('margin_pct');
 
-      function fmt(n) { return '€' + n.toFixed(2); }
+      var currencyEl = document.getElementById('currency');
+      var symbols = { EUR: '€', USD: '$', GBP: '£' };
+      function fmt(n) { return (symbols[currencyEl.value] || '€') + n.toFixed(2); }
 
       function recalc() {
         var subtotal = 0;
@@ -596,6 +637,7 @@ function quoteFormScript(): string {
 
       document.getElementById('add-row-btn').addEventListener('click', addRow);
       marginEl.addEventListener('input', recalc);
+      currencyEl.addEventListener('change', recalc);
 
       var statusEl = document.getElementById('status');
       var wonWarningEl = document.getElementById('won-status-warning');
@@ -616,14 +658,15 @@ function quoteFormScript(): string {
 
 export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
   const isWon = quote.status === "Won";
+  const isExpired = quote.valid_until !== null && quote.valid_until < new Date().toISOString().slice(0, 10);
   const rows = quote.items
     .map(
       (item) => html`<tr id="quote-item-row-${item.id}" data-testid="quote-item-row">
         <td data-testid="quote-item-sku">${item.sku}</td>
         <td>${item.description}</td>
         <td>${item.quantity}</td>
-        <td>€${item.unit_price.toFixed(2)}</td>
-        <td>€${item.line_total.toFixed(2)}</td>
+        <td>${money(item.unit_price, quote.currency)}</td>
+        <td>${money(item.line_total, quote.currency)}</td>
       </tr>`
     )
     .join("");
@@ -634,6 +677,12 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
       <p class="muted">
         ${customer.name} (${customer.ref_id}) · Vendor: ${quote.vendor} ·
         <span class="badge ${quote.status}" id="quote-status-badge" data-testid="quote-status-badge">${quote.status}</span>
+      </p>
+      <p class="muted" id="quote-terms" data-testid="quote-terms">
+        Currency: <strong id="quote-currency" data-testid="quote-currency">${quote.currency}</strong> ·
+        Valid until: <strong id="quote-valid-until" data-testid="quote-valid-until">${quote.valid_until ?? "—"}</strong>
+        ${isExpired ? html`<span class="badge Lost" id="quote-expired-badge" data-testid="quote-expired-badge">Expired</span>` : ""} ·
+        Payment terms: <strong id="quote-payment-terms" data-testid="quote-payment-terms">${quote.payment_terms}</strong>
       </p>
 
       ${isWon
@@ -668,7 +717,7 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
         <div class="totals">
           <div class="box">
             <div class="label">Subtotal</div>
-            <div class="value" id="quote-subtotal" data-testid="quote-subtotal">€${quote.subtotal.toFixed(2)}</div>
+            <div class="value" id="quote-subtotal" data-testid="quote-subtotal">${money(quote.subtotal, quote.currency)}</div>
           </div>
           <div class="box">
             <div class="label">Margin</div>
@@ -676,7 +725,7 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
           </div>
           <div class="box">
             <div class="label">Total</div>
-            <div class="value" id="quote-total" data-testid="quote-total">€${quote.total_amount.toFixed(2)}</div>
+            <div class="value" id="quote-total" data-testid="quote-total">${money(quote.total_amount, quote.currency)}</div>
           </div>
         </div>
       </div>`,
