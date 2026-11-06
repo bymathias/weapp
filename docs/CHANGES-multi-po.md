@@ -49,9 +49,9 @@ limit was changed. P2P scenarios (PO/GR/invoice 4500000001…, 5100000002,
 - Every quote now shows **Currency** (all seeded: EUR), **Valid Until** and
   **Payment Terms**, on the quote page and in the quote PDF header.
 - Seeded quotes now have fixed creation dates (2026-09-01 … 2026-09-29, in
-  ref order) and a validity of 90 days (Q-2026-0005 valid until
-  2026-12-06, Q-2026-0009 until 2026-12-12, Q-2026-0015 until 2026-12-21).
-  **Demos after those dates will show these quotes as expired.**
+  ref order) and are all **valid until 2027-06-30**, except the deliberately
+  expired Q-2026-0024 (valid until 2026-07-15). Demos after 2027-06-30 will
+  show every quote as expired.
 - Payment terms match the sample POs: Meridian Net 30, Vertex Net 45,
   Ironclad Net 30.
 
