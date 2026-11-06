@@ -28,6 +28,7 @@ import {
   DlvNumberParamSchema,
   DuplicateErrorSchema,
   ErrorSchema,
+  PdfDownloadQuerySchema,
   FlowEntrySchema,
   RejectSalesOrderInputSchema,
   OrderedQuantitiesQuerySchema,
@@ -143,7 +144,7 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       tags: ["Sales Orders"],
       summary: "Download the sales order as a PDF",
       security: [{ Bearer: [] }],
-      request: { params: SoNumberParamSchema },
+      request: { params: SoNumberParamSchema, query: PdfDownloadQuerySchema },
       responses: {
         200: { description: "PDF document", content: { "application/pdf": { schema: { type: "string", format: "binary" } } } },
         404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
@@ -160,7 +161,7 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `inline; filename="${so.so_number}.pdf"`,
+          "Content-Disposition": `${c.req.valid("query").download === "1" ? "attachment" : "inline"}; filename="${so.so_number}.pdf"`,
         },
       });
     }

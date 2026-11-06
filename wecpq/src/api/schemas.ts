@@ -97,6 +97,13 @@ export const CustomerRefIdParamSchema = z.object({
   refId: z.string().openapi({ param: { name: "refId", in: "path" }, example: "CUST-0001" }),
 });
 
+export const PdfDownloadQuerySchema = z.object({
+  download: z
+    .string()
+    .optional()
+    .openapi({ param: { name: "download", in: "query" }, example: "1", description: "1 = Content-Disposition: attachment (default inline)" }),
+});
+
 export const QuoteRefParamSchema = z.object({
   ref: z.string().openapi({ param: { name: "ref", in: "path" }, example: "Q-2026-0001" }),
 });

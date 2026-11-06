@@ -306,6 +306,13 @@ export const OrderedQuantitiesSchema = z
   })
   .openapi("OrderedQuantities");
 
+export const PdfDownloadQuerySchema = z.object({
+  download: z
+    .string()
+    .optional()
+    .openapi({ param: { name: "download", in: "query" }, example: "1", description: "1 = Content-Disposition: attachment (default inline)" }),
+});
+
 export const SoNumberParamSchema = z.object({
   so_number: z.string().openapi({ param: { name: "so_number", in: "path" }, example: "1000000001" }),
 });

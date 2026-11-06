@@ -103,7 +103,7 @@ export function purchaseOrderDetailPage(
         ${po.status === "Received"
           ? html`<a class="btn secondary" id="btn-create-invoice" data-testid="btn-create-invoice" href="/supplier-invoices/new?po_number=${po.po_number}">Register Supplier Invoice</a>`
           : ""}
-        <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/purchase-orders/${po.po_number}/pdf" target="_blank" rel="noopener">Download PDF</a>
+        <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/purchase-orders/${po.po_number}/pdf?download=1" rel="noopener">Download PDF</a>
         <a class="btn transparent" id="back-btn" data-testid="back-btn" href="/purchase-orders">Back to list</a>
       </div>`,
     { loggedIn: true }

@@ -701,7 +701,7 @@ export function quoteDetailPage(customer: Customer, quote: QuoteWithItems) {
         ${isWon
           ? ""
           : html`<a class="btn" id="edit-quote-btn" data-testid="edit-quote-btn" href="/quotes/${quote.ref}/edit">Edit Quote</a>`}
-        <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/quotes/${quote.ref}/pdf" target="_blank" rel="noopener">Download PDF</a>
+        <a class="btn secondary" id="download-pdf-btn" data-testid="download-pdf-btn" href="/api/quotes/${quote.ref}/pdf?download=1" rel="noopener">Download PDF</a>
         <a class="btn secondary" id="back-to-customer-btn" data-testid="back-to-customer-btn" href="/customers/${customer.ref_id}">Back to customer</a>
       </div>
 
