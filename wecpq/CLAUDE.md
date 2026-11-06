@@ -16,7 +16,7 @@ API-based automation.
 npm run dev                 # wrangler dev (Miniflare) on :8787
 npm run typecheck           # tsc --noEmit
 npm run db:migrate:local    # drop/recreate schema against local D1
-npm run db:seed:local       # load seed.sql (8 customers, 16 quotes) into local D1
+npm run db:seed:local       # load seed.sql (15 customers, 24 quotes) into local D1
 npm run db:migrate:remote   # same, against the deployed D1 database
 npm run db:seed:remote
 npm run deploy               # wrangler deploy
