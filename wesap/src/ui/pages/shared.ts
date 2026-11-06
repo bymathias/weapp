@@ -8,7 +8,7 @@ export function money(n: number): string {
 }
 
 export function statusBadgeClass(status: string): "ok" | "warn" | "danger" | "neutral" {
-  if (status.startsWith("Blocked")) return "danger";
+  if (status.startsWith("Blocked") || status === "Rejected") return "danger";
   if (["Paid", "Cleared", "Matched", "Released", "Delivered", "Billed", "Posted"].includes(status)) return "ok";
   return "neutral";
 }

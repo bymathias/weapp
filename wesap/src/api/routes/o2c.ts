@@ -13,6 +13,7 @@ import {
   listBillingDocuments,
   listDeliveries,
   listSalesOrders,
+  rejectSalesOrder,
   releaseCreditBlock,
 } from "../../db/o2c";
 import { getFlow } from "../../lib/flow";
@@ -28,6 +29,7 @@ import {
   DuplicateErrorSchema,
   ErrorSchema,
   FlowEntrySchema,
+  RejectSalesOrderInputSchema,
   OrderedQuantitiesQuerySchema,
   OrderedQuantitiesSchema,
   SalesOrderInputSchema,
@@ -79,7 +81,7 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       const customer = await getCustomerByRefId(c.env.DB, body.customer_ref);
       if (!customer) return c.json({ error: "not_found", message: "Customer not found" }, 404);
       try {
-        const so = await createSalesOrder(c.env.DB, customer.id, body.items, body.source_quote_ref ?? null, body.customer_po_number);
+        const so = await createSalesOrder(c.env.DB, customer.id, body.items, body.source_quote_ref ?? null, body.customer_po_number, body.intake_case_id ?? null);
         return c.json(so, 201);
       } catch (err) {
         if (err instanceof DuplicateSalesOrderError) {
@@ -183,6 +185,37 @@ export function registerO2CRoutes(api: OpenAPIHono<Env>) {
       const { so_number } = c.req.valid("param");
       try {
         return c.json(await releaseCreditBlock(c.env.DB, so_number), 200);
+      } catch (err) {
+        const mapped = mapActionError(err);
+        if (mapped) return c.json(mapped.body, mapped.status);
+        throw err;
+      }
+    }
+  );
+
+  api.openapi(
+    createRoute({
+      method: "post",
+      path: "/sales-orders/{so_number}/reject",
+      tags: ["Sales Orders"],
+      summary: "Reject a sales order (only from Open or Blocked (Credit))",
+      security: [{ Bearer: [] }],
+      request: {
+        params: SoNumberParamSchema,
+        body: { content: { "application/json": { schema: RejectSalesOrderInputSchema } }, required: false },
+      },
+      responses: {
+        200: { description: "Rejected sales order", content: { "application/json": { schema: SalesOrderWithItemsSchema } } },
+        400: { description: "Sales order is not Open or Blocked (Credit)", content: { "application/json": { schema: ErrorSchema } } },
+        404: { description: "Not found", content: { "application/json": { schema: ErrorSchema } } },
+        409: { description: "Sales order is Paid and locked", content: { "application/json": { schema: ErrorSchema } } },
+      },
+    }),
+    async (c) => {
+      const { so_number } = c.req.valid("param");
+      const reason = (await c.req.json().catch(() => ({})))?.reason;
+      try {
+        return c.json(await rejectSalesOrder(c.env.DB, so_number, typeof reason === "string" && reason.trim() ? reason.trim() : null), 200);
       } catch (err) {
         const mapped = mapActionError(err);
         if (mapped) return c.json(mapped.body, mapped.status);

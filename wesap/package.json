@@ -17,6 +17,8 @@
     "db:migrate-so-po-quote-unique:remote": "wrangler d1 execute wesap --remote --file=./migrations/0003_so_po_quote_unique.sql",
     "db:migrate-so-item-quote-sku:local": "wrangler d1 execute wesap --local --file=./migrations/0004_add_so_item_quote_sku.sql",
     "db:migrate-so-item-quote-sku:remote": "wrangler d1 execute wesap --remote --file=./migrations/0004_add_so_item_quote_sku.sql",
+    "db:migrate-so-reject-case:local": "wrangler d1 execute wesap --local --file=./migrations/0005_so_reject_case_billing_quote.sql",
+    "db:migrate-so-reject-case:remote": "wrangler d1 execute wesap --remote --file=./migrations/0005_so_reject_case_billing_quote.sql",
     "seed:gen": "node scripts/gen-seed.mjs",
     "reset": "wrangler d1 execute wesap --remote --file reset.sql",
     "typecheck": "tsc --noEmit"

@@ -17,6 +17,7 @@ export interface SalesOrderFilters {
   source_quote_ref?: string;
   customer_ref?: string;
   status?: string;
+  intake_case_id?: string;
 }
 
 export async function listSalesOrders(db: D1Database, filters: SalesOrderFilters = {}): Promise<SalesOrderListRow[]> {
@@ -25,6 +26,7 @@ export async function listSalesOrders(db: D1Database, filters: SalesOrderFilters
     source_quote_ref: "so.source_quote_ref",
     customer_ref: "c.ref_id",
     status: "so.status",
+    intake_case_id: "so.intake_case_id",
   };
   const conditions: string[] = [];
   const params: string[] = [];
@@ -98,7 +100,8 @@ export async function createSalesOrder(
   customerId: number,
   items: CreateSoItemInput[],
   sourceQuoteRef: string | null,
-  customerPoNumber: string
+  customerPoNumber: string,
+  intakeCaseId: string | null = null
 ): Promise<SalesOrderWithItems> {
   const customer = await getCustomer(db, customerId);
   if (!customer) throw new Error("not_found");
@@ -120,10 +123,10 @@ export async function createSalesOrder(
   try {
     result = await db
       .prepare(
-        `INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, customer_po_number, total_amount)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
+        `INSERT INTO sales_orders (so_number, customer_id, status, source_quote_ref, customer_po_number, total_amount, intake_case_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
       )
-      .bind(soNumber, customerId, status, sourceQuoteRef, customerPoNumber, totalAmount)
+      .bind(soNumber, customerId, status, sourceQuoteRef, customerPoNumber, totalAmount, intakeCaseId)
       .run();
   } catch (err) {
     // A concurrent request for the same pair won the race past the check above.
@@ -188,6 +191,20 @@ export async function releaseCreditBlock(db: D1Database, soNumber: string): Prom
   if (existing.status !== "Blocked (Credit)") throw new Error("invalid_state");
 
   await db.prepare(`UPDATE sales_orders SET status = 'Released' WHERE id = ?1`).bind(existing.id).run();
+
+  return (await getSalesOrderByNumber(db, soNumber))!;
+}
+
+export async function rejectSalesOrder(db: D1Database, soNumber: string, reason: string | null): Promise<SalesOrderWithItems> {
+  const existing = await getSalesOrderByNumber(db, soNumber);
+  if (!existing) throw new Error("not_found");
+  if (existing.status === "Paid") throw new Error("locked");
+  if (existing.status !== "Blocked (Credit)" && existing.status !== "Open") throw new Error("invalid_state");
+
+  await db
+    .prepare(`UPDATE sales_orders SET status = 'Rejected', reject_reason = ?1 WHERE id = ?2`)
+    .bind(reason, existing.id)
+    .run();
 
   return (await getSalesOrderByNumber(db, soNumber))!;
 }
@@ -278,10 +295,10 @@ export async function createBilling(db: D1Database, soNumber: string): Promise<B
 
   const result = await db
     .prepare(
-      `INSERT INTO billing_documents (bill_number, so_id, customer_id, amount, status, customer_po_number)
-       VALUES (?1, ?2, ?3, ?4, 'Open', ?5)`
+      `INSERT INTO billing_documents (bill_number, so_id, customer_id, amount, status, customer_po_number, source_quote_ref)
+       VALUES (?1, ?2, ?3, ?4, 'Open', ?5, ?6)`
     )
-    .bind(billNumber, so.id, so.customer_id, so.total_amount, so.customer_po_number)
+    .bind(billNumber, so.id, so.customer_id, so.total_amount, so.customer_po_number, so.source_quote_ref)
     .run();
   const billId = result.meta.last_row_id as number;
 

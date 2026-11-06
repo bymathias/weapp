@@ -211,7 +211,7 @@ export const InvNumberParamSchema = z.object({
 // Order-to-Cash --------------------------------------------------------------------
 
 export const SoStatusSchema = z
-  .enum(["Open", "Blocked (Credit)", "Released", "Delivered", "Billed", "Paid"])
+  .enum(["Open", "Blocked (Credit)", "Released", "Delivered", "Billed", "Paid", "Rejected"])
   .openapi("SoStatus");
 
 export const SoItemSchema = z
@@ -237,6 +237,8 @@ export const SalesOrderSchema = z
     customer_po_number: z.string().nullable(),
     total_amount: z.number(),
     created_at: z.string(),
+    reject_reason: z.string().nullable(),
+    intake_case_id: z.string().nullable(),
   })
   .openapi("SalesOrder");
 
@@ -264,14 +266,21 @@ export const SalesOrderInputSchema = z
     // number is required. source_quote_ref stays optional for flexibility.
     customer_po_number: z.string().min(1),
     source_quote_ref: z.string().optional(),
+    // UiPath intake Case ID, e.g. PIO-20261106-7F3A9C.
+    intake_case_id: z.string().optional(),
   })
   .openapi("SalesOrderInput");
+
+export const RejectSalesOrderInputSchema = z
+  .object({ reason: z.string().optional() })
+  .openapi("RejectSalesOrderInput");
 
 export const SalesOrderListQuerySchema = z.object({
   customer_po_number: z.string().optional().openapi({ param: { name: "customer_po_number", in: "query" }, example: "MIG-PO-2026-0457" }),
   source_quote_ref: z.string().optional().openapi({ param: { name: "source_quote_ref", in: "query" }, example: "Q-2026-0005" }),
   customer_ref: z.string().optional().openapi({ param: { name: "customer_ref", in: "query" }, example: "CUST-0003" }),
   status: SoStatusSchema.optional().openapi({ param: { name: "status", in: "query" } }),
+  intake_case_id: z.string().optional().openapi({ param: { name: "intake_case_id", in: "query" }, example: "PIO-20261106-7F3A9C" }),
 });
 
 export const DuplicateErrorSchema = z
@@ -331,6 +340,7 @@ export const BillingDocumentSchema = z
     status: BillingStatusSchema,
     customer_po_number: z.string().nullable(),
     created_at: z.string(),
+    source_quote_ref: z.string().nullable(),
   })
   .openapi("BillingDocument");
 

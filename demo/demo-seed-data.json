@@ -1197,7 +1197,8 @@
         "customer_id": 1,
         "amount": 4600,
         "status": "Paid",
-        "customer_po_number": "PO-NORTHBRIDGE-2026-0142"
+        "customer_po_number": "PO-NORTHBRIDGE-2026-0142",
+        "source_quote_ref": "Q-2026-0001"
       },
       {
         "id": 2,
@@ -1206,7 +1207,8 @@
         "customer_id": 4,
         "amount": 16000,
         "status": "Open",
-        "customer_po_number": "CCS2026-0219"
+        "customer_po_number": "CCS2026-0219",
+        "source_quote_ref": "Q-2026-0007"
       }
     ],
     "purchase_orders": [

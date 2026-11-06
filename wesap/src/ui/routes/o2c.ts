@@ -13,6 +13,7 @@ import {
   listBillingDocuments,
   listDeliveries,
   listSalesOrders,
+  rejectSalesOrder,
   releaseCreditBlock,
 } from "../../db/o2c";
 import { createPayment } from "../../db/payments";
@@ -112,6 +113,18 @@ export function registerO2CUiRoutes(ui: Hono<Env>) {
       await releaseCreditBlock(c.env.DB, soNumber);
     } catch {
       // Button is only shown when the action is valid; swallow and re-render current state.
+    }
+    return c.redirect(`/sales-orders/${soNumber}`);
+  });
+
+  ui.post("/sales-orders/:so_number/reject", async (c) => {
+    const soNumber = c.req.param("so_number");
+    const body = await c.req.parseBody();
+    const reason = typeof body.reject_reason === "string" ? body.reject_reason.trim() : "";
+    try {
+      await rejectSalesOrder(c.env.DB, soNumber, reason || null);
+    } catch {
+      // ditto
     }
     return c.redirect(`/sales-orders/${soNumber}`);
   });

@@ -95,7 +95,7 @@ const blocks = [
   insertBlock(
     "Order-to-Cash: billing documents",
     "billing_documents",
-    ["id", "bill_number", "so_id", "customer_id", "amount", "status", "customer_po_number"],
+    ["id", "bill_number", "so_id", "customer_id", "amount", "status", "customer_po_number", "source_quote_ref"],
     billingDocuments
   ),
   insertBlock(

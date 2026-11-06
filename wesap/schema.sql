@@ -111,11 +111,13 @@ CREATE TABLE sales_orders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   so_number TEXT NOT NULL UNIQUE,
   customer_id INTEGER NOT NULL REFERENCES customers(id),
-  status TEXT NOT NULL CHECK (status IN ('Open', 'Blocked (Credit)', 'Released', 'Delivered', 'Billed', 'Paid')) DEFAULT 'Open',
+  status TEXT NOT NULL CHECK (status IN ('Open', 'Blocked (Credit)', 'Released', 'Delivered', 'Billed', 'Paid', 'Rejected')) DEFAULT 'Open',
   source_quote_ref TEXT,
   customer_po_number TEXT,
   total_amount REAL NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  reject_reason TEXT,
+  intake_case_id TEXT
 );
 
 CREATE TABLE so_items (
@@ -145,7 +147,8 @@ CREATE TABLE billing_documents (
   amount REAL NOT NULL DEFAULT 0,
   status TEXT NOT NULL CHECK (status IN ('Open', 'Paid')) DEFAULT 'Open',
   customer_po_number TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  source_quote_ref TEXT
 );
 
 -- Shared ----------------------------------------------------------------------

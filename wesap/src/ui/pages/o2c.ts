@@ -69,6 +69,9 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
   if (so.source_quote_ref) {
     facets.push({ label: "Source Quote", value: html`<span data-testid="so-source-quote-ref">${so.source_quote_ref}</span>` });
   }
+  if (so.intake_case_id) {
+    facets.push({ label: "Intake Case", value: html`<span id="so-intake-case-id" data-testid="so-intake-case-id">${so.intake_case_id}</span>` });
+  }
 
   return layout(
     `SO ${so.so_number}`,
@@ -87,6 +90,11 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
         : ""}
       ${so.status === "Paid"
         ? html`<div class="locked-banner" id="paid-locked-banner" data-testid="paid-locked-banner">This sales order is Paid and is locked.</div>`
+        : ""}
+      ${so.status === "Rejected"
+        ? html`<div class="block-banner" id="rejected-banner" data-testid="rejected-banner">
+            Rejected${so.reject_reason ? html`: <span id="so-reject-reason" data-testid="so-reject-reason">${so.reject_reason}</span>` : ""}
+          </div>`
         : ""}
 
       ${anchorBar([
@@ -113,6 +121,12 @@ export function salesOrderDetailPage(so: SalesOrderWithItems, customer: Customer
           : ""}
         ${so.status === "Open" || so.status === "Released"
           ? html`<form method="post" action="/sales-orders/${so.so_number}/deliver"><button type="submit" class="btn" id="btn-create-delivery" data-testid="btn-create-delivery">Create Delivery</button></form>`
+          : ""}
+        ${so.status === "Open" || so.status === "Blocked (Credit)"
+          ? html`<form method="post" action="/sales-orders/${so.so_number}/reject" id="reject-form" data-testid="reject-form">
+              <input type="text" name="reject_reason" id="reject-reason-input" data-testid="reject-reason-input" placeholder="Reject reason (optional)" />
+              <button type="submit" class="btn secondary" id="btn-reject" data-testid="btn-reject">Reject</button>
+            </form>`
           : ""}
         ${so.status === "Delivered"
           ? html`<form method="post" action="/sales-orders/${so.so_number}/bill"><button type="submit" class="btn" id="btn-bill" data-testid="btn-bill">Bill</button></form>`
@@ -330,6 +344,7 @@ export function billingListPage(rows: BillingListRow[]) {
         <td>${money(b.amount)}</td>
         <td>${statusBadge(b.status, `bill-status-${b.bill_number}`)}</td>
         <td>${b.created_at.slice(0, 10)}</td>
+        <td data-testid="bill-source-quote-ref">${b.source_quote_ref ?? "—"}</td>
       </tr>`
     )
     .join("");
@@ -345,8 +360,8 @@ export function billingListPage(rows: BillingListRow[]) {
       ${filterBar("bill-table")}
       <div class="panel">
         <table id="bill-table" data-testid="bill-table">
-          <thead><tr><th>Bill Number</th><th>SO Number</th><th>Customer</th><th>Customer PO</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
-          <tbody>${raw(body || `<tr><td colspan="7" class="muted">No billing documents yet.</td></tr>`)}</tbody>
+          <thead><tr><th>Bill Number</th><th>SO Number</th><th>Customer</th><th>Customer PO</th><th>Amount</th><th>Status</th><th>Created</th><th>Source Quote</th></tr></thead>
+          <tbody>${raw(body || `<tr><td colspan="8" class="muted">No billing documents yet.</td></tr>`)}</tbody>
         </table>
       </div>`,
     { loggedIn: true }
@@ -360,6 +375,9 @@ export function billingDetailPage(bill: BillingDocument, so: SalesOrder, custome
   ];
   if (bill.customer_po_number) {
     facets.push({ label: "Customer PO", value: html`<span data-testid="bill-customer-po-number-value">${bill.customer_po_number}</span>` });
+  }
+  if (bill.source_quote_ref) {
+    facets.push({ label: "Source Quote", value: html`<span id="bill-source-quote-ref-value" data-testid="bill-source-quote-ref-value">${bill.source_quote_ref}</span>` });
   }
 
   return layout(

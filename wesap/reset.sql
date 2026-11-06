@@ -188,9 +188,9 @@ INSERT INTO deliveries (id, dlv_number, so_id, status) VALUES
   (4, '8000000004', 6, 'Posted');
 
 -- Order-to-Cash: billing documents
-INSERT INTO billing_documents (id, bill_number, so_id, customer_id, amount, status, customer_po_number) VALUES
-  (1, '9000000001', 1, 1, 4600, 'Paid', 'PO-NORTHBRIDGE-2026-0142'),
-  (2, '9000000002', 3, 4, 16000, 'Open', 'CCS2026-0219');
+INSERT INTO billing_documents (id, bill_number, so_id, customer_id, amount, status, customer_po_number, source_quote_ref) VALUES
+  (1, '9000000001', 1, 1, 4600, 'Paid', 'PO-NORTHBRIDGE-2026-0142', 'Q-2026-0001'),
+  (2, '9000000002', 3, 4, 16000, 'Open', 'CCS2026-0219', 'Q-2026-0007');
 
 -- Cross-process: payments
 INSERT INTO payments (id, pay_number, ref_type, ref_id, direction, amount, status) VALUES
